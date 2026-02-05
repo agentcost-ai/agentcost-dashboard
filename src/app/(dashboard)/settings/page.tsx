@@ -28,7 +28,8 @@ interface ProjectInfo {
   id: string;
   name: string;
   description: string | null;
-  api_key: string;
+  api_key: string | null;
+  key_prefix?: string | null;
   created_at: string;
   is_active: boolean;
 }
@@ -78,6 +79,8 @@ export default function SettingsPage() {
   const [config, setConfig] = useState<SavedConfig>(DEFAULT_CONFIG);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRotatingKey, setIsRotatingKey] = useState(false);
+  const [showSnippetKey, setShowSnippetKey] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -157,7 +160,7 @@ export default function SettingsPage() {
       // Auto-save the API key and project ID to localStorage
       const updatedConfig = {
         ...config,
-        apiKey: newProject.api_key,
+        apiKey: newProject.api_key ?? "",
         projectId: newProject.id,
       };
       localStorage.setItem("agentcost_config", JSON.stringify(updatedConfig));
@@ -181,6 +184,35 @@ export default function SettingsPage() {
       });
     }
     setIsCreatingProject(false);
+    setTimeout(() => setSaveMessage(null), 3000);
+  };
+
+  const rotateApiKey = async () => {
+    if (!project) return;
+    setIsRotatingKey(true);
+    try {
+      const result = await api.rotateProjectApiKey(project.id);
+      const updatedConfig = {
+        ...config,
+        apiKey: result.api_key ?? "",
+        projectId: project.id,
+      };
+      localStorage.setItem("agentcost_config", JSON.stringify(updatedConfig));
+      setConfig(updatedConfig);
+      window.dispatchEvent(new Event("agentcost_config_updated"));
+
+      setSaveMessage({
+        type: "success",
+        text: "API key rotated. Save the new key now.",
+      });
+    } catch (error) {
+      console.error("Failed to rotate API key:", error);
+      setSaveMessage({
+        type: "error",
+        text: "Failed to rotate API key. Make sure you're logged in with admin access.",
+      });
+    }
+    setIsRotatingKey(false);
     setTimeout(() => setSaveMessage(null), 3000);
   };
 
@@ -218,20 +250,44 @@ export default function SettingsPage() {
                     <div className="mt-1 flex gap-2">
                       <div className="relative flex-1 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 pr-20">
                         <code className="text-white font-mono text-sm">
-                          {showApiKey
-                            ? (config.apiKey || project.api_key)
-                            : "•".repeat(Math.min((config.apiKey || project.api_key).length, 32))}
+                          {config.apiKey
+                            ? showApiKey
+                              ? config.apiKey
+                              : "•".repeat(Math.min(config.apiKey.length, 32))
+                            : "API keys are shown once at creation."}
                         </code>
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                           <button
                             onClick={() => setShowApiKey(!showApiKey)}
                             className="p-1 text-neutral-400 hover:text-white"
+                            disabled={!config.apiKey}
                           >
-                            {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                            {showApiKey ? (
+                              <EyeOff size={16} />
+                            ) : (
+                              <Eye size={16} />
+                            )}
                           </button>
-                          <CopyButton text={config.apiKey || project.api_key} />
+                          {config.apiKey && <CopyButton text={config.apiKey} />}
                         </div>
                       </div>
+                    </div>
+                    <p className="mt-2 text-xs text-neutral-500">
+                      API keys are write-only secrets and are shown once at
+                      creation. Store them securely.
+                    </p>
+                    <div className="mt-3">
+                      <button
+                        onClick={rotateApiKey}
+                        disabled={isRotatingKey}
+                        className="inline-flex items-center gap-2 rounded-lg bg-neutral-700 px-3 py-2 text-xs text-white hover:bg-neutral-600 disabled:opacity-50"
+                      >
+                        <RefreshCw
+                          size={12}
+                          className={isRotatingKey ? "animate-spin" : ""}
+                        />
+                        Rotate API Key
+                      </button>
                     </div>
                   </div>
 
@@ -551,12 +607,26 @@ export default function SettingsPage() {
             <p className="text-sm text-neutral-400">
               Use your configuration in your Python code
             </p>
+            <p className="mt-2 text-xs text-neutral-500">
+              API keys are shown once at creation and stored locally if you save
+              them. If your key is not stored, rotate the key to generate a new
+              one.
+            </p>
             <div className="mt-4 bg-neutral-900 rounded-lg overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2 bg-neutral-800 border-b border-neutral-700">
                 <span className="text-sm text-neutral-400">Python</span>
-                <CopyButton
-                  text={`from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${config.apiKey || "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your LangChain code is now tracked!`}
-                />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowSnippetKey(!showSnippetKey)}
+                    className="text-xs text-neutral-400 hover:text-white transition-colors"
+                    disabled={!config.apiKey}
+                  >
+                    {showSnippetKey ? "Hide key" : "Show key"}
+                  </button>
+                  <CopyButton
+                    text={`from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your LangChain code is now tracked!`}
+                  />
+                </div>
               </div>
               <pre className="p-4 overflow-x-auto text-sm">
                 <code className="text-neutral-300">
@@ -567,7 +637,11 @@ export default function SettingsPage() {
                   track_costs.init({"\n"}
                   {"    "}api_key=
                   <span className="text-green-400">
-                    &quot;{config.apiKey || "your_api_key"}&quot;
+                    &quot;
+                    {showSnippetKey && config.apiKey
+                      ? config.apiKey
+                      : "your_api_key"}
+                    &quot;
                   </span>
                   ,{"\n"}
                   {"    "}project_id=

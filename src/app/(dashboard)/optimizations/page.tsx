@@ -55,10 +55,8 @@ function PriorityBadge({ priority }: { priority: string }) {
 }
 
 /**
- * Confidence Badge - Shows "Proven" for learned alternatives vs "Suggested" for dynamic ones
- *
- * - "Proven": Based on real user implementations with tracked accuracy
- * - "Suggested": Algorithmically generated based on pricing, needs validation
+ * Confidence Badge - Shows "Learned" for alternatives with user outcomes
+ * and "Price-based" for pricing-only suggestions.
  */
 function ConfidenceBadge({
   source,
@@ -72,7 +70,7 @@ function ConfidenceBadge({
   savingsAccuracy?: number | null;
 }) {
   if (source === "learned" && timesImplemented && timesImplemented > 0) {
-    // Proven alternative - based on real implementations
+    // Learned alternative - based on real implementations
     const confidencePercent = confidenceScore
       ? Math.round(confidenceScore * 100)
       : null;
@@ -84,7 +82,7 @@ function ConfidenceBadge({
       <Badge variant="green">
         <span className="flex items-center gap-1">
           <CheckCircle2 size={12} />
-          Proven
+          Learned
           {timesImplemented > 1 && (
             <span className="text-xs opacity-80">
               ({timesImplemented}x implemented)
@@ -102,12 +100,12 @@ function ConfidenceBadge({
     );
   }
 
-  // Dynamic suggestion - algorithmically generated
+  // Dynamic suggestion - cost-optimized
   return (
     <Badge variant="gray">
       <span className="flex items-center gap-1">
         <Lightbulb size={12} />
-        Suggested
+        Cost-optimized
       </span>
     </Badge>
   );
@@ -143,6 +141,47 @@ function OptimizationCard({
   isActioning?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const estimatedMonthlySavings = suggestion.estimated_savings_monthly;
+  const showMonetary =
+    ["model_downgrade", "caching", "error_reduction"].includes(
+      suggestion.type,
+    ) && estimatedMonthlySavings !== null;
+
+  const secondaryMetric = (() => {
+    switch (suggestion.type) {
+      case "model_downgrade":
+        return {
+          label: "Savings %",
+          value: formatPercentage(suggestion.estimated_savings_percent),
+        };
+      case "caching":
+        return {
+          label: "Duplicate Rate",
+          value: formatPercentage(
+            suggestion.metrics?.duplicate_rate ??
+              suggestion.estimated_savings_percent,
+          ),
+        };
+      case "error_reduction":
+        return {
+          label: "Error Rate",
+          value: formatPercentage(
+            suggestion.metrics?.error_rate ??
+              suggestion.estimated_savings_percent,
+          ),
+        };
+      case "anomaly_alert":
+      case "prompt_optimization":
+        return suggestion.metrics?.z_score != null
+          ? {
+              label: "Deviation (σ)",
+              value: suggestion.metrics.z_score.toFixed(1),
+            }
+          : null;
+      default:
+        return null;
+    }
+  })();
 
   return (
     <Card className="hover:border-neutral-700 transition-colors">
@@ -166,22 +205,42 @@ function OptimizationCard({
 
           {/* Savings and Model Info */}
           <div className="mt-4 flex flex-wrap items-center gap-6">
-            <div>
-              <span className="text-xs text-neutral-500 uppercase">
-                Est. Monthly Savings
-              </span>
-              <p className="text-lg font-semibold text-emerald-400">
-                {formatCurrency(suggestion.estimated_savings_monthly)}
-              </p>
-            </div>
-            <div>
-              <span className="text-xs text-neutral-500 uppercase">
-                Savings %
-              </span>
-              <p className="text-lg font-semibold text-emerald-400">
-                {formatPercentage(suggestion.estimated_savings_percent)}
-              </p>
-            </div>
+            {showMonetary && (
+              <div>
+                <span className="text-xs text-neutral-500 uppercase">
+                  Est. Monthly Savings
+                </span>
+                <p className="text-lg font-semibold text-emerald-400">
+                  {formatCurrency(estimatedMonthlySavings ?? 0)}
+                </p>
+                {suggestion.metrics?.savings_estimated && (
+                  <p className="text-xs text-neutral-500">Estimated</p>
+                )}
+              </div>
+            )}
+            {!showMonetary &&
+              ["model_downgrade", "caching", "error_reduction"].includes(
+                suggestion.type,
+              ) && (
+                <div>
+                  <span className="text-xs text-neutral-500 uppercase">
+                    Savings
+                  </span>
+                  <p className="text-sm text-neutral-400">
+                    Insufficient data to estimate
+                  </p>
+                </div>
+              )}
+            {secondaryMetric && (
+              <div>
+                <span className="text-xs text-neutral-500 uppercase">
+                  {secondaryMetric.label}
+                </span>
+                <p className="text-lg font-semibold text-emerald-400">
+                  {secondaryMetric.value}
+                </p>
+              </div>
+            )}
             {suggestion.agent_name && (
               <div>
                 <span className="text-xs text-neutral-500 uppercase">
@@ -225,6 +284,16 @@ function OptimizationCard({
                 savingsAccuracy={suggestion.metrics?.savings_accuracy}
               />
 
+              {suggestion.metrics?.capability_requirements &&
+                (() => {
+                  const caps = suggestion.metrics?.capability_requirements;
+                  const unknownCaps = Object.entries(caps).filter(
+                    ([, value]) => value === "unknown",
+                  );
+                  if (unknownCaps.length === 0) return null;
+                  return <Badge variant="gray">Compatibility unknown</Badge>;
+                })()}
+
               {/* Quality Impact Badge - only shown for learned alternatives */}
               {suggestion.metrics?.quality_impact && (
                 <Badge
@@ -238,17 +307,17 @@ function OptimizationCard({
                 >
                   {suggestion.metrics.quality_impact === "minimal" && (
                     <span className="flex items-center gap-1">
-                      <CheckCircle2 size={12} /> Minimal quality impact
+                      <CheckCircle2 size={12} /> Minimal price delta
                     </span>
                   )}
                   {suggestion.metrics.quality_impact === "moderate" && (
                     <span className="flex items-center gap-1">
-                      <AlertTriangle size={12} /> Moderate quality impact
+                      <AlertTriangle size={12} /> Moderate price delta
                     </span>
                   )}
                   {suggestion.metrics.quality_impact === "significant" && (
                     <span className="flex items-center gap-1">
-                      <AlertTriangle size={12} /> Significant quality impact
+                      <AlertTriangle size={12} /> Significant price delta
                     </span>
                   )}
                 </Badge>
@@ -271,17 +340,17 @@ function OptimizationCard({
                 >
                   {suggestion.metrics.quality_impact === "minimal" && (
                     <span className="flex items-center gap-1">
-                      <CheckCircle2 size={12} /> Minimal quality impact
+                      <CheckCircle2 size={12} /> Minimal price delta
                     </span>
                   )}
                   {suggestion.metrics.quality_impact === "moderate" && (
                     <span className="flex items-center gap-1">
-                      <AlertTriangle size={12} /> Moderate quality impact
+                      <AlertTriangle size={12} /> Moderate price delta
                     </span>
                   )}
                   {suggestion.metrics.quality_impact === "significant" && (
                     <span className="flex items-center gap-1">
-                      <AlertTriangle size={12} /> Significant quality impact
+                      <AlertTriangle size={12} /> Significant price delta
                     </span>
                   )}
                 </Badge>
@@ -378,7 +447,7 @@ export default function OptimizationsPage() {
     try {
       const [suggestionsData, summaryData, recommendationsData] =
         await Promise.all([
-          api.getOptimizations(),
+          api.generateOptimizationRecommendations(),
           api.getOptimizationSummary(),
           api.getPendingRecommendations(),
         ]);
@@ -415,7 +484,8 @@ export default function OptimizationsPage() {
       (r) =>
         r.type === suggestion.type &&
         r.agent_name === suggestion.agent_name &&
-        r.model === suggestion.model,
+        r.model === suggestion.model &&
+        r.alternative_model === suggestion.alternative_model,
     );
   };
 

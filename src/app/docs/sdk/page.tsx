@@ -121,6 +121,12 @@ export default function SDKDocsPage() {
               Configuration
             </a>
             <a
+              href="#supported-models"
+              className="block text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              Supported Models
+            </a>
+            <a
               href="#agent-tagging"
               className="block text-primary-400 hover:text-primary-300 transition-colors"
             >
@@ -143,12 +149,6 @@ export default function SDKDocsPage() {
               className="block text-primary-400 hover:text-primary-300 transition-colors"
             >
               Streaming Support
-            </a>
-            <a
-              href="#supported-models"
-              className="block text-primary-400 hover:text-primary-300 transition-colors"
-            >
-              Supported Models
             </a>
             <a
               href="#event-structure"
@@ -221,6 +221,13 @@ response = llm.invoke("Hello, world!")  # Automatically tracked`}
               <p className="text-blue-300 text-sm">
                 <strong>Note:</strong> The SDK uses monkey patching to intercept
                 LangChain calls. Your existing code requires no modifications.
+              </p>
+            </div>
+            <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-4 mt-4">
+              <p className="text-yellow-300 text-sm">
+                <strong>Security:</strong> API keys are shown once on creation.
+                Store them securely and rotate keys from the dashboard if
+                needed.
               </p>
             </div>
           </Section>

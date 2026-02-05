@@ -62,7 +62,7 @@ export interface OptimizationSuggestion {
   type: string;
   title: string;
   description: string;
-  estimated_savings_monthly: number;
+  estimated_savings_monthly: number | null;
   estimated_savings_percent: number;
   priority: "high" | "medium" | "low";
   action_items: string[];
@@ -76,6 +76,16 @@ export interface OptimizationSuggestion {
     avg_input_tokens?: number;
     savings_percentage?: number;
     quality_impact?: string | null;
+    duplicate_rate?: number;
+    error_rate?: number;
+    z_score?: number;
+    savings_estimated?: boolean;
+    coverage_days?: number | null;
+    capability_requirements?: {
+      requires_vision?: "true" | "false" | "unknown";
+      requires_function_calling?: "true" | "false" | "unknown";
+      requires_json_mode?: "true" | "false" | "unknown";
+    };
     // Confidence data for "Proven" vs "Suggested" badge
     source?: "learned" | "dynamic" | null;
     confidence_score?: number | null;
@@ -133,7 +143,8 @@ export interface ProjectInfo {
   id: string;
   name: string;
   description: string | null;
-  api_key: string;
+  api_key: string | null;
+  key_prefix?: string | null;
   created_at: string;
   is_active: boolean;
 }
@@ -229,9 +240,9 @@ class ApiClient {
     ) {
       return "jwt";
     }
-    // Project deletion uses JWT
+    // Project deletion uses API key (project-level auth)
     if (endpoint.match(/\/v1\/projects\/[^/]+$/) && !endpoint.includes("/me")) {
-      return "jwt";
+      return "api_key";
     }
     // Analytics, events, optimizations, and project info use API key
     return "api_key";
@@ -387,8 +398,30 @@ class ApiClient {
     });
   }
 
+  async rotateProjectApiKey(projectId: string): Promise<{
+    status: string;
+    project_id: string;
+    api_key: string;
+    key_prefix?: string | null;
+    message: string;
+  }> {
+    return this.request(
+      `/v1/projects/${projectId}/api-key/rotate`,
+      { method: "POST" },
+      "jwt",
+    );
+  }
+
   async getOptimizations(): Promise<OptimizationSuggestion[]> {
     return this.request("/v1/optimizations");
+  }
+
+  async generateOptimizationRecommendations(): Promise<
+    OptimizationSuggestion[]
+  > {
+    return this.request("/v1/optimizations/recommendations/generate", {
+      method: "POST",
+    });
   }
 
   async getOptimizationSummary(): Promise<OptimizationSummary> {

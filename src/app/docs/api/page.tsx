@@ -417,6 +417,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
               language="json"
               code={`{
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "token_type": "bearer",
   "expires_in": 3600
 }`}
@@ -481,7 +482,40 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "name": "my-project",
   "description": "Optional project description",
   "api_key": "sk_live_xxxxxxxxxxxx",
-  "created_at": "2024-01-23T10:30:45.123Z"
+  "key_prefix": "sk_live_",
+  "is_active": true,
+  "created_at": "2024-01-23T10:30:45.123Z",
+  "updated_at": "2024-01-23T10:30:45.123Z",
+  "owner_id": "usr_abc123",
+  "warning": "Save this API key now! It cannot be retrieved later."
+}`}
+            />
+            <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-3 mt-3">
+              <p className="text-yellow-300 text-sm">
+                <strong>Important:</strong> The API key is shown only once on
+                creation. Store it securely and use rotation to generate a new
+                one later.
+              </p>
+            </div>
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/projects/me"
+            description="Get the current project (API key auth)"
+          >
+            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "id": "proj_abc123",
+  "name": "my-project",
+  "description": "Optional project description",
+  "api_key": null,
+  "key_prefix": null,
+  "is_active": true,
+  "created_at": "2024-01-23T10:30:45.123Z",
+  "updated_at": "2024-01-23T10:30:45.123Z"
 }`}
             />
           </Endpoint>
@@ -498,9 +532,77 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "id": "proj_abc123",
   "name": "my-project",
   "description": "Optional project description",
-  "created_at": "2024-01-23T10:30:45.123Z",
-  "total_events": 15420,
-  "total_cost": 45.32
+  "api_key": null,
+  "key_prefix": null,
+  "is_active": true,
+  "created_at": "2024-01-23T10:30:45.123Z"
+}`}
+            />
+            <p className="text-xs text-neutral-500 mt-2">
+              API keys are write-only and are never returned in read endpoints.
+            </p>
+          </Endpoint>
+
+          <Endpoint
+            method="PATCH"
+            path="/v1/projects/{project_id}"
+            description="Update project settings"
+          >
+            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "name": "Updated project name",
+  "description": "Updated description",
+  "is_active": true
+}`}
+            />
+            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "id": "proj_abc123",
+  "name": "Updated project name",
+  "description": "Updated description",
+  "api_key": null,
+  "key_prefix": null,
+  "is_active": true,
+  "created_at": "2024-01-23T10:30:45.123Z"
+}`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="DELETE"
+            path="/v1/projects/{project_id}"
+            description="Delete a project"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Response (200 OK)
+            </p>
+            <CodeBlock language="json" code={`{ "status": "deleted" }`} />
+            <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-3 mt-3">
+              <p className="text-yellow-300 text-sm">
+                <strong>Warning:</strong> Deleting a project removes all
+                associated events and analytics.
+              </p>
+            </div>
+          </Endpoint>
+
+          <Endpoint
+            method="POST"
+            path="/v1/projects/{project_id}/api-key/rotate"
+            description="Rotate the project API key (Admin only, JWT auth)"
+          >
+            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "status": "ok",
+  "project_id": "proj_abc123",
+  "api_key": "sk_live_xxxxxxxxxxxx",
+  "key_prefix": "sk_live_",
+  "message": "Save this API key now. It cannot be retrieved later."
 }`}
             />
           </Endpoint>
