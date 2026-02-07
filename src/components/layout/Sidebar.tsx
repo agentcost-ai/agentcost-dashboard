@@ -17,6 +17,7 @@ import {
   User,
   BookOpen,
   ChevronDown,
+  MessageSquare,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Models", href: "/models", icon: Cpu },
   { name: "Events", href: "/events", icon: List },
   { name: "Optimizations", href: "/optimizations", icon: Zap },
+  { name: "Feedback", href: "/feedback", icon: MessageSquare },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

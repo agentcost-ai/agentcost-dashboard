@@ -169,6 +169,86 @@ export interface PendingInvitation {
   invited_at: string;
 }
 
+export type FeedbackType =
+  | "feature_request"
+  | "bug_report"
+  | "model_request"
+  | "general"
+  | "security_report"
+  | "performance_issue";
+
+export type FeedbackStatus =
+  | "open"
+  | "under_review"
+  | "needs_info"
+  | "in_progress"
+  | "completed"
+  | "shipped"
+  | "rejected"
+  | "duplicate";
+
+export type FeedbackPriority = "low" | "medium" | "high" | "critical";
+
+export interface FeedbackItem {
+  id: string;
+  type: FeedbackType;
+  title: string;
+  description: string;
+  status: FeedbackStatus;
+  priority: FeedbackPriority;
+  upvotes: number;
+  user_has_upvoted: boolean;
+  model_name?: string | null;
+  model_provider?: string | null;
+  admin_response?: string | null;
+  created_at: string;
+  updated_at: string;
+  comment_count: number;
+  user_name?: string | null;
+  metadata?: Record<string, unknown> | null;
+  attachments?: AttachmentMeta[] | null;
+  environment?: string | null;
+  is_confidential?: boolean;
+}
+
+export interface FeedbackListResponse {
+  items: FeedbackItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface FeedbackSummaryResponse {
+  total: number;
+  by_type: Record<string, number>;
+  by_status: Record<string, number>;
+}
+
+export interface FeedbackComment {
+  id: string;
+  user_name?: string | null;
+  comment: string;
+  is_admin: boolean;
+  created_at: string;
+}
+
+export interface AttachmentMeta {
+  id: string;
+  name: string;
+  stored_name: string;
+  type: string;
+  size: number;
+  storage: string;
+  path: string;
+}
+
+export interface AttachmentLimits {
+  max_file_size: number;
+  max_files_per_feedback: number;
+  allowed_extensions: string[];
+  allowed_mime_types: string[];
+}
+
 // Get config from localStorage (client-side only)
 function getStoredConfig(): {
   apiKey: string;
@@ -226,6 +306,14 @@ class ApiClient {
     }
     // Auth endpoints always use JWT
     if (endpoint.includes("/auth/")) {
+      return "jwt";
+    }
+    // Feedback endpoints use JWT (optional for list/submit)
+    if (endpoint.startsWith("/v1/feedback")) {
+      return "jwt";
+    }
+    // Attachment endpoints use JWT
+    if (endpoint.startsWith("/v1/attachments")) {
       return "jwt";
     }
     // Project creation uses JWT (to associate with user)
@@ -559,6 +647,158 @@ class ApiClient {
       },
       "jwt",
     );
+  }
+
+  async listFeedback(params: {
+    type?: FeedbackType | "all";
+    status?: FeedbackStatus | "all";
+    priority?: FeedbackPriority | "all";
+    sortBy?: "recent" | "popular" | "oldest";
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<FeedbackListResponse> {
+    const searchParams = new URLSearchParams();
+
+    if (params.type && params.type !== "all") {
+      searchParams.set("type", params.type);
+    }
+    if (params.status && params.status !== "all") {
+      searchParams.set("status", params.status);
+    }
+    if (params.priority && params.priority !== "all") {
+      searchParams.set("priority", params.priority);
+    }
+    if (params.sortBy) {
+      searchParams.set("sort_by", params.sortBy);
+    }
+    if (params.search && params.search.trim().length > 0) {
+      searchParams.set("search", params.search.trim());
+    }
+    if (params.limit) {
+      searchParams.set("limit", params.limit.toString());
+    }
+    if (params.offset) {
+      searchParams.set("offset", params.offset.toString());
+    }
+
+    const queryString = searchParams.toString();
+    const endpoint = queryString
+      ? `/v1/feedback?${queryString}`
+      : "/v1/feedback";
+
+    return this.request(endpoint, {}, "jwt");
+  }
+
+  async getFeedbackSummary(): Promise<FeedbackSummaryResponse> {
+    return this.request("/v1/feedback/summary", {}, "jwt");
+  }
+
+  async createFeedback(payload: {
+    type: FeedbackType;
+    title: string;
+    description: string;
+    model_name?: string | null;
+    model_provider?: string | null;
+    user_email?: string | null;
+    user_name?: string | null;
+    metadata?: Record<string, unknown> | null;
+    attachments?: AttachmentMeta[] | null;
+    environment?: string | null;
+  }): Promise<{ id: string; message: string }> {
+    return this.request(
+      "/v1/feedback",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      "jwt",
+    );
+  }
+
+  async toggleFeedbackUpvote(
+    feedbackId: string,
+  ): Promise<{ action: "added" | "removed"; upvotes: number }> {
+    return this.request(
+      `/v1/feedback/${feedbackId}/upvote`,
+      { method: "POST" },
+      "jwt",
+    );
+  }
+
+  async getFeedbackComments(
+    feedbackId: string,
+  ): Promise<{ items: FeedbackComment[]; total: number }> {
+    return this.request(`/v1/feedback/${feedbackId}/comments`, {}, "jwt");
+  }
+
+  async addFeedbackComment(
+    feedbackId: string,
+    payload: { comment: string; user_name?: string | null },
+  ): Promise<{ message: string }> {
+    return this.request(
+      `/v1/feedback/${feedbackId}/comments`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      "jwt",
+    );
+  }
+
+  // ── Attachment methods ──────────────────────────────────────────────────
+
+  async uploadAttachment(file: File): Promise<AttachmentMeta> {
+    const { baseUrl, authToken } = this.getConfig();
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const headers: Record<string, string> = {};
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+
+    const response = await fetch(`${baseUrl}/v1/attachments`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401 && authToken) {
+      const refreshed = await this.tryRefreshToken();
+      if (refreshed) {
+        const { authToken: newToken } = this.getConfig();
+        const retryHeaders: Record<string, string> = {};
+        if (newToken) retryHeaders["Authorization"] = `Bearer ${newToken}`;
+        const retry = await fetch(`${baseUrl}/v1/attachments`, {
+          method: "POST",
+          headers: retryHeaders,
+          body: formData,
+        });
+        if (!retry.ok) {
+          const text = await retry.text().catch(() => "");
+          throw new Error(`Upload failed: ${retry.status} ${text}`);
+        }
+        return retry.json();
+      }
+    }
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new Error(`Upload failed: ${response.status} ${text}`);
+    }
+
+    return response.json();
+  }
+
+  getAttachmentUrl(storedName: string): string {
+    const { baseUrl } = this.getConfig();
+    return `${baseUrl}/v1/attachments/${storedName}`;
+  }
+
+  async getAttachmentLimits(): Promise<AttachmentLimits> {
+    return this.request("/v1/attachments/config/limits", {}, "jwt");
   }
 
   async getFullAnalytics(range: string = "7d"): Promise<{

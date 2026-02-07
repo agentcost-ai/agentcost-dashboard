@@ -1,17 +1,24 @@
 "use client";
 
-import { ReactNode } from "react";
+import { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface CardProps {
   children: ReactNode;
   className?: string;
   padding?: "none" | "sm" | "md" | "lg";
+  style?: CSSProperties;
 }
 
-export function Card({ children, className, padding = "md" }: CardProps) {
+export function Card({
+  children,
+  className,
+  padding = "md",
+  style,
+}: CardProps) {
   return (
     <div
+      style={style}
       className={cn(
         "rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm",
         padding === "sm" && "p-4",
