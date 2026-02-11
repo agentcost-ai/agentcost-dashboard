@@ -30,7 +30,7 @@ export default function AuthLayout({
                             business.&rdquo;
                         </p>
                         <footer className="font-mono text-sm font-semibold">
-                            ~ Ali Hassan
+                            ~ Kushagra
                         </footer>
                     </blockquote>
                 </div>
