@@ -78,17 +78,17 @@ src/
 
 ## Pages
 
-| Page         | URL             | Description                                |
-| ------------ | --------------- | ------------------------------------------ |
-| Overview     | `/`             | Main dashboard with key metrics and charts |
-| Projects     | `/projects`     | Project management and team collaboration  |
-| Agents       | `/agents`       | Per-agent cost breakdown and performance   |
-| Models       | `/models`       | Per-model usage and cost analysis          |
-| Events       | `/events`       | Real-time event log viewer                 |
-| Feedback     | `/feedback`     | Submit and track feature requests          |
-| Settings     | `/settings`     | User profile and API key configuration     |
-| Login        | `/login`        | User authentication                        |
-| Register     | `/register`     | User registration                          |
+| Page     | URL         | Description                                |
+| -------- | ----------- | ------------------------------------------ |
+| Overview | `/`         | Main dashboard with key metrics and charts |
+| Projects | `/projects` | Project management and team collaboration  |
+| Agents   | `/agents`   | Per-agent cost breakdown and performance   |
+| Models   | `/models`   | Per-model usage and cost analysis          |
+| Events   | `/events`   | Real-time event log viewer                 |
+| Feedback | `/feedback` | Submit and track feature requests          |
+| Settings | `/settings` | User profile and API key configuration     |
+| Login    | `/login`    | User authentication                        |
+| Register | `/register` | User registration                          |
 
 ## Configuration
 
