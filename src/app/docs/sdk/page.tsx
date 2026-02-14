@@ -775,7 +775,7 @@ async def shutdown_event():
                 <p className="text-neutral-400 text-sm">
                   If you&apos;re still having issues, check our{" "}
                   <a
-                    href="https://github.com/agentcost/agentcost/issues"
+                    href="https://github.com/agentcost-ai/agentcost-backend/issues"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary-400 hover:text-primary-300"

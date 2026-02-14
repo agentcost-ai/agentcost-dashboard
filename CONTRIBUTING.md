@@ -12,7 +12,7 @@ Thank you for your interest in contributing!
 
 ## Development Setup
 ```bash
-git clone https://github.com/agentcost/agentcost-dashboard.git
+git clone https://github.com/agentcost-ai/agentcost-dashboard.git
 cd agentcost-dashboard
 pip install -r requirements.txt
 pytest  # Run tests
