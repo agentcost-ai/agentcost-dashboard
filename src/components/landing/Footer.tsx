@@ -16,9 +16,13 @@ const columns = [
   {
     title: "Resources",
     links: [
-      { label: "Documentation", href: "/docs" },
+      { label: "Documentation", href: "/docs/sdk" },
       { label: "API Reference", href: "/docs/api" },
-      { label: "GitHub", href: "https://github.com", external: true },
+      {
+        label: "GitHub",
+        href: "https://github.com/agentcost-ai",
+        external: true,
+      },
       { label: "Changelog", href: "#" },
     ],
   },
@@ -27,7 +31,10 @@ const columns = [
     links: [
       { label: "Terms of Service", href: "/terms" },
       { label: "Privacy Policy", href: "/privacy" },
-      { label: "License (MIT)", href: "#" },
+      {
+        label: "License (MIT)",
+        href: "https://github.com/agentcost-ai/agentcost-sdk/blob/main/LICENSE",
+      },
     ],
   },
 ];
@@ -92,7 +99,7 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com"
+              href="https://github.com/agentcost-ai"
               target="_blank"
               rel="noopener noreferrer"
               className="text-neutral-600 hover:text-neutral-400 transition-colors"

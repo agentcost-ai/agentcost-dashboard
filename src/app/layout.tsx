@@ -21,7 +21,12 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   title: "AgentCost - LLM Cost Analytics",
-  description: "Track and optimize your AI agent costs",
+  description: "Track and optimize your AI agent costs across OpenAI, Anthropic, LangChain, and 1900+ models",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({
