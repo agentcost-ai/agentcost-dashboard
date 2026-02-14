@@ -340,10 +340,10 @@ export default function TermsOfServicePage() {
               </p>
               <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
                 <a
-                  href="mailto:hello@agentcost.dev"
+                  href="mailto:hello@agentcost.tech"
                   className="text-white hover:text-gray-300 transition-colors font-medium"
                 >
-                  hello@agentcost.dev
+                  hello@agentcost.tech
                 </a>
               </div>
             </div>

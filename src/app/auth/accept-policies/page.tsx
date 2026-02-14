@@ -298,7 +298,7 @@ function AcceptPoliciesContent() {
       <p className="text-center text-gray-500 text-sm mt-8">
         Questions about these changes?{" "}
         <a
-          href="mailto:hello@agentcost.dev"
+          href="mailto:hello@agentcost.tech"
           className="text-gray-400 hover:text-white transition-colors"
         >
           Contact us

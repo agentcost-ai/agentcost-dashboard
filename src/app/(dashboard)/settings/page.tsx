@@ -22,6 +22,7 @@ import {
   Trash2,
   AlertTriangle,
   Users,
+  Pencil,
 } from "lucide-react";
 
 interface ProjectInfo {
@@ -90,6 +91,10 @@ export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [dangerZoneExpanded, setDangerZoneExpanded] = useState(false);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [editProjectName, setEditProjectName] = useState("");
+  const [editProjectDesc, setEditProjectDesc] = useState("");
+  const [isSavingProject, setIsSavingProject] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("agentcost_config");
@@ -365,6 +370,131 @@ export default function SettingsPage() {
           </div>
         </div>
       </Card>
+
+      {/* Project Details (Edit) */}
+      {project && (
+        <Card>
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
+              <Pencil size={24} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-medium text-white">
+                    Project Details
+                  </h3>
+                  <p className="text-sm text-neutral-400">
+                    Update your project name and description
+                  </p>
+                </div>
+                {!isEditingProject && (
+                  <button
+                    onClick={() => {
+                      setEditProjectName(project.name);
+                      setEditProjectDesc(project.description || "");
+                      setIsEditingProject(true);
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-sm text-white transition-colors"
+                  >
+                    <Pencil size={14} />
+                    Edit
+                  </button>
+                )}
+              </div>
+
+              {isEditingProject ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-neutral-300">
+                      Project Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editProjectName}
+                      onChange={(e) => setEditProjectName(e.target.value)}
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-200 focus:border-primary-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-neutral-300">
+                      Description
+                    </label>
+                    <textarea
+                      value={editProjectDesc}
+                      onChange={(e) => setEditProjectDesc(e.target.value)}
+                      rows={3}
+                      placeholder="A brief description of this project"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-200 focus:border-primary-500 focus:outline-none resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={() => setIsEditingProject(false)}
+                      className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-sm text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!editProjectName.trim()) return;
+                        setIsSavingProject(true);
+                        try {
+                          const updated = await api.updateProject(project.id, {
+                            name: editProjectName.trim(),
+                            description: editProjectDesc.trim() || undefined,
+                          });
+                          setProject(updated);
+                          setIsEditingProject(false);
+                          setSaveMessage({
+                            type: "success",
+                            text: "Project updated successfully",
+                          });
+                        } catch {
+                          setSaveMessage({
+                            type: "error",
+                            text: "Failed to update project",
+                          });
+                        }
+                        setIsSavingProject(false);
+                        setTimeout(() => setSaveMessage(null), 3000);
+                      }}
+                      disabled={isSavingProject || !editProjectName.trim()}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-sm text-white disabled:opacity-50 transition-colors"
+                    >
+                      {isSavingProject && (
+                        <RefreshCw size={14} className="animate-spin" />
+                      )}
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2 bg-neutral-800/50 rounded-lg p-4">
+                  <div>
+                    <span className="text-xs text-neutral-500">Name</span>
+                    <p className="text-sm font-medium text-neutral-200">
+                      {project.name}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-neutral-500">
+                      Description
+                    </span>
+                    <p className="text-sm text-neutral-300">
+                      {project.description || (
+                        <span className="italic text-neutral-500">
+                          No description set
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Team Management */}
       {project && (

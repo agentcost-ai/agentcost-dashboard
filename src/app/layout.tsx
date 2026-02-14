@@ -40,6 +40,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} ${sora.variable} antialiased bg-neutral-950 text-neutral-100`}
+        suppressHydrationWarning={true}
       >
         <AuthProvider>{children}</AuthProvider>
       </body>

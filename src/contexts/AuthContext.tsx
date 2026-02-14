@@ -121,49 +121,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
   }, []);
 
-  // Auto-refresh token before expiry (every 45 minutes)
-  useEffect(() => {
-    if (!token || !refreshTokenValue) return;
-
-    const refreshInterval = setInterval(
-      async () => {
-        try {
-          const response = await fetch(`${API_URL}/v1/auth/refresh`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              refresh_token: refreshTokenValue,
-            }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem("access_token", data.access_token);
-            if (data.refresh_token) {
-              localStorage.setItem("refresh_token", data.refresh_token);
-              setRefreshTokenValue(data.refresh_token);
-            }
-            setToken(data.access_token);
-          }
-        } catch (error) {
-          console.error("Auto-refresh failed:", error);
-        }
-      },
-      45 * 60 * 1000,
-    ); // Refresh every 45 minutes
-
-    return () => clearInterval(refreshInterval);
-  }, [token, refreshTokenValue, API_URL]);
-
   // Redirect logic based on auth state
   useEffect(() => {
     if (isLoading) return;
 
-    const isPublicRoute = pathname === "/" || publicRoutes.some((route) =>
-      route !== "/" && pathname?.startsWith(route),
-    );
+    const isPublicRoute =
+      pathname === "/" ||
+      publicRoutes.some(
+        (route) => route !== "/" && pathname?.startsWith(route),
+      );
 
     const isAuthRoute = authOnlyRoutes.some((route) =>
       pathname?.startsWith(route),
@@ -415,6 +381,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         handleTokenRefreshFailed,
       );
   }, [logout]);
+
+  // Auto-refresh token before expiry (every 45 minutes)
+  useEffect(() => {
+    if (!token || !refreshTokenValue) return;
+
+    const refreshInterval = setInterval(
+      async () => {
+        try {
+          const response = await fetch(`${API_URL}/v1/auth/refresh`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              refresh_token: refreshTokenValue,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem("access_token", data.access_token);
+            if (data.refresh_token) {
+              localStorage.setItem("refresh_token", data.refresh_token);
+              setRefreshTokenValue(data.refresh_token);
+            }
+            setToken(data.access_token);
+          } else {
+            // Refresh rejected (session revoked / user deleted) — log out
+            await logout();
+          }
+        } catch (error) {
+          console.error("Auto-refresh failed:", error);
+        }
+      },
+      45 * 60 * 1000,
+    ); // Refresh every 45 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [token, refreshTokenValue, API_URL, logout]);
+
+  // Session heartbeat; verify the session is still valid every 5 minutes.
+  // If the user was deleted or disabled by an admin, this forces an immediate logout
+  useEffect(() => {
+    if (!token) return;
+
+    const heartbeat = setInterval(
+      async () => {
+        try {
+          const response = await fetch(`${API_URL}/v1/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (response.status === 401) {
+            const refreshed = await refreshToken();
+            if (!refreshed) {
+              await logout();
+            }
+          } else if (response.ok) {
+            // Sync user data in case admin changed anything (name, role, etc.)
+            const userData = await response.json();
+            localStorage.setItem("user", JSON.stringify(userData));
+            setUser(userData);
+          }
+        } catch (error) {
+          // Network error, do nothing; retry on next interval
+        }
+      },
+      5 * 60 * 1000,
+    ); // Every 5 minutes
+
+    return () => clearInterval(heartbeat);
+  }, [token, API_URL, logout, refreshToken]);
 
   const value: AuthContextType = {
     user,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import {
   Table,
@@ -19,7 +19,7 @@ import {
   formatLatency,
   formatRelativeTime,
 } from "@/lib/utils";
-import { List, RefreshCw } from "lucide-react";
+import { List, RefreshCw, Filter, X } from "lucide-react";
 import {
   useApiConfiguration,
   OnboardingScreen,
@@ -34,9 +34,31 @@ export default function EventsPage() {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Filters
+  const [agentFilter, setAgentFilter] = useState("");
+  const [modelFilter, setModelFilter] = useState("");
+  const [agentOptions, setAgentOptions] = useState<string[]>([]);
+  const [modelOptions, setModelOptions] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+
   const pageSize = 50;
 
-  async function fetchData() {
+  // Fetch distinct agent names and models for filter dropdowns
+  const fetchFilterOptions = useCallback(async () => {
+    try {
+      // Fetch a larger batch of events to extract unique values
+      const allEvents = await api.getEvents(1000, 0);
+      const agents = [...new Set(allEvents.map((e) => e.agent_name))].sort();
+      const models = [...new Set(allEvents.map((e) => e.model))].sort();
+      setAgentOptions(agents);
+      setModelOptions(models);
+    } catch {
+      // Silently fail - filters just won't have options
+    }
+  }, []);
+
+  const fetchData = useCallback(async () => {
     if (!api.isConfigured()) {
       setLoading(false);
       return;
@@ -47,7 +69,12 @@ export default function EventsPage() {
 
     try {
       const [eventsData, countData] = await Promise.all([
-        api.getEvents(pageSize, page * pageSize),
+        api.getEvents(
+          pageSize,
+          page * pageSize,
+          agentFilter || undefined,
+          modelFilter || undefined,
+        ),
         api.getEventCount(),
       ]);
 
@@ -69,17 +96,29 @@ export default function EventsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [page, agentFilter, modelFilter]);
 
   useEffect(() => {
     fetchData();
-  }, [page]);
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (api.isConfigured()) {
+      fetchFilterOptions();
+    }
+  }, [fetchFilterOptions]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [agentFilter, modelFilter]);
 
   // Show onboarding if not configured or invalid API key
   if (isConfigured === false || showOnboarding) return <OnboardingScreen />;
   if (isConfigured === null) return <LoadingSpinner />;
 
   const totalPages = Math.ceil(totalCount / pageSize);
+  const hasActiveFilters = agentFilter || modelFilter;
 
   return (
     <div className="space-y-8">
@@ -91,15 +130,87 @@ export default function EventsPage() {
             Raw event log of all LLM calls
           </p>
         </div>
-        <button
-          onClick={fetchData}
-          disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-600 hover:bg-neutral-800 disabled:opacity-50"
-        >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+              hasActiveFilters
+                ? "border-primary-600 bg-primary-900/30 text-primary-400"
+                : "border-neutral-700 bg-neutral-800/50 text-neutral-200 hover:border-neutral-600 hover:bg-neutral-800"
+            }`}
+          >
+            <Filter size={16} />
+            Filters
+            {hasActiveFilters && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs text-white">
+                {(agentFilter ? 1 : 0) + (modelFilter ? 1 : 0)}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-600 hover:bg-neutral-800 disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            Refresh
+          </button>
+        </div>
       </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <Card>
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="min-w-50 flex-1">
+              <label className="mb-1.5 block text-sm font-medium text-neutral-300">
+                Agent Name
+              </label>
+              <select
+                value={agentFilter}
+                onChange={(e) => setAgentFilter(e.target.value)}
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-200 focus:border-primary-500 focus:outline-none"
+              >
+                <option value="">All Agents</option>
+                {agentOptions.map((agent) => (
+                  <option key={agent} value={agent}>
+                    {agent}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="min-w-50 flex-1">
+              <label className="mb-1.5 block text-sm font-medium text-neutral-300">
+                Model
+              </label>
+              <select
+                value={modelFilter}
+                onChange={(e) => setModelFilter(e.target.value)}
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-200 focus:border-primary-500 focus:outline-none"
+              >
+                <option value="">All Models</option>
+                {modelOptions.map((model) => (
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {hasActiveFilters && (
+              <button
+                onClick={() => {
+                  setAgentFilter("");
+                  setModelFilter("");
+                }}
+                className="flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-400 hover:border-neutral-600 hover:text-neutral-200"
+              >
+                <X size={14} />
+                Clear
+              </button>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Error State */}
       {error && (

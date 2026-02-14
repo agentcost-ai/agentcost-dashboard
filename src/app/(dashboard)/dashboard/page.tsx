@@ -219,7 +219,7 @@ export default function DashboardPage() {
         <Card className="border-red-900/50 bg-red-950/20">
           <p className="text-red-400">{error}</p>
           <p className="mt-2 text-sm text-neutral-400">
-            Make sure the backend is running at http://localhost:8000
+            Make sure the backend is running and accessible.
           </p>
         </Card>
       )}

@@ -243,7 +243,7 @@ response = llm.invoke("Hello, world!")  # Automatically tracked`}
     project_id="my-project",
 
     # Optional settings
-    base_url="https://api.agentcost.dev",  # Your backend URL
+    base_url="https://api.agentcost.tech",  # Your backend URL
     batch_size=10,                          # Events before auto-flush
     flush_interval=5.0,                     # Seconds between flushes
     debug=True,                             # Enable debug logging
@@ -680,7 +680,7 @@ from agentcost import track_costs
 
 track_costs.init(
     api_key=os.environ["AGENTCOST_API_KEY"],
-    base_url=os.environ.get("AGENTCOST_URL", "https://api.agentcost.dev"),
+    base_url=os.environ.get("AGENTCOST_URL", "https://api.agentcost.tech"),
     debug=os.environ.get("DEBUG", "false").lower() == "true"
 )`}
                 />

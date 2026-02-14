@@ -13,11 +13,11 @@ function useApiBaseUrl() {
     if (envUrl) {
       setBaseUrl(envUrl.replace(/\/$/, "")); // Remove trailing slash
     } else {
-      // Default to current origin with /api or standard backend port
+      // Default to production API URL
       setBaseUrl(
         typeof window !== "undefined"
-          ? `${window.location.origin.replace(":3000", ":8000")}`
-          : "https://api.yourdomain.com",
+          ? `${window.location.protocol}//${window.location.hostname}:8000`
+          : "https://api.agentcost.tech",
       );
     }
   }, []);

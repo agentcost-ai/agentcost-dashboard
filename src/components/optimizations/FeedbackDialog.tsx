@@ -35,8 +35,14 @@ export function FeedbackDialog({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-md rounded-xl bg-neutral-900 shadow-2xl border border-neutral-700">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={handleClose}
+        >
+            <div
+                className="w-full max-w-md rounded-xl bg-neutral-900 shadow-2xl border border-neutral-700"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-neutral-800">
                     <div className="flex items-center gap-3">
@@ -81,7 +87,7 @@ export function FeedbackDialog({
                         ].map((option) => (
                             <button
                                 key={option}
-                                onClick={() => setFeedback(option)}
+                                onClick={() => setFeedback(prev => prev ? `${prev}. ${option}` : option)}
                                 disabled={isLoading}
                                 className="px-3 py-1 text-xs rounded-full bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white transition-colors border border-neutral-700"
                             >

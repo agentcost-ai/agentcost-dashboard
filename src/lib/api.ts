@@ -249,6 +249,30 @@ export interface AttachmentLimits {
   allowed_mime_types: string[];
 }
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string | null;
+  avatar_url: string | null;
+  email_verified: boolean;
+  is_active: boolean;
+  created_at: string;
+  last_login_at: string | null;
+  auth_provider: string;
+  user_number: number | null;
+  milestone_badge: string | null;
+}
+
+export interface SessionInfo {
+  id: string;
+  device_info: string | null;
+  ip_address: string | null;
+  created_at: string;
+  last_used_at: string;
+  expires_at: string;
+  is_current: boolean;
+}
+
 // Get config from localStorage (client-side only)
 function getStoredConfig(): {
   apiKey: string;
@@ -475,8 +499,18 @@ class ApiClient {
     return this.request(`/v1/analytics/timeseries?range=${range}`);
   }
 
-  async getEvents(limit: number = 100, offset: number = 0): Promise<Event[]> {
-    return this.request(`/v1/events?limit=${limit}&offset=${offset}`);
+  async getEvents(
+    limit: number = 100,
+    offset: number = 0,
+    agentName?: string,
+    model?: string,
+  ): Promise<Event[]> {
+    const params = new URLSearchParams();
+    params.set("limit", limit.toString());
+    params.set("offset", offset.toString());
+    if (agentName) params.set("agent_name", agentName);
+    if (model) params.set("model", model);
+    return this.request(`/v1/events?${params.toString()}`);
   }
 
   async getEventCount(): Promise<{ count: number }> {
@@ -818,13 +852,105 @@ class ApiClient {
     return this.request("/v1/attachments/config/limits", {}, "jwt");
   }
 
+  // ── User Account & Profile methods ─────────────────────────────────────
+
+  async getProfile(): Promise<UserProfile> {
+    return this.request("/v1/auth/me", {}, "jwt");
+  }
+
+  async updateProfile(data: {
+    name?: string | null;
+    avatar_url?: string | null;
+  }): Promise<UserProfile> {
+    return this.request(
+      "/v1/auth/me",
+      {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      },
+      "jwt",
+    );
+  }
+
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<null> {
+    return this.request(
+      "/v1/auth/password/change",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      },
+      "jwt",
+    );
+  }
+
+  async getSessions(): Promise<{
+    sessions: SessionInfo[];
+    total: number;
+  }> {
+    return this.request("/v1/auth/sessions", {}, "jwt");
+  }
+
+  async revokeSession(sessionId: string): Promise<null> {
+    return this.request(
+      `/v1/auth/sessions/${sessionId}`,
+      { method: "DELETE" },
+      "jwt",
+    );
+  }
+
+  async logoutAll(): Promise<null> {
+    return this.request("/v1/auth/logout-all", { method: "POST" }, "jwt");
+  }
+
+  async resendVerification(email: string): Promise<null> {
+    return this.request(
+      "/v1/auth/resend-verification",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+      "jwt",
+    );
+  }
+
+  async updateProject(
+    projectId: string,
+    data: { name?: string; description?: string },
+  ): Promise<ProjectInfo> {
+    return this.request(
+      `/v1/projects/${projectId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      },
+      "jwt",
+    );
+  }
+
+  // ── Analytics (full) ─────────────────────────────────────────────────
+
   async getFullAnalytics(range: string = "7d"): Promise<{
     overview: AnalyticsOverview;
     agents: AgentStats[];
     models: ModelStats[];
     timeseries: TimeSeriesPoint[];
   }> {
-    return this.request(`/v1/analytics/full?range=${range}`);
+    // Backend /v1/analytics/full expects `days` as an integer, not `range`
+    const daysMap: Record<string, number> = {
+      "1h": 1,
+      "24h": 1,
+      "7d": 7,
+      "30d": 30,
+      "90d": 90,
+    };
+    const days = daysMap[range] ?? 7;
+    return this.request(`/v1/analytics/full?days=${days}`);
   }
 
   /**
