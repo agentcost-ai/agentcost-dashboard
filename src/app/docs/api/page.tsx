@@ -577,9 +577,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}"
             description="Delete a project"
           >
-            <p className="text-sm text-neutral-400 mb-2">
-              Response (200 OK)
-            </p>
+            <p className="text-sm text-neutral-400 mb-2">Response (200 OK)</p>
             <CodeBlock language="json" code={`{ "status": "deleted" }`} />
             <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-3 mt-3">
               <p className="text-yellow-300 text-sm">
