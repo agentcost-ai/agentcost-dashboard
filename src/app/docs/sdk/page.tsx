@@ -91,8 +91,8 @@ export default function SDKDocsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">SDK Documentation</h1>
           <p className="mt-2 text-neutral-400">
-            Complete guide to integrating AgentCost into your LangChain
-            applications
+            Complete guide to integrating AgentCost into your OpenAI, Anthropic,
+            and LangChain applications
           </p>
         </div>
 
@@ -211,16 +211,26 @@ track_costs.init(
     project_id="my-project"
 )
 
-# Your existing code works unchanged
-from langchain_openai import ChatOpenAI
+# OpenAI — automatically tracked
+from openai import OpenAI
+client = OpenAI()
+response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": "Hello!"}])
 
+# Anthropic — automatically tracked
+from anthropic import Anthropic
+client = Anthropic()
+message = client.messages.create(model="claude-3-5-sonnet-20241022", max_tokens=100, messages=[{"role": "user", "content": "Hello!"}])
+
+# LangChain — automatically tracked
+from langchain_openai import ChatOpenAI
 llm = ChatOpenAI(model="gpt-4")
 response = llm.invoke("Hello, world!")  # Automatically tracked`}
             />
             <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-4">
               <p className="text-blue-300 text-sm">
                 <strong>Note:</strong> The SDK uses monkey patching to intercept
-                LangChain calls. Your existing code requires no modifications.
+                OpenAI, Anthropic, and LangChain calls. Your existing code
+                requires no modifications.
               </p>
             </div>
             <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-4 mt-4">

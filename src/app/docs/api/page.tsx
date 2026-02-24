@@ -1239,7 +1239,7 @@ X-RateLimit-Reset: 45`}
               <div>
                 <h4 className="font-medium text-white">Python SDK</h4>
                 <p className="text-xs text-neutral-500">
-                  For LangChain applications
+                  For OpenAI, Anthropic, and LangChain applications
                 </p>
               </div>
             </div>
