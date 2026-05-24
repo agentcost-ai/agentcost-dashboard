@@ -78,20 +78,20 @@ src/
 
 ## Pages
 
-| Page        | URL           | Description                                |
-| ----------- | ------------- | ------------------------------------------ |
-| Overview    | `/`           | Main dashboard with key metrics and charts |
-| Projects    | `/projects`   | Project management and team collaboration  |
-| Agents      | `/agents`     | Per-agent cost breakdown and performance   |
-| Models      | `/models`     | Per-model usage and cost analysis          |
-| Events      | `/events`     | Real-time event log viewer                 |
-| Feedback    | `/feedback`   | Submit and track feature requests          |
-| Settings    | `/settings`   | User profile and API key configuration     |
-| Login       | `/login`      | User authentication                        |
-| Register    | `/register`   | User registration                          |
-| SDK Docs    | `/docs/sdk`   | SDK integration guide                      |
-| API Docs    | `/docs/api`   | REST API reference                         |
-| Model List  | `/docs/models`| Browse all 1900+ supported models          |
+| Page       | URL            | Description                                |
+| ---------- | -------------- | ------------------------------------------ |
+| Overview   | `/`            | Main dashboard with key metrics and charts |
+| Projects   | `/projects`    | Project management and team collaboration  |
+| Agents     | `/agents`      | Per-agent cost breakdown and performance   |
+| Models     | `/models`      | Per-model usage and cost analysis          |
+| Events     | `/events`      | Real-time event log viewer                 |
+| Feedback   | `/feedback`    | Submit and track feature requests          |
+| Settings   | `/settings`    | User profile and API key configuration     |
+| Login      | `/login`       | User authentication                        |
+| Register   | `/register`    | User registration                          |
+| SDK Docs   | `/docs/sdk`    | SDK integration guide                      |
+| API Docs   | `/docs/api`    | REST API reference                         |
+| Model List | `/docs/models` | Browse all 2000+ supported models          |
 
 ## Configuration
 

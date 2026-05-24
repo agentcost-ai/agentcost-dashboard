@@ -42,6 +42,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Routes that don't require authentication
 const publicRoutes = [
   "/", // Landing page is public
+  "/blog", // Blog is public
+  "/changelog", // Changelog is public
   "/auth/login",
   "/auth/register",
   "/auth/forgot-password",
@@ -300,6 +302,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
+      // Clear project-scoped config so a fresh login on a different account
+      // doesn't reuse the previous account's API key and trip 403s on
+      // permission-checked endpoints (members, budget, etc.).
+      localStorage.removeItem("agentcost_config");
+      localStorage.removeItem("agentcost_active_project_id");
+      window.dispatchEvent(new Event("agentcost_config_updated"));
+      window.dispatchEvent(new Event("agentcost_active_project_changed"));
       setToken(null);
       setRefreshTokenValue(null);
       setUser(null);

@@ -20,6 +20,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 
 const navigation = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -34,6 +35,8 @@ const navigation = [
 const docsLinks = [
   { name: "SDK Documentation", href: "/docs/sdk" },
   { name: "API Reference", href: "/docs/api" },
+  { name: "Blog", href: "/blog" },
+  { name: "Changelog", href: "/changelog" },
 ];
 
 export function Sidebar() {
@@ -147,6 +150,13 @@ export function Sidebar() {
           >
             <ChevronRight size={18} />
           </button>
+        )}
+
+        {/* Project switcher */}
+        {!collapsed && (
+          <div className="px-3 pt-3 pb-1">
+            <ProjectSwitcher />
+          </div>
         )}
 
         {/* Navigation */}

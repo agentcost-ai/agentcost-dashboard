@@ -147,6 +147,35 @@ export interface ProjectInfo {
   key_prefix?: string | null;
   created_at: string;
   is_active: boolean;
+  monthly_budget_usd?: number | null;
+  budget_enforcement_mode?: "off" | "warn" | "hard_cap";
+  budget_alert_thresholds?: number[] | null;
+}
+
+export type BudgetCurrency = "USD" | "INR";
+
+export interface ProjectBudgetSettings {
+  project_id: string;
+  monthly_budget_usd: number | null;
+  budget_enforcement_mode: "off" | "warn" | "hard_cap";
+  budget_alert_thresholds: number[];
+  current_month_spend: number;
+  current_month_spend_usd: number;
+  utilization_percent: number | null;
+  period_key: string;
+  budget_currency: BudgetCurrency;
+  fx_rate: number;
+}
+
+export interface ProjectListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  role: "admin" | "member" | "viewer";
+  is_owner: boolean;
+  is_pending: boolean;
+  created_at: string | null;
 }
 
 export interface ProjectMember {
@@ -249,6 +278,28 @@ export interface AttachmentLimits {
   allowed_mime_types: string[];
 }
 
+export type NotificationSeverity = "info" | "warning" | "critical";
+
+export interface NotificationItem {
+  id: string;
+  type: string;
+  severity: NotificationSeverity;
+  title: string;
+  body: string | null;
+  link: string | null;
+  project_id: string | null;
+  payload: Record<string, unknown> | null;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface NotificationListResponse {
+  items: NotificationItem[];
+  total: number;
+  unread_count: number;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -278,14 +329,22 @@ function getStoredConfig(): {
   apiKey: string;
   baseUrl: string;
   authToken: string | null;
+  activeProjectId: string | null;
 } {
   if (typeof window === "undefined") {
-    return { apiKey: "", baseUrl: DEFAULT_API_BASE_URL, authToken: null };
+    return {
+      apiKey: "",
+      baseUrl: DEFAULT_API_BASE_URL,
+      authToken: null,
+      activeProjectId: null,
+    };
   }
 
   try {
     const saved = localStorage.getItem("agentcost_config");
     const authToken = localStorage.getItem("access_token");
+    const activeProjectId =
+      localStorage.getItem("agentcost_active_project_id") || null;
 
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -293,6 +352,7 @@ function getStoredConfig(): {
         apiKey: parsed.apiKey || process.env.NEXT_PUBLIC_API_KEY || "",
         baseUrl: parsed.baseUrl || DEFAULT_API_BASE_URL,
         authToken,
+        activeProjectId: activeProjectId || parsed.projectId || null,
       };
     }
 
@@ -300,6 +360,7 @@ function getStoredConfig(): {
       apiKey: process.env.NEXT_PUBLIC_API_KEY || "",
       baseUrl: DEFAULT_API_BASE_URL,
       authToken,
+      activeProjectId,
     };
   } catch {
     // Ignore parse errors
@@ -309,6 +370,7 @@ function getStoredConfig(): {
     apiKey: process.env.NEXT_PUBLIC_API_KEY || "",
     baseUrl: DEFAULT_API_BASE_URL,
     authToken: null,
+    activeProjectId: null,
   };
 }
 
@@ -318,46 +380,47 @@ class ApiClient {
   }
 
   /**
-   * Determine the type of authentication needed for an endpoint
-   * - 'api_key': Analytics, events, optimizations (project-level access)
-   * - 'jwt': Auth endpoints, project creation (user-level access)
-   * - 'none': Public endpoints like health
+   * Determine the type of authentication needed for an endpoint.
+   *
+   * - 'project': Project-scoped data (analytics, events, optimizations). The
+   *   backend accepts EITHER an SDK API key OR a JWT + ``project_id``. We
+   *   prefer the API key when one is configured so existing users see no
+   *   behavior change; team members with no API key fall through to the JWT
+   *   path with the active project automatically injected as ``project_id``.
+   * - 'jwt': User-level access (auth, feedback, projects list/create, members,
+   *   notifications, attachments).
+   * - 'none': Public endpoints like /health.
    */
-  private getAuthType(endpoint: string): "api_key" | "jwt" | "none" {
-    // Public endpoints
-    if (endpoint.includes("/health")) {
-      return "none";
-    }
-    // Auth endpoints always use JWT
-    if (endpoint.includes("/auth/")) {
-      return "jwt";
-    }
-    // Feedback endpoints use JWT (optional for list/submit)
-    if (endpoint.startsWith("/v1/feedback")) {
-      return "jwt";
-    }
-    // Attachment endpoints use JWT
-    if (endpoint.startsWith("/v1/attachments")) {
-      return "jwt";
-    }
-    // Project creation uses JWT (to associate with user)
+  private getAuthType(
+    endpoint: string,
+  ): "project" | "jwt" | "none" {
+    if (endpoint.includes("/health")) return "none";
+    if (endpoint.includes("/auth/")) return "jwt";
+    if (endpoint.startsWith("/v1/feedback")) return "jwt";
+    if (endpoint.startsWith("/v1/attachments")) return "jwt";
+    if (endpoint.startsWith("/v1/notifications")) return "jwt";
+
+    // /v1/projects collection — list (GET) and create (POST) both JWT.
     if (endpoint === "/v1/projects" || endpoint.startsWith("/v1/projects?")) {
       return "jwt";
     }
-    // Member management and invitations use JWT
+    // Member/invitation subroutes are JWT.
     if (
       endpoint.includes("/members") ||
       endpoint.includes("/invitations") ||
-      endpoint.includes("/leave")
+      endpoint.includes("/leave") ||
+      endpoint.includes("/budget") ||
+      endpoint.includes("/api-key/rotate")
     ) {
       return "jwt";
     }
-    // Project deletion and update now use JWT (ownership via permissions)
-    if (endpoint.match(/\/v1\/projects\/[^/]+$/) && !endpoint.includes("/me")) {
+    // /v1/projects/{id} (and variants like /me) — JWT for member-driven flows.
+    if (endpoint.match(/\/v1\/projects\/[^/?]+($|\?)/) && !endpoint.includes("/me")) {
       return "jwt";
     }
-    // Analytics, events, optimizations, and project info use API key
-    return "api_key";
+
+    // Project-scoped read endpoints: dual-auth (API key OR JWT+project_id).
+    return "project";
   }
 
   // token refresh mutex to prevent concurrent refresh storms
@@ -422,21 +485,50 @@ class ApiClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    authOverride?: "api_key" | "jwt" | "none",
+    authOverride?: "api_key" | "jwt" | "none" | "project",
     retryOnUnauthorized = true,
   ): Promise<T> {
-    const { apiKey, baseUrl, authToken } = this.getConfig();
+    const { apiKey, baseUrl, authToken, activeProjectId } = this.getConfig();
     const authType = authOverride ?? this.getAuthType(endpoint);
 
-    // Build authorization header based on auth type
+    // Resolve the effective auth path for "project" mode:
+    //   - apiKey present  -> use the API key (back-compat / SDK / solo users)
+    //   - no apiKey + JWT -> JWT path; we'll inject ?project_id= below
+    let effectiveAuth: "api_key" | "jwt" | "none" =
+      authType === "project"
+        ? apiKey
+          ? "api_key"
+          : "jwt"
+        : (authType as "api_key" | "jwt" | "none");
+
+    let resolvedEndpoint = endpoint;
+    if (authType === "project" && effectiveAuth === "jwt") {
+      if (!activeProjectId) {
+        throw new Error(
+          "API Error: 400 Bad Request - No active project selected. Open Settings to pick or create a project.",
+        );
+      }
+      if (!authToken) {
+        throw new Error(
+          "API Error: 401 Unauthorized - Not signed in.",
+        );
+      }
+      const separator = resolvedEndpoint.includes("?") ? "&" : "?";
+      // Don't overwrite a project_id already in the URL.
+      if (!/[?&]project_id=/.test(resolvedEndpoint)) {
+        resolvedEndpoint = `${resolvedEndpoint}${separator}project_id=${encodeURIComponent(activeProjectId)}`;
+      }
+    }
+
+    // Build authorization header based on effective auth type
     let authHeader = "";
-    if (authType === "api_key" && apiKey) {
+    if (effectiveAuth === "api_key" && apiKey) {
       authHeader = `Bearer ${apiKey}`;
-    } else if (authType === "jwt" && authToken) {
+    } else if (effectiveAuth === "jwt" && authToken) {
       authHeader = `Bearer ${authToken}`;
     }
 
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(`${baseUrl}${resolvedEndpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -445,11 +537,15 @@ class ApiClient {
       },
     });
 
-    // Handle 401 with token refresh for JWT auth
-    if (response.status === 401 && authType === "jwt" && retryOnUnauthorized) {
+    // Handle 401 with token refresh for JWT auth (covers both pure JWT and
+    // "project" mode that fell through to JWT).
+    if (
+      response.status === 401 &&
+      effectiveAuth === "jwt" &&
+      retryOnUnauthorized
+    ) {
       const refreshed = await this.tryRefreshToken();
       if (refreshed) {
-        // Retry the request with new token
         return this.request<T>(endpoint, options, authOverride, false);
       }
     }
@@ -461,7 +557,6 @@ class ApiClient {
       );
     }
 
-    // Handle 204 No Content responses
     if (response.status === 204) {
       return null as T;
     }
@@ -521,6 +616,23 @@ class ApiClient {
     return this.request("/v1/projects/me");
   }
 
+  /**
+   * List all projects the authenticated user can access (owned + member).
+   * Used by the project switcher and onboarding.
+   */
+  async listMyProjects(): Promise<ProjectListItem[]> {
+    return this.request("/v1/projects", {}, "jwt");
+  }
+
+  /**
+   * Fetch a single project by id. Works for members without the project's
+   * raw API key — the dual-auth backend dependency reads project_id from
+   * the URL path and validates JWT + permission.
+   */
+  async getProjectById(projectId: string): Promise<ProjectInfo> {
+    return this.request(`/v1/projects/${projectId}`, {}, "jwt");
+  }
+
   async createProject(
     name: string,
     description?: string,
@@ -547,6 +659,43 @@ class ApiClient {
     return this.request(
       `/v1/projects/${projectId}/api-key/rotate`,
       { method: "POST" },
+      "jwt",
+    );
+  }
+
+  /**
+   * Fetch the current cached USD -> target FX rate. Used by the budget UI
+   * to preview the conversion the moment a user picks a currency.
+   */
+  async getFxRate(
+    target: BudgetCurrency,
+  ): Promise<{ base: "USD"; target: string; rate: number; source: string }> {
+    return this.request(
+      `/v1/currency/rate?target=${encodeURIComponent(target)}`,
+      {},
+      "jwt",
+    );
+  }
+
+  async getProjectBudget(projectId: string): Promise<ProjectBudgetSettings> {
+    return this.request(`/v1/projects/${projectId}/budget`, {}, "jwt");
+  }
+
+  async updateProjectBudget(
+    projectId: string,
+    payload: {
+      monthly_budget_usd: number | null;
+      budget_enforcement_mode: "off" | "warn" | "hard_cap";
+      budget_alert_thresholds: number[];
+      budget_currency: BudgetCurrency;
+    },
+  ): Promise<ProjectBudgetSettings> {
+    return this.request(
+      `/v1/projects/${projectId}/budget`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
       "jwt",
     );
   }
@@ -908,6 +1057,44 @@ class ApiClient {
     return this.request("/v1/auth/logout-all", { method: "POST" }, "jwt");
   }
 
+  // ── Notifications ──────────────────────────────────────────────────────
+
+  async listNotifications(params?: {
+    limit?: number;
+    offset?: number;
+    unreadOnly?: boolean;
+  }): Promise<NotificationListResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set("limit", params.limit.toString());
+    if (params?.offset) searchParams.set("offset", params.offset.toString());
+    if (params?.unreadOnly) searchParams.set("unread_only", "true");
+    const query = searchParams.toString();
+    const endpoint = query
+      ? `/v1/notifications?${query}`
+      : "/v1/notifications";
+    return this.request(endpoint, {}, "jwt");
+  }
+
+  async getUnreadNotificationCount(): Promise<{ unread_count: number }> {
+    return this.request("/v1/notifications/unread-count", {}, "jwt");
+  }
+
+  async markNotificationRead(notificationId: string): Promise<null> {
+    return this.request(
+      `/v1/notifications/${notificationId}/read`,
+      { method: "POST" },
+      "jwt",
+    );
+  }
+
+  async markAllNotificationsRead(): Promise<{ unread_count: number }> {
+    return this.request(
+      "/v1/notifications/read-all",
+      { method: "POST" },
+      "jwt",
+    );
+  }
+
   async resendVerification(email: string): Promise<null> {
     return this.request(
       "/v1/auth/resend-verification",
@@ -959,6 +1146,34 @@ class ApiClient {
   isConfigured(): boolean {
     const { apiKey } = this.getConfig();
     return !!apiKey && apiKey.length > 0;
+  }
+
+  /**
+   * Whether project-scoped requests can run right now — either via API key
+   * (legacy / SDK) or via JWT + an active project id (team-member path).
+   */
+  hasProjectAccess(): boolean {
+    const { apiKey, authToken, activeProjectId } = this.getConfig();
+    if (apiKey && apiKey.length > 0) return true;
+    return !!(authToken && activeProjectId);
+  }
+
+  /**
+   * Get / set the active project (used by the project switcher).
+   * Setting null clears it.
+   */
+  getActiveProjectId(): string | null {
+    return this.getConfig().activeProjectId;
+  }
+
+  setActiveProjectId(projectId: string | null): void {
+    if (typeof window === "undefined") return;
+    if (projectId) {
+      localStorage.setItem("agentcost_active_project_id", projectId);
+    } else {
+      localStorage.removeItem("agentcost_active_project_id");
+    }
+    window.dispatchEvent(new Event("agentcost_active_project_changed"));
   }
 
   /**

@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
+import { BudgetSettingsCard } from "@/components/settings/BudgetSettingsCard";
 import { api } from "@/lib/api";
+import { useActiveProject } from "@/contexts/ActiveProjectContext";
 import {
   Key,
   Check,
@@ -73,6 +76,12 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export default function SettingsPage() {
+  const {
+    activeProject,
+    refresh: refreshProjectList,
+    selectProject,
+  } = useActiveProject();
+  const searchParams = useSearchParams();
   const [project, setProject] = useState<ProjectInfo | null>(null);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
@@ -96,6 +105,14 @@ export default function SettingsPage() {
   const [editProjectDesc, setEditProjectDesc] = useState("");
   const [isSavingProject, setIsSavingProject] = useState(false);
 
+  // Open the create-project form automatically when navigated via
+  // /settings?new=1 (e.g. from the project switcher).
+  useEffect(() => {
+    if (searchParams?.get("new") === "1") {
+      setShowCreateProject(true);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     const saved = localStorage.getItem("agentcost_config");
     if (saved) {
@@ -115,18 +132,34 @@ export default function SettingsPage() {
   }, []);
 
   const fetchProject = useCallback(async () => {
-    if (!config.apiKey) return;
-    try {
-      const projectData = await api.getProject();
-      setProject(projectData);
-    } catch {
+    // Prefer the active project from the JWT-backed list (works for members
+    // even without the project's raw API key). Fall back to the legacy
+    // API-key path (/v1/projects/me) for users who only have an API key
+    // configured.
+    if (activeProject?.id) {
+      try {
+        const data = await api.getProjectById(activeProject.id);
+        setProject(data);
+        return;
+      } catch {
+        // fall through to API-key path
+      }
+    }
+    if (config.apiKey) {
+      try {
+        const data = await api.getProject();
+        setProject(data);
+      } catch {
+        setProject(null);
+      }
+    } else {
       setProject(null);
     }
-  }, [config.apiKey]);
+  }, [activeProject?.id, config.apiKey]);
 
   useEffect(() => {
-    if (config.apiKey) fetchProject();
-  }, [config.apiKey, fetchProject]);
+    fetchProject();
+  }, [fetchProject]);
 
   const updateConfig = (updates: Partial<SavedConfig>) => {
     setConfig((prev) => ({ ...prev, ...updates }));
@@ -173,6 +206,10 @@ export default function SettingsPage() {
 
       // Dispatch a custom event so other components know config changed
       window.dispatchEvent(new Event("agentcost_config_updated"));
+
+      // Make the new project the active one for the switcher + refresh list
+      selectProject(newProject.id);
+      await refreshProjectList();
 
       setSaveMessage({
         type: "success",
@@ -223,12 +260,83 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
-        <p className="mt-1 text-neutral-400">
-          Configure your AgentCost connection
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Settings</h1>
+          <p className="mt-1 text-neutral-400">
+            Configure your AgentCost connection
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowCreateProject(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 transition-colors"
+        >
+          <Plus size={16} />
+          New project
+        </button>
       </div>
+
+      {/* Inline create-project form, always available so users can add more
+          projects without first clearing their existing one. */}
+      {showCreateProject && (
+        <Card>
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
+              <Plus size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-white">
+                Create new project
+              </h3>
+              <p className="text-sm text-neutral-400">
+                Each project has its own API key, members, budget, and
+                analytics. You can switch between projects from the sidebar.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <input
+                  type="text"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      createProject();
+                    }
+                  }}
+                  placeholder="Project name"
+                  className="flex-1 min-w-55 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-white focus:border-primary-500 focus:outline-none"
+                />
+                <button
+                  onClick={createProject}
+                  disabled={isCreatingProject || !newProjectName.trim()}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-white hover:bg-primary-500 disabled:opacity-50"
+                >
+                  {isCreatingProject ? (
+                    <RefreshCw size={16} className="animate-spin" />
+                  ) : (
+                    <Plus size={16} />
+                  )}
+                  Create
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCreateProject(false);
+                    setNewProjectName("");
+                  }}
+                  className="rounded-lg bg-neutral-700 px-4 py-2 text-white hover:bg-neutral-600"
+                >
+                  Cancel
+                </button>
+              </div>
+              <p className="mt-3 text-xs text-neutral-500">
+                After creation you&apos;ll be switched to the new project and
+                shown its API key (once — store it securely).
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* API Key & Project */}
       <Card>
@@ -324,46 +432,14 @@ export default function SettingsPage() {
                   </div>
                 </>
               ) : (
-                <div className="border border-dashed border-neutral-700 rounded-lg p-4">
-                  {showCreateProject ? (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={newProjectName}
-                        onChange={(e) => setNewProjectName(e.target.value)}
-                        placeholder="Project name"
-                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-white focus:border-primary-500 focus:outline-none"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={createProject}
-                          disabled={isCreatingProject || !newProjectName.trim()}
-                          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white disabled:opacity-50"
-                        >
-                          {isCreatingProject ? (
-                            <RefreshCw size={16} className="animate-spin" />
-                          ) : (
-                            <Plus size={16} />
-                          )}
-                          Create
-                        </button>
-                        <button
-                          onClick={() => setShowCreateProject(false)}
-                          className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setShowCreateProject(true)}
-                      className="flex items-center gap-2 text-primary-400 hover:text-primary-300"
-                    >
-                      <Plus size={16} />
-                      Create a new project to get an API key
-                    </button>
-                  )}
+                <div className="border border-dashed border-neutral-700 rounded-lg p-6 text-center">
+                  <p className="text-sm text-neutral-400">
+                    No project yet. Use the{" "}
+                    <span className="font-medium text-white">
+                      &ldquo;New project&rdquo;
+                    </span>{" "}
+                    button at the top of the page to create one.
+                  </p>
                 </div>
               )}
             </div>
@@ -527,6 +603,9 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {/* Budget Guardrails */}
+      {project && <BudgetSettingsCard projectId={project.id} />}
+
       {/* Danger Zone - Delete Project */}
       {project && (
         <Card className="border-red-900/50">
@@ -598,11 +677,23 @@ export default function SettingsPage() {
                             setIsDeleting(true);
                             try {
                               await api.deleteProject(project.id);
-                              // Clear config and reload
+                              // Clear ALL project-scoped local state so the
+                              // dashboard doesn't render stale data from the
+                              // deleted project on the next render.
                               localStorage.removeItem("agentcost_config");
+                              localStorage.removeItem(
+                                "agentcost_active_project_id",
+                              );
                               window.dispatchEvent(
                                 new Event("agentcost_config_updated"),
                               );
+                              window.dispatchEvent(
+                                new Event("agentcost_active_project_changed"),
+                              );
+                              // Refresh the project switcher; reconciliation
+                              // will pick another accessible project (or none)
+                              // automatically.
+                              await refreshProjectList();
                               setProject(null);
                               setConfig(DEFAULT_CONFIG);
                               setShowDeleteConfirm(false);
@@ -754,7 +845,7 @@ export default function SettingsPage() {
                     {showSnippetKey ? "Hide key" : "Show key"}
                   </button>
                   <CopyButton
-                    text={`from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your LangChain code is now tracked!`}
+                    text={`from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your OpenAI, Anthropic, and LangChain calls are now tracked!`}
                   />
                 </div>
               </div>
@@ -781,7 +872,7 @@ export default function SettingsPage() {
                   </span>
                   ,{"\n"}){"\n\n"}
                   <span className="text-neutral-500">
-                    # Your LangChain code is now tracked!
+                    # Your OpenAI, Anthropic, and LangChain calls are now tracked!
                   </span>
                 </code>
               </pre>

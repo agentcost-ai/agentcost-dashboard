@@ -1,6 +1,8 @@
 "use client";
 
 import { Sidebar } from "@/components/layout/Sidebar";
+import { NotificationBell } from "@/components/layout/NotificationBell";
+import { ActiveProjectProvider } from "@/contexts/ActiveProjectContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function DashboardLayout({
@@ -30,7 +32,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <>
+    <ActiveProjectProvider>
       <Sidebar />
       <main
         className="min-h-screen p-8"
@@ -40,8 +42,11 @@ export default function DashboardLayout({
           willChange: "margin-left",
         }}
       >
+        <div className="fixed top-4 right-6 z-30">
+          <NotificationBell />
+        </div>
         {children}
       </main>
-    </>
+    </ActiveProjectProvider>
   );
 }

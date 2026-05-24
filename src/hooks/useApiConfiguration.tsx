@@ -17,43 +17,44 @@ import {
 } from "lucide-react";
 
 /**
- * Hook to check if the API is configured with an API key
+ * Hook to check whether project-scoped requests can succeed right now.
+ *
+ * Returns true when EITHER:
+ *  - an SDK API key is configured (legacy / SDK / solo path), OR
+ *  - the user is signed in AND has an active project selected (team path
+ *    for invited members who don't have the project's raw API key).
  */
 export function useApiConfiguration() {
   const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check on mount
-    setIsConfigured(api.isConfigured());
+    const recheck = () => setIsConfigured(api.hasProjectAccess());
+    recheck();
 
-    // Listen for storage changes (in case user configures in another tab)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "agentcost_config") {
-        setIsConfigured(api.isConfigured());
+      if (
+        e.key === "agentcost_config" ||
+        e.key === "agentcost_active_project_id" ||
+        e.key === "access_token"
+      ) {
+        recheck();
       }
     };
 
-    // Listen for custom event (same-tab updates from settings page)
-    const handleConfigUpdate = () => {
-      setIsConfigured(api.isConfigured());
-    };
-
     window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("agentcost_config_updated", handleConfigUpdate);
+    window.addEventListener("agentcost_config_updated", recheck);
+    window.addEventListener("agentcost_active_project_changed", recheck);
+    window.addEventListener("tokens-refreshed", recheck);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener(
-        "agentcost_config_updated",
-        handleConfigUpdate,
-      );
+      window.removeEventListener("agentcost_config_updated", recheck);
+      window.removeEventListener("agentcost_active_project_changed", recheck);
+      window.removeEventListener("tokens-refreshed", recheck);
     };
   }, []);
 
-  // Function to recheck configuration (call after saving settings)
-  const recheckConfiguration = () => {
-    setIsConfigured(api.isConfigured());
-  };
+  const recheckConfiguration = () => setIsConfigured(api.hasProjectAccess());
 
   return { isConfigured, recheckConfiguration };
 }
@@ -243,7 +244,7 @@ export function OnboardingScreen() {
                     ){"\n"}
                     {"\n"}
                     <span className="text-neutral-500">
-                      # Your LangChain code is now tracked!
+                      # Your OpenAI, Anthropic, and LangChain calls are now tracked!
                     </span>
                   </code>
                 </pre>

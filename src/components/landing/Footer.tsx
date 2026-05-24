@@ -18,12 +18,13 @@ const columns = [
     links: [
       { label: "Documentation", href: "/docs/sdk" },
       { label: "API Reference", href: "/docs/api" },
+      { label: "Blog", href: "/blog" },
+      { label: "Changelog", href: "/changelog" },
       {
         label: "GitHub",
         href: "https://github.com/agentcost-ai",
         external: true,
       },
-      { label: "Changelog", href: "#" },
     ],
   },
   {

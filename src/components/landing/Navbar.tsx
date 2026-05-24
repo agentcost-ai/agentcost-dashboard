@@ -9,6 +9,8 @@ const navLinks = [
   { label: "Features", href: "#features" },
   { label: "Integration", href: "#integration" },
   { label: "Pricing", href: "#metrics" },
+  { label: "Blog", href: "/blog" },
+  { label: "Changelog", href: "/changelog" },
   { label: "Docs", href: "/docs/sdk" },
 ];
 

@@ -21,11 +21,13 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "AgentCost - Real-time Cost Tracking for LangChain Agents",
+  title: "AgentCost - Real-time Cost Tracking for OpenAI, Anthropic, and LangChain",
   description:
-    "Track your LangChain agent costs in real-time. See which agents are expensive, get optimization suggestions. Free & open source.",
+    "Track OpenAI, Anthropic, and LangChain costs in real-time. See which agents are expensive, set budget guardrails, and get optimization suggestions.",
   keywords: [
     "langchain",
+    "openai",
+    "anthropic",
     "ai cost tracking",
     "llm costs",
     "agent monitoring",
@@ -33,25 +35,27 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
   openGraph: {
     type: "website",
     url: "https://agentcost.tech/",
-    title: "AgentCost - Cost Tracking for LangChain Agents",
+    title: "AgentCost - Cost Tracking for OpenAI, Anthropic, and LangChain",
     description:
-      "Track your LangChain agent costs in real-time. Free & open source.",
+      "Track OpenAI, Anthropic, and LangChain costs in real-time. Free & open source.",
     images: [
       {
         url: "https://agentcost.tech/icon.svg",
-        alt: "AgentCost - Cost Tracking for LangChain Agents",
+        alt: "AgentCost - LLM Cost Tracking Platform",
       },
     ],
     siteName: "AgentCost",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AgentCost - Cost Tracking for LangChain Agents",
-    description: "Track your LangChain agent costs in real-time.",
+    title: "AgentCost - Cost Tracking for OpenAI, Anthropic, and LangChain",
+    description: "Track OpenAI, Anthropic, and LangChain costs in real-time.",
     images: ["https://agentcost.tech/icon.svg"],
   },
   alternates: {

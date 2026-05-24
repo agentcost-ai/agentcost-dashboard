@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { api, ProjectMember, PendingInvitation } from "@/lib/api";
 import { parseApiError } from "@/lib/utils";
+import { useActiveProject } from "@/contexts/ActiveProjectContext";
 import {
   Users,
   UserPlus,
@@ -203,14 +204,47 @@ export default function TeamPage() {
   // Success message
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [staleConfig, setStaleConfig] = useState(false);
+  const { activeProject } = useActiveProject();
+
   const fetchData = useCallback(async () => {
     try {
-      // Get project info first
-      const project = await api.getProject();
-      setProjectId(project.id);
+      // Resolve the project id from the JWT-backed active project (works for
+      // invited members who don't have the project's raw API key). Fall back
+      // to /v1/projects/me (API-key auth) when no active project is selected.
+      let resolvedProjectId: string | null = activeProject?.id ?? null;
+      if (!resolvedProjectId) {
+        try {
+          const project = await api.getProject();
+          resolvedProjectId = project.id;
+        } catch {
+          // No active project AND no API key — show the recovery banner.
+          setStaleConfig(true);
+          setError(null);
+          setIsLoading(false);
+          return;
+        }
+      }
+      setProjectId(resolvedProjectId);
 
-      // Get members
-      const membersData = await api.getProjectMembers(project.id);
+      // Get members (JWT + permission check — only succeeds if the current
+      // user owns or is a member of this project). A 403 here means the
+      // resolved project belongs to someone else.
+      let membersData: ProjectMember[];
+      try {
+        membersData = await api.getProjectMembers(resolvedProjectId);
+      } catch (membersErr) {
+        const msg =
+          membersErr instanceof Error ? membersErr.message : String(membersErr);
+        if (msg.includes("403") || msg.toLowerCase().includes("don't have access")) {
+          setStaleConfig(true);
+          setError(null);
+          setIsLoading(false);
+          return;
+        }
+        throw membersErr;
+      }
+      setStaleConfig(false);
       setMembers(membersData);
 
       // Get current user from localStorage
@@ -249,6 +283,14 @@ export default function TeamPage() {
     } finally {
       setIsLoading(false);
     }
+  }, [activeProject?.id]);
+
+  const handleClearStaleConfig = useCallback(() => {
+    localStorage.removeItem("agentcost_config");
+    localStorage.removeItem("agentcost_active_project_id");
+    window.dispatchEvent(new Event("agentcost_config_updated"));
+    window.dispatchEvent(new Event("agentcost_active_project_changed"));
+    window.location.href = "/settings";
   }, []);
 
   useEffect(() => {
@@ -396,6 +438,47 @@ export default function TeamPage() {
           <Check size={18} />
           {successMessage}
         </div>
+      )}
+
+      {/* Stale API key from a previous account */}
+      {staleConfig && (
+        <Card className="border-amber-900/50">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400">
+              <AlertTriangle size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-white">
+                This API key belongs to a different account
+              </h3>
+              <p className="mt-1 text-sm text-neutral-400">
+                The API key stored in your browser is linked to a project you
+                don&apos;t have access to as{" "}
+                <span className="text-neutral-200">
+                  {currentUserEmail || "the current user"}
+                </span>
+                . This usually happens after switching accounts. Clear the saved
+                API key, then create a new project (or paste the API key for a
+                project you own) on the Settings page.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={handleClearStaleConfig}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 transition-colors"
+                >
+                  Clear saved API key &amp; go to Settings
+                </button>
+                <Link
+                  href="/settings"
+                  className="inline-flex items-center gap-2 rounded-lg bg-neutral-700 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-600 transition-colors"
+                >
+                  Go to Settings
+                </Link>
+              </div>
+            </div>
+          </div>
+        </Card>
       )}
 
       {/* Error Message */}

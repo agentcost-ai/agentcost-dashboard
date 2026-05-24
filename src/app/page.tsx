@@ -1,8 +1,6 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { TrustedBySection } from "@/components/landing/TrustedBySection";
@@ -15,16 +13,9 @@ import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
 
 export default function LandingPage() {
-    const { isAuthenticated, isLoading } = useAuth();
-    const router = useRouter();
+    const { isLoading } = useAuth();
 
-    useEffect(() => {
-        if (!isLoading && isAuthenticated) {
-            router.push("/dashboard");
-        }
-    }, [isAuthenticated, isLoading, router]);
-
-    if (isLoading || isAuthenticated) {
+    if (isLoading) {
         return (
             <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
