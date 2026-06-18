@@ -2,6 +2,9 @@
  * API configuration and client for AgentCost backend
  */
 
+import { isDemoMode } from "@/lib/demo/demo";
+import { resolveDemoRequest } from "@/lib/demo/demoApi";
+
 const DEFAULT_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -488,6 +491,12 @@ class ApiClient {
     authOverride?: "api_key" | "jwt" | "none" | "project",
     retryOnUnauthorized = true,
   ): Promise<T> {
+    // Demo mode: serve everything from the client-side demo dataset. No
+    // network, no auth — the demo works even if the backend is down.
+    if (typeof window !== "undefined" && isDemoMode()) {
+      return resolveDemoRequest<T>(endpoint, options);
+    }
+
     const { apiKey, baseUrl, authToken, activeProjectId } = this.getConfig();
     const authType = authOverride ?? this.getAuthType(endpoint);
 
@@ -949,6 +958,13 @@ class ApiClient {
   // ── Attachment methods ──────────────────────────────────────────────────
 
   async uploadAttachment(file: File): Promise<AttachmentMeta> {
+    // Uploads bypass request(), so demo mode is handled here directly.
+    if (typeof window !== "undefined" && isDemoMode()) {
+      return resolveDemoRequest<AttachmentMeta>("/v1/attachments", {
+        method: "POST",
+      });
+    }
+
     const { baseUrl, authToken } = this.getConfig();
 
     const formData = new FormData();
@@ -1144,6 +1160,7 @@ class ApiClient {
    * Check if API key is configured
    */
   isConfigured(): boolean {
+    if (typeof window !== "undefined" && isDemoMode()) return true;
     const { apiKey } = this.getConfig();
     return !!apiKey && apiKey.length > 0;
   }
@@ -1153,6 +1170,7 @@ class ApiClient {
    * (legacy / SDK) or via JWT + an active project id (team-member path).
    */
   hasProjectAccess(): boolean {
+    if (typeof window !== "undefined" && isDemoMode()) return true;
     const { apiKey, authToken, activeProjectId } = this.getConfig();
     if (apiKey && apiKey.length > 0) return true;
     return !!(authToken && activeProjectId);
@@ -1163,6 +1181,7 @@ class ApiClient {
    * Setting null clears it.
    */
   getActiveProjectId(): string | null {
+    if (typeof window !== "undefined" && isDemoMode()) return "demo-project";
     return this.getConfig().activeProjectId;
   }
 

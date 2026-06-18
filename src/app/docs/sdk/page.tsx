@@ -427,7 +427,7 @@ async for chunk in llm.astream("Tell me a story"):
           >
             <p className="text-neutral-300">
               AgentCost supports over{" "}
-              <strong className="text-white">1,900+ models</strong> from all
+              <strong className="text-white">2,900+ models</strong> from all
               major providers. Pricing is automatically synced from{" "}
               <a
                 href="https://github.com/BerriAI/litellm"

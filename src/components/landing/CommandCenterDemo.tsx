@@ -153,7 +153,7 @@ export function CommandCenterDemo() {
             </div>
 
             {/* Decorative Glow */}
-            <div className="absolute -inset-10 bg-linear-to-r from-sky-600/20 via-blue-600/20 to-purple-600/20 blur-3xl opacity-30 -z-10 rounded-full" />
+            <div className="absolute -inset-10 bg-linear-to-r from-sky-600/20 via-blue-600/20 to-cyan-600/15 blur-3xl opacity-30 -z-10 rounded-full" />
         </div>
     );
 }

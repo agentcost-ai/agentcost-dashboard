@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { CommandCenterDemo } from "./CommandCenterDemo";
 
 
@@ -111,7 +111,7 @@ export function HeroSection() {
         >
           Open-source cost tracking for LLM applications.{" "}
           <span className="text-neutral-200 font-medium">Two lines of Python.</span>{" "}
-          Self-hosted. 1,900+ models supported.
+          Self-hosted. 2,900+ models supported.
         </motion.p>
 
         {/* CTA buttons */}
@@ -131,6 +131,16 @@ export function HeroSection() {
           >
             Get Started — Free
             <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Link>
+          <Link
+            href="/demo?src=hero"
+            className="group inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
+          >
+            <Play className="size-3.5 fill-current" />
+            Try Live Demo
+            <span className="text-[11px] font-mono text-sky-500/70 group-hover:text-sky-400/80">
+              no signup
+            </span>
           </Link>
           <Link
             href="/docs/sdk"

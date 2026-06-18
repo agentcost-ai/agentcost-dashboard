@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { TimeRangeSelector } from "@/components/layout/TimeRangeSelector";
@@ -13,14 +13,29 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import { TableSkeleton } from "@/components/ui/Skeleton";
+import { HeroStatCard } from "@/components/dashboard/HeroStatCard";
 import { api, ModelStats } from "@/lib/api";
 import { formatCurrency, formatNumber, formatLatency } from "@/lib/utils";
-import { Cpu, DollarSign, Zap, ArrowUpDown, Database } from "lucide-react";
+import { Cpu, DollarSign, Zap, Scale, Database } from "lucide-react";
 import {
   useApiConfiguration,
   OnboardingScreen,
   LoadingSpinner,
 } from "@/hooks/useApiConfiguration";
+
+/** Best-effort provider tag from the model id — purely cosmetic. */
+function providerOf(model: string): { name: string; className: string } {
+  const m = model.toLowerCase();
+  if (m.includes("gpt") || m.startsWith("o1") || m.startsWith("o3"))
+    return { name: "OpenAI", className: "bg-emerald-400" };
+  if (m.includes("claude")) return { name: "Anthropic", className: "bg-orange-400" };
+  if (m.includes("gemini")) return { name: "Google", className: "bg-sky-400" };
+  if (m.includes("llama")) return { name: "Meta", className: "bg-blue-400" };
+  if (m.includes("mistral") || m.includes("mixtral"))
+    return { name: "Mistral", className: "bg-amber-400" };
+  if (m.includes("deepseek")) return { name: "DeepSeek", className: "bg-indigo-400" };
+  return { name: "Other", className: "bg-neutral-500" };
+}
 
 export default function ModelsPage() {
   const { isConfigured } = useApiConfiguration();
@@ -64,30 +79,46 @@ export default function ModelsPage() {
     fetchData();
   }, [timeRange]);
 
+  const summary = useMemo(() => {
+    const totalCost = models.reduce((sum, m) => sum + m.total_cost, 0);
+    const totalTokens = models.reduce((sum, m) => sum + m.total_tokens, 0);
+    const totalCalls = models.reduce((sum, m) => sum + m.total_calls, 0);
+    const totalInput = models.reduce((sum, m) => sum + m.input_tokens, 0);
+    const totalOutput = models.reduce((sum, m) => sum + m.output_tokens, 0);
+    const sorted = [...models].sort((a, b) => b.total_cost - a.total_cost);
+    return {
+      totalCost,
+      totalTokens,
+      totalCalls,
+      totalInput,
+      totalOutput,
+      sorted,
+      topModel: sorted[0] ?? null,
+    };
+  }, [models]);
+
   // Show onboarding if not configured or invalid API key
   if (isConfigured === false || showOnboarding) return <OnboardingScreen />;
   if (isConfigured === null) return <LoadingSpinner />;
 
-  const totalCost = models.reduce((sum, m) => sum + m.total_cost, 0);
-  const totalTokens = models.reduce((sum, m) => sum + m.total_tokens, 0);
-  const totalCalls = models.reduce((sum, m) => sum + m.total_calls, 0);
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Models</h1>
-          <p className="mt-1 text-sm text-neutral-400">
+          <h1 className="text-2xl font-semibold tracking-tight text-white">
+            Models
+          </h1>
+          <p className="mt-1 text-sm text-neutral-500">
             Usage and cost breakdown by LLM model
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/docs/models"
-            className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-600 hover:bg-neutral-800 transition-colors"
+            className="flex items-center gap-2 rounded-lg border border-white/6 px-4 py-2 text-[13px] font-medium text-neutral-300 hover:text-white hover:border-white/12 transition-colors"
           >
-            <Database size={16} />
+            <Database size={14} />
             Supported Models
           </Link>
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
@@ -102,65 +133,58 @@ export default function ModelsPage() {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
-              <Cpu size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-neutral-400">Models Used</p>
-              <p className="text-2xl font-semibold text-white">
-                {models.length}
-              </p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-900/30 text-emerald-400">
-              <DollarSign size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-neutral-400">Total Spend</p>
-              <p className="text-2xl font-semibold text-white">
-                {formatCurrency(totalCost)}
-              </p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-900/30 text-purple-400">
-              <Zap size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-neutral-400">Total Tokens</p>
-              <p className="text-2xl font-semibold text-white">
-                {formatNumber(totalTokens)}
-              </p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400">
-              <ArrowUpDown size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-neutral-400">Avg Cost/Call</p>
-              <p className="text-2xl font-semibold text-white">
-                {totalCalls > 0 ? formatCurrency(totalCost / totalCalls) : "-"}
-              </p>
-            </div>
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <HeroStatCard
+          label="Models in Use"
+          value={String(models.length)}
+          sub={
+            summary.topModel
+              ? `Top spend: ${summary.topModel.model}`
+              : undefined
+          }
+          icon={<Cpu size={15} />}
+          iconClassName="bg-violet-500/10 text-violet-400"
+        />
+        <HeroStatCard
+          label="Total Spend"
+          value={formatCurrency(summary.totalCost)}
+          sub={
+            summary.totalCalls > 0
+              ? `${formatCurrency(summary.totalCost / summary.totalCalls)} / call blended`
+              : undefined
+          }
+          icon={<DollarSign size={15} />}
+          iconClassName="bg-emerald-500/10 text-emerald-400"
+        />
+        <HeroStatCard
+          label="Total Tokens"
+          value={formatNumber(summary.totalTokens)}
+          sub={`${formatNumber(summary.totalInput)} in · ${formatNumber(summary.totalOutput)} out`}
+          icon={<Zap size={15} />}
+          iconClassName="bg-amber-500/10 text-amber-400"
+        />
+        <HeroStatCard
+          label="Cost / 1K Tokens"
+          value={
+            summary.totalTokens > 0
+              ? formatCurrency((summary.totalCost / summary.totalTokens) * 1000)
+              : "—"
+          }
+          sub="Blended across models"
+          icon={<Scale size={15} />}
+          iconClassName="bg-sky-500/10 text-sky-400"
+        />
       </div>
 
       {/* Models Table */}
       <Card padding="none">
-        <div className="border-b border-neutral-800 px-6 py-4">
-          <h3 className="text-lg font-medium text-white">Model Usage</h3>
+        <div className="border-b border-white/6 px-6 py-4">
+          <h3 className="text-[15px] font-semibold tracking-tight text-white">
+            Model Usage
+          </h3>
+          <p className="text-[12.5px] text-neutral-500 mt-0.5">
+            Ranked by spend in the selected window
+          </p>
         </div>
         {loading ? (
           <div className="p-6">
@@ -171,59 +195,94 @@ export default function ModelsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Model</TableHead>
+                <TableHead className="w-44">Cost Share</TableHead>
+                <TableHead className="text-right">Cost</TableHead>
+                <TableHead className="text-right">Cost / 1K Tok</TableHead>
                 <TableHead className="text-right">Calls</TableHead>
-                <TableHead className="text-right">Input Tokens</TableHead>
-                <TableHead className="text-right">Output Tokens</TableHead>
-                <TableHead className="text-right">Total Cost</TableHead>
-                <TableHead className="text-right">Avg Latency</TableHead>
-                <TableHead className="text-right">Cost Share</TableHead>
+                <TableHead className="w-40">Token Split</TableHead>
+                <TableHead className="text-right">Latency</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {models
-                .sort((a, b) => b.total_cost - a.total_cost)
-                .map((model) => (
+              {summary.sorted.map((model) => {
+                const share =
+                  summary.totalCost > 0
+                    ? (model.total_cost / summary.totalCost) * 100
+                    : 0;
+                const inShare =
+                  model.total_tokens > 0
+                    ? (model.input_tokens / model.total_tokens) * 100
+                    : 0;
+                const provider = providerOf(model.model);
+                return (
                   <TableRow key={model.model}>
                     <TableCell>
-                      <span className="font-mono font-medium text-white">
-                        {model.model}
-                      </span>
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={`h-2 w-2 rounded-full shrink-0 ${provider.className}`}
+                          title={provider.name}
+                        />
+                        <div className="min-w-0">
+                          <p className="font-mono font-medium text-white truncate">
+                            {model.model}
+                          </p>
+                          <p className="text-[11px] text-neutral-600">
+                            {provider.name}
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatNumber(model.total_calls)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-neutral-400">
-                      {formatNumber(model.input_tokens)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-neutral-400">
-                      {formatNumber(model.output_tokens)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-emerald-400">
-                      {formatCurrency(model.total_cost)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatLatency(model.avg_latency_ms)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <div className="h-2 w-16 overflow-hidden rounded-full bg-neutral-800">
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-1.5 w-24 rounded-full bg-white/5 overflow-hidden">
                           <div
-                            className="h-full bg-primary-500 transition-all"
-                            style={{
-                              width: `${totalCost > 0 ? (model.total_cost / totalCost) * 100 : 0}%`,
-                            }}
+                            className="h-full rounded-full bg-violet-500"
+                            style={{ width: `${share}%` }}
                           />
                         </div>
-                        <span className="w-12 text-right font-mono text-sm">
-                          {totalCost > 0
-                            ? ((model.total_cost / totalCost) * 100).toFixed(1)
-                            : 0}
-                          %
+                        <span className="text-[11.5px] text-neutral-500 tabular-nums">
+                          {share.toFixed(1)}%
                         </span>
                       </div>
                     </TableCell>
+                    <TableCell className="text-right font-mono text-white">
+                      {formatCurrency(model.total_cost)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-neutral-400">
+                      {model.total_tokens > 0
+                        ? formatCurrency(
+                            (model.total_cost / model.total_tokens) * 1000,
+                          )
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-neutral-300">
+                      {formatNumber(model.total_calls)}
+                    </TableCell>
+                    <TableCell>
+                      <div
+                        className="flex h-1.5 w-32 rounded-full overflow-hidden bg-white/5"
+                        title={`${formatNumber(model.input_tokens)} input / ${formatNumber(model.output_tokens)} output`}
+                      >
+                        <div
+                          className="h-full bg-sky-500/80"
+                          style={{ width: `${inShare}%` }}
+                        />
+                        <div
+                          className="h-full bg-amber-400/80"
+                          style={{ width: `${100 - inShare}%` }}
+                        />
+                      </div>
+                      <p className="mt-1 text-[10.5px] text-neutral-600 tabular-nums">
+                        {formatNumber(model.input_tokens)} in ·{" "}
+                        {formatNumber(model.output_tokens)} out
+                      </p>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-neutral-300">
+                      {formatLatency(model.avg_latency_ms)}
+                    </TableCell>
                   </TableRow>
-                ))}
+                );
+              })}
             </TableBody>
           </Table>
         ) : (

@@ -19,7 +19,7 @@ const steps = [
     title: "Calls are captured",
     subtitle: "Automatic interception",
     description:
-      "Every LLM invocation is intercepted in real-time. Token counts are calculated using tiktoken, costs are computed from a pricing database of 1,900+ models, and events are batched efficiently before sending.",
+      "Every LLM invocation is intercepted in real-time. Token counts are calculated using tiktoken, costs are computed from a pricing database of 2,900+ models, and events are batched efficiently before sending.",
     highlight: "Adds <1ms overhead to your calls.",
     code: `# Behind the scenes:\n► gpt-4o     1,247 tokens   $0.0124\n► claude-3.5  2,105 tokens   $0.0189\n\n✓ Batched & sent asynchronously`,
   },

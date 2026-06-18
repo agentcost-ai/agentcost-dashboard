@@ -8,6 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { isDemoMode, exitDemoMode } from "@/lib/demo/demo";
 
 interface User {
   id: string;
@@ -20,11 +21,24 @@ interface User {
   last_login_at: string | null;
 }
 
+// Synthetic user for demo mode — no token, no backend session.
+const DEMO_USER: User = {
+  id: "demo-user",
+  email: "demo@agentcost.dev",
+  name: "Demo Explorer",
+  avatar_url: null,
+  email_verified: true,
+  is_active: true,
+  created_at: new Date(0).toISOString(),
+  last_login_at: null,
+};
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isDemo: boolean;
   login: (
     email: string,
     password: string,
@@ -42,6 +56,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Routes that don't require authentication
 const publicRoutes = [
   "/", // Landing page is public
+  "/demo", // Demo entry point — sets demo mode then redirects to dashboard
   "/blog", // Blog is public
   "/changelog", // Changelog is public
   "/auth/login",
@@ -80,6 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = () => {
       try {
+        // Demo mode: synthetic user, no tokens. Real auth wins if present.
+        if (isDemoMode() && !localStorage.getItem("access_token")) {
+          setUser(DEMO_USER);
+          return;
+        }
+
         const storedToken = localStorage.getItem("access_token");
         const storedRefreshToken = localStorage.getItem("refresh_token");
         const storedUser = localStorage.getItem("user");
@@ -137,14 +158,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       pathname?.startsWith(route),
     );
 
+    // The demo user is synthetic — they must be able to reach the register/
+    // login pages (that's the whole conversion path out of the demo).
+    const isDemoUser = !!user && !token && user.id === "demo-user";
+
     if (!user && !isPublicRoute) {
       // Not authenticated and trying to access protected route
       router.push("/auth/login");
-    } else if (user && isAuthRoute) {
+    } else if (user && isAuthRoute && !isDemoUser) {
       // Authenticated and trying to access auth pages — go to dashboard
       router.push("/dashboard");
     }
-  }, [user, isLoading, pathname, router]);
+  }, [user, token, isLoading, pathname, router]);
 
   const login = useCallback(
     async (email: string, password: string, rememberMe = false) => {
@@ -165,6 +190,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok) {
         throw new Error(data.detail || "Login failed");
       }
+
+      // A real login supersedes any demo session.
+      exitDemoMode(false);
 
       localStorage.setItem("access_token", data.access_token);
       if (data.refresh_token) {
@@ -222,6 +250,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok) {
         throw new Error(data.detail || "Google sign-in failed");
       }
+
+      // A real login supersedes any demo session.
+      exitDemoMode(false);
 
       localStorage.setItem("access_token", data.access_token);
       if (data.refresh_token) {
@@ -287,6 +318,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    // Demo mode: no backend session to revoke — just leave the demo.
+    if (!token && isDemoMode()) {
+      exitDemoMode();
+      setUser(null);
+      router.push("/");
+      return;
+    }
+
     try {
       if (token) {
         await fetch(`${API_URL}/v1/auth/logout`, {
@@ -468,6 +507,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     token,
     isLoading,
     isAuthenticated: !!user,
+    isDemo: !!user && !token && user.id === "demo-user",
     login,
     googleLogin,
     register,

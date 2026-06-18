@@ -392,6 +392,18 @@ function LoginContent() {
           Create account
         </Link>
       </p>
+
+      {/* Demo Link */}
+      <p className="text-center text-neutral-600 mt-3 text-[13px]">
+        Just exploring?{" "}
+        <Link
+          href="/demo?src=login"
+          className="text-sky-400 hover:text-sky-300 font-medium transition-colors"
+        >
+          Try the live demo
+        </Link>{" "}
+        — no account needed.
+      </p>
     </div>
   );
 }

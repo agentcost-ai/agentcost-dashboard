@@ -50,6 +50,23 @@ export const blogPosts: BlogPost[] = [
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "v1.8.0",
+    date: "2026-06-18",
+    summary:
+      "Interactive no-signup demo, a redesigned analytics dashboard, and broader model coverage",
+    changes: [
+      "Added Live Demo mode — explore a fully populated workspace (sample data from a fictional AI-support company) with no signup. It runs entirely client-side, so the demo works even when the API is unavailable.",
+      "Reachable from the landing hero, the navbar, and the sign-in page, the demo is read-only: any write action invites you to create a free account, and signups originating in the demo are attributed for conversion reporting.",
+      "Added a Demo Funnel page to the admin control plane: sessions over time, entry sources, most-explored pages, signup click-through, and demo-to-account conversion rate.",
+      "Redesigned the dashboard with hero metric cards (inline sparklines and period-over-period deltas) and a new operational snapshot: projected monthly spend at the current run rate, blended cost per 1K tokens, and failed-call/error-rate tracking.",
+      "Added a new activity chart with a Spend / Calls / Tokens switcher and a period-average reference line, an interactive cost-by-model donut, and a ranked agent cost list with per-agent calls, success rate, and latency.",
+      "Reworked the Agents and Models pages with provider tags, cost-share bars, call-volume-weighted success rates, and input/output token-split visualizations.",
+      "Updated model coverage to reflect 2,900+ supported models, synced from LiteLLM's pricing database.",
+      "Refined the visual language across the app — flat, single-color data fills replace cross-color gradient treatments for a cleaner, more professional look.",
+      "Fixed a reliability issue on the registration page where an unreachable policy-versions endpoint surfaced a console error instead of silently falling back to the built-in defaults.",
+    ],
+  },
+  {
     version: "v1.7.1",
     date: "2026-05-24",
     summary:

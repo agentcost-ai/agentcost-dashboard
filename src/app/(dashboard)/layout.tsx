@@ -2,6 +2,7 @@
 
 import { Sidebar } from "@/components/layout/Sidebar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { DemoExperience } from "@/components/demo/DemoExperience";
 import { ActiveProjectProvider } from "@/contexts/ActiveProjectContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -47,6 +48,7 @@ export default function DashboardLayout({
         </div>
         {children}
       </main>
+      <DemoExperience />
     </ActiveProjectProvider>
   );
 }

@@ -34,7 +34,7 @@ export function TrustedBySection() {
           className="text-center"
         >
           <p className="text-sm font-medium text-neutral-500 uppercase tracking-widest">
-            Supporting <span className="text-neutral-400">1,900+ models</span>{" "}
+            Supporting <span className="text-neutral-400">2,900+ models</span>{" "}
             across all major providers
           </p>
         </motion.div>

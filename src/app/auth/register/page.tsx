@@ -19,6 +19,7 @@ import {
 import { parseApiError } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Checkbox } from "@/components/auth/AuthComponents";
+import { isDemoMode, exitDemoMode, trackDemo } from "@/lib/demo/demo";
 
 declare global {
   interface Window {
@@ -61,6 +62,8 @@ const passwordRequirements: PasswordRequirement[] = [
   { label: "Number", test: (p) => /[0-9]/.test(p) },
 ];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function RegisterPage() {
   const router = useRouter();
   const { googleLogin } = useAuth();
@@ -86,9 +89,7 @@ export default function RegisterPage() {
   useEffect(() => {
     const fetchPolicyVersions = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/policies/current`,
-        );
+        const response = await fetch(`${API_URL}/v1/auth/policies/current`);
         if (response.ok) {
           const data = await response.json();
           setPolicyVersions({
@@ -97,7 +98,10 @@ export default function RegisterPage() {
           });
         }
       } catch {
-        console.error("Failed to fetch policy versions, using defaults");
+        // Backend unreachable — fall back to the built-in defaults silently.
+        // This is an expected, fully-handled path (e.g. API not yet up), so
+        // it is a warning, not an error that should surface in the overlay.
+        console.warn("Policy versions unavailable; using defaults");
       }
     };
     fetchPolicyVersions();
@@ -193,7 +197,7 @@ export default function RegisterPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/register`,
+        `${API_URL}/v1/auth/register`,
         {
           method: "POST",
           headers: {
@@ -215,6 +219,15 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         throw new Error(data.detail || "Registration failed");
+      }
+
+      // Attribute the conversion if this visitor came through the demo,
+      // then leave demo mode so first login lands on their real workspace.
+      if (localStorage.getItem("agentcost_demo_session_id")) {
+        trackDemo("signup_completed");
+      }
+      if (isDemoMode()) {
+        exitDemoMode(false);
       }
 
       setSuccess(true);

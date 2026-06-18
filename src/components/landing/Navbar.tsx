@@ -7,6 +7,7 @@ import { Grid2x2Plus, Menu, X } from "lucide-react";
 
 const navLinks = [
   { label: "Features", href: "#features" },
+  { label: "Live Demo", href: "/demo?src=navbar" },
   { label: "Integration", href: "#integration" },
   { label: "Pricing", href: "#metrics" },
   { label: "Blog", href: "/blog" },

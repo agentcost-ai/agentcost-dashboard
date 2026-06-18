@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Sora } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { BackendPrewarm } from "@/components/BackendPrewarm";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -95,7 +96,10 @@ export default function RootLayout({
             gtag('config', 'G-KMLSX540HL');
           `}
         </Script>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <BackendPrewarm />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
