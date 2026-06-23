@@ -91,7 +91,7 @@ src/
 | Register   | `/register`    | User registration                          |
 | SDK Docs   | `/docs/sdk`    | SDK integration guide                      |
 | API Docs   | `/docs/api`    | REST API reference                         |
-| Model List | `/docs/models` | Browse all 2000+ supported models          |
+| Model List | `/docs/models` | Browse all 2900+ supported models          |
 
 ## Configuration
 
