@@ -16,6 +16,7 @@ import {
   demoEventCount,
   demoOptimizationSuggestions,
   demoOptimizationSummary,
+  demoExecutiveReport,
   demoRecommendations,
   demoProject,
   demoProjectList,
@@ -128,6 +129,14 @@ export async function resolveDemoRequest<T>(
   }
   if (path === "/v1/analytics/timeseries") {
     return demoTimeSeries(param(endpoint, "range") ?? "7d") as T;
+  }
+  if (path === "/v1/analytics/report") {
+    return demoExecutiveReport({
+      range: param(endpoint, "range") ?? undefined,
+      start: param(endpoint, "start") ?? undefined,
+      end: param(endpoint, "end") ?? undefined,
+      topN: Number(param(endpoint, "top_n") ?? 10),
+    }) as T;
   }
   if (path === "/v1/analytics/full") {
     const days = Number(param(endpoint, "days") ?? 7);

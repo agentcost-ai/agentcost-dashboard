@@ -170,3 +170,58 @@ body {
 html {
   scroll-behavior: smooth;
 }
+
+/* Hand-drawn feature annotations (signature flourish) */
+.font-handwriting {
+  font-family: var(--font-caveat), "Comic Sans MS", ui-rounded, cursive;
+}
+
+/* ── Print / PDF export for the Executive Report ──────────────────────────
+   Hide the app chrome, flatten the dark theme to a clean white page, and keep
+   accent fills (bars, charts) visible. Triggered by window.print(). */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  /* Hide navigation, notification bell, range controls, etc. */
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  /* The dashboard <main> is offset by the sidebar — reset for full-width print. */
+  main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  /* Force dark, legible text across the whole report and keep fills printing. */
+  .report-print-root,
+  .report-print-root * {
+    color: #18181b !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Flatten translucent dark cards to bordered white blocks. */
+  .report-print-root .rounded-xl,
+  .report-print-root .rounded-2xl,
+  .report-print-root .rounded-lg {
+    background: #ffffff !important;
+    border-color: #e4e4e7 !important;
+    box-shadow: none !important;
+  }
+
+  /* Each section stays whole across page breaks. */
+  .report-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

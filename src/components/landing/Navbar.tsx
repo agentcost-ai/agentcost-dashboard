@@ -9,7 +9,7 @@ const navLinks = [
   { label: "Features", href: "#features" },
   { label: "Live Demo", href: "/demo?src=navbar" },
   { label: "Integration", href: "#integration" },
-  { label: "Pricing", href: "#metrics" },
+  { label: "Pricing", href: "/pricing" },
   { label: "Blog", href: "/blog" },
   { label: "Changelog", href: "/changelog" },
   { label: "Docs", href: "/docs/sdk" },

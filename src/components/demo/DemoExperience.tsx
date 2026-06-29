@@ -38,6 +38,26 @@ export function DemoExperience() {
   const [modalAction, setModalAction] = useState<string | null>(null);
   const visitedPages = useRef(new Set<string>());
 
+  // Floating banner peek behavior: after an initial reveal it tucks toward the
+  // bottom edge; hovering brings it back for a few seconds. Hover-capable
+  // devices only — touch devices keep it fully visible (no hover to reveal).
+  const [bannerRevealed, setBannerRevealed] = useState(true);
+  const bannerHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearBannerTimer = () => {
+    if (bannerHideTimer.current) {
+      clearTimeout(bannerHideTimer.current);
+      bannerHideTimer.current = null;
+    }
+  };
+  const revealBanner = useCallback(() => {
+    clearBannerTimer();
+    setBannerRevealed(true);
+  }, []);
+  const scheduleHideBanner = useCallback(() => {
+    clearBannerTimer();
+    bannerHideTimer.current = setTimeout(() => setBannerRevealed(false), 3500);
+  }, []);
+
   // The savings number shown in the modal comes from the same dataset the
   // visitor has been looking at — specific beats generic.
   const savings = useMemo(() => {
@@ -58,8 +78,11 @@ export function DemoExperience() {
       const nudged = sessionStorage.getItem("agentcost_demo_nudged");
       if (visitedPages.current.size >= 4 && !nudged) {
         sessionStorage.setItem("agentcost_demo_nudged", "true");
-        setModalAction(null);
-        setModalOpen(true);
+        // Defer one tick so we don't setState synchronously inside the effect.
+        setTimeout(() => {
+          setModalAction(null);
+          setModalOpen(true);
+        }, 0);
       }
     }
   }, [isDemo, pathname]);
@@ -86,6 +109,14 @@ export function DemoExperience() {
     return () => window.removeEventListener("keydown", onKey);
   }, [modalOpen]);
 
+  // Initial auto-tuck after a few seconds (hover devices only).
+  useEffect(() => {
+    if (!isDemo || typeof window === "undefined") return;
+    if (!window.matchMedia("(hover: hover)").matches) return;
+    bannerHideTimer.current = setTimeout(() => setBannerRevealed(false), 6000);
+    return clearBannerTimer;
+  }, [isDemo]);
+
   const handleSignupClick = useCallback(() => {
     trackDemo("signup_click", { page: pathname ?? undefined });
     // Strongest intent signal — make sure the backend is hot before the
@@ -97,8 +128,16 @@ export function DemoExperience() {
 
   return (
     <>
-      {/* ── Floating demo banner ── */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-2xl">
+      {/* ── Floating demo banner (auto-tucks; hover to reveal) ── */}
+      <motion.div
+        initial={false}
+        animate={{ y: bannerRevealed ? 0 : 48 }}
+        transition={{ type: "spring", stiffness: 240, damping: 30 }}
+        style={{ x: "-50%" }}
+        onMouseEnter={revealBanner}
+        onMouseLeave={scheduleHideBanner}
+        className="fixed bottom-5 left-1/2 z-40 w-[calc(100%-2rem)] max-w-2xl"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl border border-sky-500/25 bg-[#0d1420]/95 backdrop-blur-md shadow-[0_8px_40px_rgba(2,132,199,0.18)]">
           <div className="flex items-center gap-2.5 min-w-0">
             <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
@@ -128,7 +167,7 @@ export function DemoExperience() {
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Conversion modal ── */}
       <AnimatePresence>

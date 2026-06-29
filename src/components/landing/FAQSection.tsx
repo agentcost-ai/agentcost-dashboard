@@ -19,7 +19,7 @@ const faqs = [
             },
             {
                 q: "What LLM providers and models are supported?",
-                a: "AgentCost supports pricing for 2,900+ models across 30+ providers including OpenAI (GPT-4, GPT-4o, o1), Anthropic (Claude 3/4), Google (Gemini), Mistral, DeepSeek, Groq, Cohere, Together AI, AWS Bedrock, Azure OpenAI, and many more. Pricing data is synced from LiteLLM's continuously updated database.",
+                a: "AgentCost supports pricing for 2,900+ models across 50+ providers including OpenAI (GPT-4, GPT-4o, o1), Anthropic (Claude 3/4), Google (Gemini), Mistral, DeepSeek, Groq, Cohere, Together AI, AWS Bedrock, Azure OpenAI, and many more. Pricing data is synced from LiteLLM's continuously updated database.",
             },
         ],
     },

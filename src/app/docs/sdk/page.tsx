@@ -534,7 +534,7 @@ async for chunk in llm.astream("Tell me a story"):
                     </td>
                   </tr>
                   <tr className="border-b border-neutral-800">
-                    <td className="py-3 px-4 font-medium">30+ More</td>
+                    <td className="py-3 px-4 font-medium">50+ More</td>
                     <td className="py-3 px-4">
                       Replicate, Fireworks, Anyscale, Perplexity, etc.
                     </td>

@@ -57,6 +57,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const publicRoutes = [
   "/", // Landing page is public
   "/demo", // Demo entry point — sets demo mode then redirects to dashboard
+  "/pricing", // Pricing page is public
   "/blog", // Blog is public
   "/changelog", // Changelog is public
   "/auth/login",

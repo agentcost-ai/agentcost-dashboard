@@ -5,6 +5,8 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { CommandCenterDemo } from "./CommandCenterDemo";
+import { FeatureAnnouncement } from "./FeatureAnnouncement";
+import { AnnotatedArrow } from "./AnnotatedArrow";
 
 
 
@@ -61,20 +63,25 @@ export function HeroSection() {
       {/* ── Content ── */}
       <div className="relative z-10 mx-auto max-w-7xl px-6 w-full flex flex-col items-center">
 
-        {/* Open-source badge */}
+        {/* What's-new announcement (reusable on every release) */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="inline-flex items-center gap-2.5 px-4 py-2 mb-8 rounded-full border border-white/6 bg-white/2 text-xs text-neutral-500"
+          className="relative mb-9"
         >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-30" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-          </span>
-          <span className="font-mono tracking-wide">
-            Open Source · MIT License
-          </span>
+          <FeatureAnnouncement
+            badge="New"
+            href="/blog/executive-cost-and-usage-reports"
+          >
+            Turn your AI spend into board-ready reports
+          </FeatureAnnouncement>
+          <AnnotatedArrow
+            label="just shipped!"
+            dir="left"
+            delay={0.5}
+            className="absolute left-full top-1/2 ml-3 hidden -translate-y-1/2 lg:flex"
+          />
         </motion.div>
 
         {/* Headline */}
@@ -123,7 +130,7 @@ export function HeroSection() {
             delay: 0.3,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="flex flex-wrap justify-center gap-3 mb-16"
+          className="flex flex-wrap items-center justify-center gap-3 mb-20"
         >
           <Link
             href="/auth/register"
@@ -132,16 +139,24 @@ export function HeroSection() {
             Get Started — Free
             <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
-          <Link
-            href="/demo?src=hero"
-            className="group inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
-          >
-            <Play className="size-3.5 fill-current" />
-            Try Live Demo
-            <span className="text-[11px] font-mono text-sky-500/70 group-hover:text-sky-400/80">
-              no signup
-            </span>
-          </Link>
+          <span className="relative">
+            <Link
+              href="/demo?src=hero"
+              className="group inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
+            >
+              <Play className="size-3.5 fill-current" />
+              Try Live Demo
+              <span className="text-[11px] font-mono text-sky-500/70 group-hover:text-sky-400/80">
+                no signup
+              </span>
+            </Link>
+            <AnnotatedArrow
+              label="fully interactive!"
+              dir="up"
+              delay={0.85}
+              className="absolute left-1/2 top-full mt-2 hidden -translate-x-1/2 lg:flex"
+            />
+          </span>
           <Link
             href="/docs/sdk"
             className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-neutral-400 hover:text-white border border-white/8 hover:border-white/15 rounded-full transition-all duration-200 hover:bg-white/2"

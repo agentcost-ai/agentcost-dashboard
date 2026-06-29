@@ -43,7 +43,7 @@ export default function DashboardLayout({
           willChange: "margin-left",
         }}
       >
-        <div className="fixed top-4 right-6 z-30">
+        <div className="fixed top-4 right-6 z-30 print:hidden">
           <NotificationBell />
         </div>
         {children}

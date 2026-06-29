@@ -37,6 +37,7 @@ export interface ModelStats {
   avg_latency_ms: number;
   input_tokens: number;
   output_tokens: number;
+  cost_share?: number;
 }
 
 export interface TimeSeriesPoint {
@@ -44,6 +45,132 @@ export interface TimeSeriesPoint {
   cost: number;
   calls: number;
   tokens: number;
+}
+
+// ── Executive Report ──────────────────────────────────────────────────────
+
+export interface MetricDelta {
+  current: number;
+  previous: number;
+  change_percent: number;
+  direction: "up" | "down" | "neutral";
+}
+
+export interface ReportSummary {
+  cost: MetricDelta;
+  calls: MetricDelta;
+  tokens: MetricDelta;
+  success_rate: MetricDelta;
+  avg_latency_ms: MetricDelta;
+  blended_cost_per_1k: number;
+  in_out_ratio: number;
+}
+
+export interface LatencyPercentiles {
+  p50: number;
+  p95: number;
+  p99: number;
+  avg: number;
+  sample_size: number;
+  approximate: boolean;
+}
+
+export interface ModelEfficiency {
+  model: string;
+  cost_per_1k: number;
+  in_out_ratio: number;
+}
+
+export interface TokenEfficiency {
+  blended_cost_per_1k: number;
+  in_out_ratio: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  by_model: ModelEfficiency[];
+}
+
+export interface ParetoInfo {
+  top_count: number;
+  top_share: number;
+  total_models: number;
+}
+
+export interface CadenceBucket {
+  label: string;
+  index: number;
+  calls: number;
+  cost: number;
+}
+
+export interface UsageCadence {
+  busiest_day: string | null;
+  busiest_hour: string | null;
+  by_dow: CadenceBucket[];
+  by_hour: CadenceBucket[];
+}
+
+export interface ErrorBreakdownRow {
+  model: string;
+  total_calls: number;
+  error_count: number;
+  error_rate: number;
+}
+
+export interface TopError {
+  error: string;
+  count: number;
+}
+
+export interface RunRateProjection {
+  daily_avg_cost: number;
+  projected_monthly_cost: number;
+  window_days: number;
+}
+
+export interface ReportBudgetStatus {
+  enabled: boolean;
+  budget: number | null;
+  current_spend: number;
+  projected_spend: number;
+  utilization_percent: number | null;
+  currency: string;
+  fx_rate: number;
+  mode: string;
+}
+
+export interface SavingsRollup {
+  total_potential_savings_monthly: number;
+  total_potential_savings_percent: number;
+  suggestion_count: number;
+  high_priority_count: number;
+  top_suggestions: OptimizationSuggestion[];
+}
+
+export interface ExecutiveReport {
+  generated_at: string;
+  range_label: string;
+  period_start: string;
+  period_end: string;
+  previous_period_start: string;
+  previous_period_end: string;
+  is_custom_range: boolean;
+  project_name: string;
+  currency: string;
+  summary: ReportSummary;
+  overview: AnalyticsOverview;
+  timeseries: TimeSeriesPoint[];
+  models: ModelStats[];
+  model_pareto: ParetoInfo;
+  agents: AgentStats[];
+  agent_cost_share: Record<string, number>;
+  latency: LatencyPercentiles;
+  efficiency: TokenEfficiency;
+  errors: ErrorBreakdownRow[];
+  top_errors: TopError[];
+  cadence: UsageCadence;
+  run_rate: RunRateProjection;
+  budget: ReportBudgetStatus;
+  savings: SavingsRollup;
 }
 
 export interface Event {
@@ -601,6 +728,27 @@ class ApiClient {
 
   async getTimeSeries(range: string = "7d"): Promise<TimeSeriesPoint[]> {
     return this.request(`/v1/analytics/timeseries?range=${range}`);
+  }
+
+  /**
+   * Fetch the composite Executive Cost & Usage Report. Pass either a preset
+   * `range` (incl. "mtd") or an explicit `start`/`end` custom window.
+   */
+  async getExecutiveReport(opts: {
+    range?: string;
+    start?: string;
+    end?: string;
+    topN?: number;
+  } = {}): Promise<ExecutiveReport> {
+    const p = new URLSearchParams();
+    if (opts.start && opts.end) {
+      p.set("start", opts.start);
+      p.set("end", opts.end);
+    } else {
+      p.set("range", opts.range ?? "30d");
+    }
+    p.set("top_n", String(opts.topN ?? 10));
+    return this.request(`/v1/analytics/report?${p.toString()}`);
   }
 
   async getEvents(

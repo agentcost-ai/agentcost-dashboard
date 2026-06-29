@@ -26,6 +26,8 @@ import type {
   NotificationListResponse,
   UserProfile,
   SessionInfo,
+  ExecutiveReport,
+  MetricDelta,
 } from "@/lib/api";
 
 export const DEMO_PROJECT_ID = "demo-project";
@@ -633,4 +635,295 @@ export function demoNotifications(): NotificationListResponse {
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
+}
+
+function round6(n: number): number {
+  return Math.round(n * 1_000_000) / 1_000_000;
+}
+
+// ── Executive Report ──────────────────────────────────────────────────────
+
+/** Call-weighted aggregate over the window [offsetDays, offsetDays + days). */
+function windowAgg(offsetDays: number, days: number) {
+  let mult = 0;
+  for (let d = 0; d < days; d++) mult += dayMultiplier(offsetDays + d);
+  let cost = 0, calls = 0, inTok = 0, outTok = 0, latW = 0, errW = 0;
+  for (const p of AGENTS) {
+    const c = p.callsPerDay * mult;
+    calls += c;
+    cost += c * perCallCost(p);
+    inTok += c * p.inTokens;
+    outTok += c * p.outTokens;
+    latW += c * p.avgLatencyMs;
+    errW += c * p.errorRate;
+  }
+  return {
+    mult,
+    cost,
+    calls,
+    inTok,
+    outTok,
+    tokens: inTok + outTok,
+    avgLat: calls > 0 ? latW / calls : 0,
+    successRate: calls > 0 ? 100 * (1 - errW / calls) : 100,
+  };
+}
+
+function mkDelta(cur: number, prev: number): MetricDelta {
+  const change = prev ? ((cur - prev) / Math.abs(prev)) * 100 : 0;
+  const direction =
+    Math.abs(change) < 0.05 ? "neutral" : change > 0 ? "up" : "down";
+  return {
+    current: round6(cur),
+    previous: round6(prev),
+    change_percent: round2(change),
+    direction,
+  };
+}
+
+export function demoExecutiveReport(opts: {
+  range?: string;
+  start?: string;
+  end?: string;
+  topN?: number;
+}): ExecutiveReport {
+  const topN = opts.topN ?? 10;
+  const now = new Date();
+  let days: number;
+  let rangeLabel: string;
+  let isCustom = false;
+  let tsRange: string;
+  let periodStart: Date;
+  let periodEnd = new Date();
+
+  if (opts.start && opts.end) {
+    isCustom = true;
+    periodStart = new Date(opts.start);
+    periodEnd = new Date(opts.end);
+    days = Math.max(
+      1,
+      Math.round((periodEnd.getTime() - periodStart.getTime()) / 86400_000),
+    );
+    rangeLabel = "Custom range";
+    tsRange = days <= 1 ? "24h" : days <= 7 ? "7d" : days <= 30 ? "30d" : "90d";
+  } else if (opts.range === "mtd") {
+    periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    days = Math.max(
+      1,
+      Math.round((now.getTime() - periodStart.getTime()) / 86400_000),
+    );
+    rangeLabel = "Month to date";
+    tsRange = days <= 7 ? "7d" : days <= 30 ? "30d" : "90d";
+  } else {
+    const r = opts.range ?? "30d";
+    days = rangeToDays(r);
+    rangeLabel = r;
+    tsRange = r;
+    periodStart = new Date(now.getTime() - days * 86400_000);
+  }
+
+  const cur = windowAgg(0, days);
+  const prev = windowAgg(days, days);
+
+  const overview: AnalyticsOverview = {
+    total_cost: round2(cur.cost),
+    total_calls: Math.round(cur.calls),
+    total_tokens: Math.round(cur.tokens),
+    total_input_tokens: Math.round(cur.inTok),
+    total_output_tokens: Math.round(cur.outTok),
+    avg_cost_per_call: cur.calls > 0 ? cur.cost / cur.calls : 0,
+    avg_tokens_per_call: cur.calls > 0 ? Math.round(cur.tokens / cur.calls) : 0,
+    avg_latency_ms: Math.round(cur.avgLat),
+    success_rate: round2(cur.successRate),
+  };
+
+  // Models + Pareto + per-model cost share.
+  const models = demoModelStats(tsRange, topN);
+  const modelTotal = models.reduce((s, m) => s + m.total_cost, 0) || 1;
+  for (const m of models) m.cost_share = round2((m.total_cost / modelTotal) * 100);
+  const ordered = [...models].sort((a, b) => b.total_cost - a.total_cost);
+  let cumulative = 0;
+  let paretoCount = 0;
+  for (const m of ordered) {
+    cumulative += m.total_cost;
+    paretoCount += 1;
+    if (cumulative / modelTotal >= 0.8) break;
+  }
+
+  // Agents + cost share.
+  const agents = demoAgentStats(tsRange, topN);
+  const agentTotal = agents.reduce((s, a) => s + a.total_cost, 0) || 1;
+  const agentCostShare: Record<string, number> = {};
+  for (const a of agents)
+    agentCostShare[a.agent_name] = round2((a.total_cost / agentTotal) * 100);
+
+  // Latency percentiles — call-weighted across agent profiles.
+  const latProfiles = [...AGENTS].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs);
+  const totalW = latProfiles.reduce((s, p) => s + p.callsPerDay, 0) || 1;
+  const weightedPct = (pct: number): number => {
+    let acc = 0;
+    for (const p of latProfiles) {
+      acc += p.callsPerDay / totalW;
+      if (acc >= pct) return p.avgLatencyMs;
+    }
+    return latProfiles[latProfiles.length - 1].avgLatencyMs;
+  };
+  const maxLat = latProfiles[latProfiles.length - 1].avgLatencyMs;
+  const latency = {
+    p50: round2(weightedPct(0.5)),
+    p95: round2(maxLat * 1.4),
+    p99: round2(maxLat * 1.8),
+    avg: Math.round(cur.avgLat),
+    sample_size: Math.round(cur.calls),
+    approximate: true,
+  };
+
+  // Token efficiency.
+  const byModelEff = models.map((m) => ({
+    model: m.model,
+    cost_per_1k: m.total_tokens > 0 ? round6((m.total_cost / m.total_tokens) * 1000) : 0,
+    in_out_ratio: m.output_tokens > 0 ? round2(m.input_tokens / m.output_tokens) : 0,
+  }));
+  const efficiency = {
+    blended_cost_per_1k:
+      cur.tokens > 0 ? round6((cur.cost / cur.tokens) * 1000) : 0,
+    in_out_ratio: cur.outTok > 0 ? round2(cur.inTok / cur.outTok) : 0,
+    total_input_tokens: Math.round(cur.inTok),
+    total_output_tokens: Math.round(cur.outTok),
+    by_model: byModelEff,
+  };
+
+  // Error breakdown per model.
+  const errMap = new Map<string, { calls: number; err: number }>();
+  for (const p of AGENTS) {
+    const calls = p.callsPerDay * cur.mult;
+    const e = errMap.get(p.model) ?? { calls: 0, err: 0 };
+    e.calls += calls;
+    e.err += calls * p.errorRate;
+    errMap.set(p.model, e);
+  }
+  const errors = [...errMap.entries()]
+    .map(([model, v]) => ({
+      model,
+      total_calls: Math.round(v.calls),
+      error_count: Math.round(v.err),
+      error_rate: v.calls > 0 ? round2((v.err / v.calls) * 100) : 0,
+    }))
+    .sort((a, b) => b.error_count - a.error_count);
+  const totalErrors = errors.reduce((s, e) => s + e.error_count, 0) || 1;
+  const top_errors = SAMPLE_ERRORS.map((error, i) => ({
+    error,
+    count: Math.round((totalErrors * [0.5, 0.3, 0.2][i]) || 0),
+  })).filter((e) => e.count > 0);
+
+  // Usage cadence — day-of-week from real weekdays, hour-of-day synthetic.
+  const dowCalls = new Array(7).fill(0);
+  const dowCost = new Array(7).fill(0);
+  for (let d = 0; d < days; d++) {
+    const date = new Date();
+    date.setDate(date.getDate() - d);
+    const dow = date.getDay();
+    const m = dayMultiplier(d);
+    for (const p of AGENTS) {
+      const c = p.callsPerDay * m;
+      dowCalls[dow] += c;
+      dowCost[dow] += c * perCallCost(p);
+    }
+  }
+  const DOW_LABELS = [
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+  ];
+  const by_dow = DOW_LABELS.map((label, i) => ({
+    label,
+    index: i,
+    calls: Math.round(dowCalls[i]),
+    cost: round6(dowCost[i]),
+  }));
+  const dayCallsTotal = cur.calls;
+  const by_hour = Array.from({ length: 24 }, (_, h) => {
+    const curve = 0.45 + 0.55 * Math.sin((Math.PI * (h - 4)) / 20) ** 2;
+    const share = curve / 14.4; // curve integrates to ~14.4 over 24h
+    return {
+      label: `${String(h).padStart(2, "0")}:00`,
+      index: h,
+      calls: Math.round((dayCallsTotal / days) * share * 24),
+      cost: round6((cur.cost / days) * share * 24),
+    };
+  });
+  const busiestDow = by_dow.reduce((a, b) => (b.calls > a.calls ? b : a), by_dow[0]);
+  const busiestHour = by_hour.reduce((a, b) => (b.calls > a.calls ? b : a), by_hour[0]);
+
+  const dailyAvg = cur.cost / days;
+  const run_rate = {
+    daily_avg_cost: round6(dailyAvg),
+    projected_monthly_cost: round2(dailyAvg * 30),
+    window_days: round2(days),
+  };
+
+  const b = demoBudget();
+  const budget = {
+    enabled: true,
+    budget: b.monthly_budget_usd,
+    current_spend: b.current_month_spend,
+    projected_spend: round2((b.current_month_spend / new Date().getDate()) * 30),
+    utilization_percent: b.utilization_percent,
+    currency: b.budget_currency,
+    fx_rate: b.fx_rate,
+    mode: b.budget_enforcement_mode,
+  };
+
+  const optSummary = demoOptimizationSummary();
+  const savings = {
+    total_potential_savings_monthly: optSummary.total_potential_savings_monthly,
+    total_potential_savings_percent: optSummary.total_potential_savings_percent,
+    suggestion_count: optSummary.suggestion_count,
+    high_priority_count: optSummary.high_priority_count,
+    top_suggestions: optSummary.suggestions.slice(0, 3),
+  };
+
+  return {
+    generated_at: new Date().toISOString(),
+    range_label: rangeLabel,
+    period_start: periodStart.toISOString(),
+    period_end: periodEnd.toISOString(),
+    previous_period_start: new Date(
+      periodStart.getTime() - days * 86400_000,
+    ).toISOString(),
+    previous_period_end: periodStart.toISOString(),
+    is_custom_range: isCustom,
+    project_name: DEMO_PROJECT_NAME,
+    currency: budget.currency,
+    summary: {
+      cost: mkDelta(cur.cost, prev.cost),
+      calls: mkDelta(cur.calls, prev.calls),
+      tokens: mkDelta(cur.tokens, prev.tokens),
+      success_rate: mkDelta(cur.successRate, prev.successRate),
+      avg_latency_ms: mkDelta(cur.avgLat, prev.avgLat),
+      blended_cost_per_1k: efficiency.blended_cost_per_1k,
+      in_out_ratio: efficiency.in_out_ratio,
+    },
+    overview,
+    timeseries: demoTimeSeries(tsRange),
+    models,
+    model_pareto: {
+      top_count: paretoCount,
+      top_share: round2((cumulative / modelTotal) * 100),
+      total_models: models.length,
+    },
+    agents,
+    agent_cost_share: agentCostShare,
+    latency,
+    efficiency,
+    errors,
+    top_errors,
+    cadence: {
+      busiest_day: busiestDow.calls > 0 ? busiestDow.label : null,
+      busiest_hour: busiestHour.calls > 0 ? busiestHour.label : null,
+      by_dow,
+      by_hour,
+    },
+    run_rate,
+    budget,
+    savings,
+  };
 }

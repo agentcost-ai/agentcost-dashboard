@@ -42,8 +42,29 @@ export default async function BlogPostPage({
     notFound();
   }
 
+  const articleLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
+    articleSection: post.category,
+    author: { "@type": "Organization", name: "AgentCost" },
+    publisher: {
+      "@type": "Organization",
+      name: "AgentCost",
+      logo: { "@type": "ImageObject", url: "https://agentcost.tech/icon.svg" },
+    },
+    mainEntityOfPage: `https://agentcost.tech/blog/${post.slug}`,
+  };
+
   return (
     <main className="min-h-screen bg-[#0a0a0b] text-neutral-100">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+      />
       <article className="mx-auto max-w-3xl px-6 py-20">
         <Link href="/blog" className="text-sm text-sky-300 hover:text-sky-200">
           ← Back to blog

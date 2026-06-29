@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Sora } from "next/font/google";
+import { Inter, JetBrains_Mono, Sora, Caveat } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -19,6 +19,13 @@ const sora = Sora({
   variable: "--font-sora",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+// Used only for hand-drawn feature annotations (our signature flourish).
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -80,9 +87,46 @@ export default function RootLayout({
         ></script>
       </head>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} ${sora.variable} antialiased bg-neutral-950 text-neutral-100`}
+        className={`${inter.variable} ${jetbrainsMono.variable} ${sora.variable} ${caveat.variable} antialiased bg-neutral-950 text-neutral-100`}
         suppressHydrationWarning={true}
       >
+        {/* Site-wide structured data for search engines */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://agentcost.tech/#organization",
+                  name: "AgentCost",
+                  url: "https://agentcost.tech",
+                  logo: "https://agentcost.tech/icon.svg",
+                  description:
+                    "Open-source LLM cost observability. Track, analyze, and optimize OpenAI, Anthropic, and LangChain spending in real time.",
+                  sameAs: ["https://github.com/agentcost-ai"],
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://agentcost.tech/#website",
+                  url: "https://agentcost.tech",
+                  name: "AgentCost",
+                  publisher: { "@id": "https://agentcost.tech/#organization" },
+                },
+                {
+                  "@type": "SoftwareApplication",
+                  name: "AgentCost",
+                  applicationCategory: "DeveloperApplication",
+                  operatingSystem: "Any",
+                  description:
+                    "Real-time LLM cost tracking and optimization for OpenAI, Anthropic, and LangChain across 2,900+ models.",
+                  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+                },
+              ],
+            }),
+          }}
+        />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-KMLSX540HL"
           strategy="afterInteractive"

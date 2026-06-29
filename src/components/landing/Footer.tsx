@@ -9,7 +9,7 @@ const columns = [
     links: [
       { label: "Features", href: "#features" },
       { label: "Integration", href: "#integration" },
-      { label: "Pricing", href: "#metrics" },
+      { label: "Pricing", href: "/pricing" },
       { label: "Dashboard", href: "/auth/login" },
     ],
   },

@@ -17,6 +17,22 @@ export type ChangelogEntry = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "executive-cost-and-usage-reports",
+    title: "Executive Reports: Board-Ready Cost & Usage in One Click",
+    excerpt:
+      "A single, exportable report that opens with a one-glance executive summary and continues into deep breakdowns — latency percentiles, cost concentration, error analysis, usage cadence, and savings — across any time range.",
+    publishedAt: "2026-06-28",
+    readTime: "4 min read",
+    category: "Product",
+    content: [
+      "Your dashboard answers questions live, one panel at a time. But when finance asks 'what did we spend last month, and why?', or a customer wants a usage summary, you need a single document you can read top to bottom — or hand to someone who will. That document is the new Executive Report.",
+      "Every report opens with an executive summary: total spend, calls, tokens, success rate, average latency, and projected monthly run-rate — each with a period-over-period delta against the immediately preceding window of equal length, so a 30-day report compares against the 30 days before it. The headline is the part anyone can read; everything below it is for the people who need the detail.",
+      "And there is a lot of detail. Latency percentiles (p50/p95/p99), not just averages — because averages hide the tail that actually pages your on-call. Cost concentration, showing how few models drive most of your spend (the classic Pareto split). Token efficiency, with blended cost per 1K tokens and your input-to-output ratio per model. A reliability section that breaks failures down by model and lists your most frequent errors verbatim. A usage cadence view that surfaces your busiest day and hour. And an optimization-savings rollup that ties straight back to the recommendations engine.",
+      "It runs over any window: the standard presets, month-to-date, or a fully custom start-and-end date range for billing-aligned reporting. Two export paths ship with it. PDF renders a clean, letterheaded document — not a screenshot of the dashboard, but a purpose-built page with its own typography, KPI grid, tables, and inline charts, so it prints the same on every machine. CSV exports the raw breakdown tables (models, agents, errors, cadence) with a UTF-8 byte-order mark so currency symbols and accented text open correctly in Excel on the first try.",
+      "You will find it in the dashboard sidebar under Reports. It works against your live data, and it works in the no-signup demo too — open the demo, pick a range, and export a sample report to see exactly what your finance team would receive.",
+    ],
+  },
+  {
     slug: "budget-guardrails-for-llm-spend",
     title: "Budget Guardrails for LLM Spend",
     excerpt:
@@ -49,6 +65,23 @@ export const blogPosts: BlogPost[] = [
 ];
 
 export const changelogEntries: ChangelogEntry[] = [
+  {
+    version: "v1.9.0",
+    date: "2026-06-28",
+    summary:
+      "Executive Reports with PDF/CSV export, a redesigned Pricing page, and reliability fixes",
+    changes: [
+      "Added Executive Reports — a new Reports page that pairs a one-glance executive summary (spend, calls, tokens, success rate, latency, projected run-rate, each with period-over-period deltas) with deep breakdowns: latency percentiles (p50/p95/p99), model cost concentration (Pareto), token efficiency, per-model error analysis, usage cadence (busiest day/hour), budget status, and an optimization-savings rollup.",
+      "Reports run over standard ranges, month-to-date, or a fully custom start/end date window — deltas always compare against the immediately preceding window of equal length.",
+      "Added a one-click PDF export that renders a purpose-built, letterheaded document (its own typography, KPI grid, tables, and inline SVG charts) instead of printing the dashboard — consistent output on every machine.",
+      "Added CSV export of the raw breakdown tables (models, agents, errors, cadence) with a UTF-8 byte-order mark and CRLF line endings, so currency symbols and accented text open correctly in Excel.",
+      "Backed the report with a new /v1/analytics/report endpoint and ReportService that compose the existing analytics, budget, and optimization services — no duplicated aggregation logic.",
+      "Reports work end-to-end in the no-signup demo, generated entirely client-side from the same sample dataset as the rest of the demo.",
+      "Redesigned the Pricing page: the header link now opens a dedicated page with an interactive savings estimator and an honest, single 'Free forever' open-source plan — replacing the old anchor jump to the metrics section.",
+      "Added a Back-to-home link and a featured-post layout to the Blog index.",
+      "Fixed the test suite's in-memory database setup (shared connection + commit-on-success) and aligned auth fixtures with the dual-auth model, restoring full green coverage; corrected the soft-delete test to reflect intentional grace-period reactivation.",
+    ],
+  },
   {
     version: "v1.8.0",
     date: "2026-06-18",

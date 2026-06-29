@@ -18,6 +18,8 @@ import {
   BookOpen,
   ChevronDown,
   MessageSquare,
+  FileText,
+  Grid2x2Plus,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
@@ -26,6 +28,7 @@ const navigation = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { name: "Agents", href: "/agents", icon: Users },
   { name: "Models", href: "/models", icon: Cpu },
+  { name: "Reports", href: "/reports", icon: FileText },
   { name: "Events", href: "/events", icon: List },
   { name: "Optimizations", href: "/optimizations", icon: Zap },
   { name: "Feedback", href: "/feedback", icon: MessageSquare },
@@ -117,18 +120,14 @@ export function Sidebar() {
         <div className="flex h-16 items-center justify-between border-b border-neutral-800 px-4">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
-                <span className="text-sm font-bold text-white">AC</span>
-              </div>
+              <Grid2x2Plus className="size-7 text-sky-400" />
               <span className="text-lg font-semibold text-white">
                 AgentCost
               </span>
             </div>
           )}
           {collapsed && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 mx-auto">
-              <span className="text-sm font-bold text-white">AC</span>
-            </div>
+            <Grid2x2Plus className="size-7 text-sky-400 mx-auto" />
           )}
           {!collapsed && (
             <button
