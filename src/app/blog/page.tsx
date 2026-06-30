@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { blogPosts } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "AgentCost Blog",
+  title: "AgentCost Blog — LLM Cost Optimization Guides & Updates",
   description:
     "Product updates, engineering writeups, and practical guides for LLM cost optimization.",
   alternates: { canonical: "https://agentcost.tech/blog" },

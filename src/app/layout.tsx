@@ -29,7 +29,7 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "AgentCost - Real-time Cost Tracking for OpenAI, Anthropic, and LangChain",
+  title: "AgentCost — Track OpenAI, Anthropic & LangChain Costs",
   description:
     "Track OpenAI, Anthropic, and LangChain costs in real-time. At AgentCost, see which agents are expensive, set budget guardrails, and get optimization suggestions.",
   keywords: [
@@ -66,9 +66,10 @@ export const metadata: Metadata = {
     description: "Track OpenAI, Anthropic, and LangChain costs in real-time.",
     images: ["https://agentcost.tech/icon.svg"],
   },
-  alternates: {
-    canonical: "https://agentcost.tech/",
-  },
+  // NOTE: do NOT set a fixed `alternates.canonical` here — it leaks to every
+  // page that doesn't override it, making them look like duplicates of the
+  // homepage (Bing: "alternate version of a canonical page" → not indexed).
+  // Each page sets its own canonical; the homepage's lives in app/page.tsx.
   metadataBase: new URL("https://agentcost.tech"),
 };
 
