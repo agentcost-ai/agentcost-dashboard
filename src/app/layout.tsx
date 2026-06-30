@@ -31,7 +31,7 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: "AgentCost - Real-time Cost Tracking for OpenAI, Anthropic, and LangChain",
   description:
-    "Track OpenAI, Anthropic, and LangChain costs in real-time. See which agents are expensive, set budget guardrails, and get optimization suggestions.",
+    "Track OpenAI, Anthropic, and LangChain costs in real-time. At AgentCost, see which agents are expensive, set budget guardrails, and get optimization suggestions.",
   keywords: [
     "langchain",
     "openai",
@@ -101,11 +101,25 @@ export default function RootLayout({
                   "@type": "Organization",
                   "@id": "https://agentcost.tech/#organization",
                   name: "AgentCost",
+                  alternateName: ["Agent Cost", "AgentCost.tech"],
                   url: "https://agentcost.tech",
                   logo: "https://agentcost.tech/icon.svg",
+                  slogan: "Real-time LLM cost observability",
                   description:
-                    "Open-source LLM cost observability. Track, analyze, and optimize OpenAI, Anthropic, and LangChain spending in real time.",
+                    "AgentCost is an open-source LLM cost observability platform. Track, analyze, and optimize OpenAI, Anthropic, and LangChain spending in real time across 2,900+ models.",
                   sameAs: ["https://github.com/agentcost-ai"],
+                  founder: { "@id": "https://agentcost.tech/#founder" },
+                },
+                {
+                  "@type": "Person",
+                  "@id": "https://agentcost.tech/#founder",
+                  name: "Kushagra Agrawal",
+                  url: "https://www.linkedin.com/in/kushagra--agrawal/",
+                  sameAs: [
+                    "https://www.linkedin.com/in/kushagra--agrawal/",
+                    "https://x.com/KushagraA15",
+                    "https://github.com/DS-Kushagra",
+                  ],
                 },
                 {
                   "@type": "WebSite",
