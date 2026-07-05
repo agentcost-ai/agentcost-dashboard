@@ -1,7 +1,13 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Grid2x2Plus, ArrowLeft } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | AgentCost",
+  description:
+    "AgentCost privacy policy — what data we collect, how we use it, and how we protect it.",
+  alternates: { canonical: "https://agentcost.tech/privacy" },
+};
 
 export default function PrivacyPolicyPage() {
   const lastUpdated = "January 30, 2026";
