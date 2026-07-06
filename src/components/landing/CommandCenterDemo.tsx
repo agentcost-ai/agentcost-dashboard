@@ -8,6 +8,7 @@ import {
     Copy,
     ChevronRight,
 } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 /* ─────────────────────────────────────────────
    CONSTANTS & DATA
@@ -37,6 +38,7 @@ export function CommandCenterDemo() {
 
     const copyCode = () => {
         navigator.clipboard.writeText(SETUP_CODE);
+        track("sdk_install_started", { location: "hero_quickstart" });
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Grid2x2Plus } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 const columns = [
   {
@@ -103,6 +104,7 @@ export function Footer() {
               href="https://github.com/agentcost-ai"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => track("github_clicked", { location: "footer" })}
               className="text-neutral-600 hover:text-neutral-400 transition-colors"
             >
               <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">

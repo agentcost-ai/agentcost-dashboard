@@ -18,8 +18,9 @@ import {
 } from "lucide-react";
 import { parseApiError } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { Checkbox } from "@/components/auth/AuthComponents";
+import { Checkbox, GitHubSignInButton } from "@/components/auth/AuthComponents";
 import { isDemoMode, exitDemoMode, trackDemo } from "@/lib/demo/demo";
+import { track } from "@/lib/analytics";
 
 declare global {
   interface Window {
@@ -113,6 +114,7 @@ export default function RegisterPage() {
       setIsGoogleLoading(true);
       try {
         await googleLogin(response.credential);
+        track("signup_completed", { method: "google" });
       } catch (err) {
         setError(parseApiError(err));
       } finally {
@@ -194,6 +196,7 @@ export default function RegisterPage() {
     }
 
     setIsLoading(true);
+    track("signup_started", { method: "email" });
 
     try {
       const response = await fetch(
@@ -230,6 +233,7 @@ export default function RegisterPage() {
         exitDemoMode(false);
       }
 
+      track("signup_completed", { method: "email" });
       setSuccess(true);
     } catch (err) {
       setError(parseApiError(err));
@@ -328,8 +332,12 @@ export default function RegisterPage() {
           aria-hidden="true"
         />
       </div>
+      {/* GitHub Sign Up */}
+      <div className="mt-3">
+        <GitHubSignInButton label="Sign up with GitHub" from="register" />
+      </div>
       <p className="text-center text-[11px] text-neutral-600 mt-2">
-        By signing up with Google, you agree to our{" "}
+        By signing up with Google or GitHub, you agree to our{" "}
         <Link
           href="/terms"
           target="_blank"

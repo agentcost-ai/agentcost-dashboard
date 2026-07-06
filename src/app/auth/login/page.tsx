@@ -16,7 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { parseApiError } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { Checkbox } from "@/components/auth/AuthComponents";
+import { Checkbox, GitHubSignInButton } from "@/components/auth/AuthComponents";
 
 declare global {
   interface Window {
@@ -228,6 +228,11 @@ function LoginContent() {
           }`}
           aria-hidden="true"
         />
+      </div>
+
+      {/* GitHub Sign In */}
+      <div className="mt-3">
+        <GitHubSignInButton label="Continue with GitHub" from="login" />
       </div>
 
       {/* Divider */}

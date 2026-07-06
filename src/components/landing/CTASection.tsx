@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 export function CTASection() {
   return (
@@ -48,6 +49,9 @@ export function CTASection() {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/auth/register"
+                onClick={() =>
+                  track("click_signup", { location: "cta_section" })
+                }
                 className="group inline-flex items-center gap-2 px-7 py-3.5 text-sm font-medium text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-xl transition-all duration-200 shadow-[0_1px_32px_rgba(255,255,255,0.08)]"
               >
                 Create Free Account
@@ -57,6 +61,9 @@ export function CTASection() {
                 href="https://github.com/agentcost-ai/agentcost-sdk"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() =>
+                  track("github_clicked", { location: "cta_section" })
+                }
                 className="inline-flex items-center gap-2 px-7 py-3.5 text-sm font-medium text-neutral-400 hover:text-white border border-white/8 hover:border-white/15 rounded-xl transition-all duration-200 hover:bg-white/2"
               >
                 <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
