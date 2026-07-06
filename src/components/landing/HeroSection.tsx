@@ -131,7 +131,7 @@ export function HeroSection() {
             delay: 0.3,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="flex flex-wrap items-center justify-center gap-3 mb-8 lg:mb-24"
+          className="flex flex-wrap items-center justify-center gap-3 mb-8"
         >
           <span className="relative">
             <Link
@@ -144,14 +144,13 @@ export function HeroSection() {
                 no signup
               </span>
             </Link>
-            {/* 38px arrow + 4px gap + 21px label + 8px offset ≈ 73px below the
-                button — the lg:mb-24 on the CTA row reserves that space so the
-                proof line clears it. */}
+            {/* Sits beside the button (like "just shipped!" on the pill) so it
+                never collides with the proof line below the CTA row. */}
             <AnnotatedArrow
               label="fully interactive!"
-              dir="up"
+              dir="right"
               delay={0.85}
-              className="absolute left-1/2 top-full mt-2 hidden -translate-x-1/2 lg:flex"
+              className="absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 lg:flex"
             />
           </span>
           <Link
