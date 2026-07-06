@@ -95,14 +95,14 @@ export function HeroSection() {
           }}
           className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-center text-white leading-[1.08] mb-8 max-w-4xl"
         >
-          Know exactly what your{" "}
+          Your AI bill spiked.{" "}
           <span className="relative inline-block">
             <span className="relative z-10 bg-linear-to-r from-sky-300 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
-              AI&nbsp;agents
+              Which&nbsp;agent
             </span>
             <span className="absolute -bottom-1 left-0 right-0 h-px bg-linear-to-r from-sky-400/50 via-cyan-400/20 to-transparent" />
           </span>{" "}
-          cost.
+          did it?
         </motion.h1>
 
         {/* Subtext */}
@@ -116,9 +116,10 @@ export function HeroSection() {
           }}
           className="text-[17px] sm:text-lg text-neutral-400 text-center max-w-2xl leading-relaxed mb-10"
         >
-          Open-source cost tracking for LLM applications.{" "}
+          AgentCost traces every LLM call back to the agent that made it —
+          OpenAI, Anthropic, LangChain, 2,900+ models.{" "}
           <span className="text-neutral-200 font-medium">Two lines of Python.</span>{" "}
-          Self-hosted. 2,900+ models supported.
+          Open source. Self-hosted.
         </motion.p>
 
         {/* CTA buttons */}
@@ -130,23 +131,16 @@ export function HeroSection() {
             delay: 0.3,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="flex flex-wrap items-center justify-center gap-3 mb-20"
+          className="flex flex-wrap items-center justify-center gap-3 mb-14"
         >
-          <Link
-            href="/auth/register"
-            className="group relative inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-all duration-200 shadow-[0_1px_32px_rgba(255,255,255,0.15)]"
-          >
-            Get Started — Free
-            <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
-          </Link>
           <span className="relative">
             <Link
               href="/demo?src=hero"
-              className="group inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
+              className="group relative inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-all duration-200 shadow-[0_1px_32px_rgba(255,255,255,0.15)]"
             >
               <Play className="size-3.5 fill-current" />
-              Try Live Demo
-              <span className="text-[11px] font-mono text-sky-500/70 group-hover:text-sky-400/80">
+              Try the Live Demo
+              <span className="text-[11px] font-mono text-neutral-500">
                 no signup
               </span>
             </Link>
@@ -158,12 +152,44 @@ export function HeroSection() {
             />
           </span>
           <Link
+            href="/auth/register"
+            className="group inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
+          >
+            Get Started — Free
+            <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Link>
+          <Link
             href="/docs/sdk"
             className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-neutral-400 hover:text-white border border-white/8 hover:border-white/15 rounded-full transition-all duration-200 hover:bg-white/2"
           >
             Documentation
           </Link>
         </motion.div>
+
+        {/* Proof — the founder story is real and verifiable; no invented metrics */}
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.5,
+            delay: 0.4,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="text-sm text-neutral-500 text-center max-w-xl leading-relaxed mb-16"
+        >
+          Born from our own{" "}
+          <span className="text-neutral-300">$800 OpenAI bill</span> — AgentCost
+          found the runaway agent and cut our spend{" "}
+          <span className="text-neutral-300">44% in two weeks</span>.{" "}
+          <a
+            href="https://dev.to/kushagra125/launching-agentcost-14lf"
+            target="_blank"
+            rel="noopener"
+            className="text-sky-400/80 hover:text-sky-300 underline underline-offset-2 decoration-sky-500/30"
+          >
+            Read the story
+          </a>
+        </motion.p>
 
         {/* ── Command Center Demo ── */}
         <motion.div
