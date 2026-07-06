@@ -7,7 +7,7 @@ interface AnnotatedArrowProps {
   /** Handwritten note. */
   label: string;
   /** Which way the arrow points (toward the thing being annotated). */
-  dir?: "left" | "up";
+  dir?: "left" | "right" | "up";
   className?: string;
   labelClassName?: string;
   /** Seconds to wait before the draw-in starts (sync with the hero entrance). */
@@ -81,6 +81,41 @@ export function AnnotatedArrow({
           />
         </svg>
         <span className="-rotate-2">{note}</span>
+      </div>
+    );
+  }
+
+  // dir === "right": arrow points right, note sits to the left (horizontal
+  // mirror of the "left" variant, for annotating something to the right).
+  if (dir === "right") {
+    return (
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none flex select-none items-center gap-1.5",
+          className,
+        )}
+      >
+        <span className="rotate-3">{note}</span>
+        <svg width="50" height="28" viewBox="0 0 50 28" fill="none">
+          <motion.path
+            d="M2 7 C 19 2, 35 7, 45 16"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            className="text-sky-400/80"
+            {...stroke(0)}
+          />
+          <motion.path
+            d="M46 6 L 47 17 L 37 15"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-sky-400/80"
+            {...stroke(1)}
+          />
+        </svg>
       </div>
     );
   }
