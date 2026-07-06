@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { enterDemoMode } from "@/lib/demo/demo";
 import { prewarmBackend } from "@/lib/prewarm";
+import { track } from "@/lib/analytics";
 
 /**
  * Demo entry point — the marketable URL (agentcost.dev/demo).
@@ -17,6 +18,9 @@ function DemoEntry() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Fired before the redirect below — GA4 delivers via sendBeacon, which
+    // survives the navigation.
+    track("demo_opened", { src: searchParams.get("src") ?? "direct" });
     enterDemoMode(searchParams.get("src"));
     // Wake the backend now: the visitor is about to spend minutes exploring
     // the (client-side) demo, which is plenty of runway to cold-start the

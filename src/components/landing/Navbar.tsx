@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Grid2x2Plus, Menu, X } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -72,6 +73,7 @@ export function Navbar() {
             </Link>
             <Link
               href="/auth/register"
+              onClick={() => track("click_signup", { location: "navbar" })}
               className="px-5 py-2 text-sm font-medium text-black bg-white hover:bg-neutral-200 rounded-lg transition-all duration-200 shadow-lg shadow-white/6"
             >
               Get Started
@@ -122,6 +124,9 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/auth/register"
+                  onClick={() =>
+                    track("click_signup", { location: "navbar_mobile" })
+                  }
                   className="block px-4 py-3 text-sm font-medium text-center text-black bg-white rounded-lg"
                 >
                   Get Started

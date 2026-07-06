@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { CommandCenterDemo } from "./CommandCenterDemo";
 import { FeatureAnnouncement } from "./FeatureAnnouncement";
 import { AnnotatedArrow } from "./AnnotatedArrow";
@@ -155,6 +156,7 @@ export function HeroSection() {
           </span>
           <Link
             href="/auth/register"
+            onClick={() => track("click_signup", { location: "hero" })}
             className="group inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
           >
             Get Started — Free

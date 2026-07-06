@@ -45,6 +45,7 @@ interface AuthContextType {
     rememberMe?: boolean,
   ) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
+  githubLogin: (code: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -250,6 +251,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         throw new Error(data.detail || "Google sign-in failed");
+      }
+
+      // A real login supersedes any demo session.
+      exitDemoMode(false);
+
+      localStorage.setItem("access_token", data.access_token);
+      if (data.refresh_token) {
+        localStorage.setItem("refresh_token", data.refresh_token);
+        setRefreshTokenValue(data.refresh_token);
+      }
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      setToken(data.access_token);
+      setUser(data.user);
+
+      // Check if user needs to accept updated policies
+      try {
+        const policyResponse = await fetch(
+          `${API_URL}/v1/auth/policies/status`,
+          {
+            headers: {
+              Authorization: `Bearer ${data.access_token}`,
+            },
+          },
+        );
+
+        if (policyResponse.ok) {
+          const policyData = await policyResponse.json();
+          if (!policyData.policies_accepted) {
+            router.push("/auth/accept-policies?return=/dashboard");
+            return;
+          }
+        }
+      } catch (policyError) {
+        console.error("Policy check failed:", policyError);
+      }
+
+      router.push("/dashboard");
+    },
+    [API_URL, router],
+  );
+
+  const githubLogin = useCallback(
+    async (code: string) => {
+      const response = await fetch(`${API_URL}/v1/auth/github`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "GitHub sign-in failed");
       }
 
       // A real login supersedes any demo session.
@@ -511,6 +570,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isDemo: !!user && !token && user.id === "demo-user",
     login,
     googleLogin,
+    githubLogin,
     register,
     logout,
     refreshUser,
