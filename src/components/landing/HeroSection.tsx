@@ -131,18 +131,29 @@ export function HeroSection() {
             delay: 0.3,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="flex flex-wrap items-center justify-center gap-3 mb-8"
+          className="flex flex-wrap items-center justify-center gap-3 mb-8 lg:mb-24"
         >
-          <Link
-            href="/demo?src=hero"
-            className="group relative inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-all duration-200 shadow-[0_1px_32px_rgba(255,255,255,0.15)]"
-          >
-            <Play className="size-3.5 fill-current" />
-            Try the Live Demo
-            <span className="text-[11px] font-mono text-neutral-500">
-              no signup
-            </span>
-          </Link>
+          <span className="relative">
+            <Link
+              href="/demo?src=hero"
+              className="group relative inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-all duration-200 shadow-[0_1px_32px_rgba(255,255,255,0.15)]"
+            >
+              <Play className="size-3.5 fill-current" />
+              Try the Live Demo
+              <span className="text-[11px] font-mono text-neutral-500">
+                no signup
+              </span>
+            </Link>
+            {/* 38px arrow + 4px gap + 21px label + 8px offset ≈ 73px below the
+                button — the lg:mb-24 on the CTA row reserves that space so the
+                proof line clears it. */}
+            <AnnotatedArrow
+              label="fully interactive!"
+              dir="up"
+              delay={0.85}
+              className="absolute left-1/2 top-full mt-2 hidden -translate-x-1/2 lg:flex"
+            />
+          </span>
           <Link
             href="/auth/register"
             className="group inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
