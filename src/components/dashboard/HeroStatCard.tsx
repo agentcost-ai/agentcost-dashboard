@@ -45,7 +45,7 @@ export function HeroStatCard({
         : "text-emerald-400";
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/6 bg-linear-to-b from-white/[0.035] to-white/[0.012] p-5 transition-colors duration-300 hover:border-white/12">
+    <div className="group relative overflow-hidden rounded-2xl border border-white/6 bg-linear-to-b from-white/[0.035] to-white/[0.012] p-4 transition-colors duration-300 hover:border-white/12 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-3">

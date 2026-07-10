@@ -15,7 +15,7 @@ export default function BlogPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0b] text-neutral-100">
-      <div className="mx-auto max-w-5xl px-6 py-20">
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         {/* Back to home */}
         <Link
           href="/"
@@ -37,7 +37,7 @@ export default function BlogPage() {
         {featured && (
           <Link
             href={`/blog/${featured.slug}`}
-            className="group mb-6 block overflow-hidden rounded-2xl border border-white/10 bg-white/2 p-8 transition-colors hover:border-sky-500/30"
+            className="group mb-6 block overflow-hidden rounded-2xl border border-white/10 bg-white/2 p-6 transition-colors hover:border-sky-500/30 sm:p-8"
           >
             <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
               <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-300">
@@ -49,7 +49,7 @@ export default function BlogPage() {
               <span className="text-neutral-400">{featured.publishedAt}</span>
               <span className="text-neutral-400">{featured.readTime}</span>
             </div>
-            <h2 className="mb-2 text-3xl font-semibold tracking-tight text-white">
+            <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               {featured.title}
             </h2>
             <p className="mb-5 max-w-3xl text-neutral-400">{featured.excerpt}</p>

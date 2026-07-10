@@ -10,8 +10,8 @@ interface TableProps {
 
 export function Table({ children, className }: TableProps) {
   return (
-    <div className={cn("overflow-x-auto", className)}>
-      <table className="w-full">{children}</table>
+    <div className={cn("max-w-full overflow-x-auto", className)}>
+      <table className="w-full min-w-160">{children}</table>
     </div>
   );
 }
@@ -48,7 +48,7 @@ export function TableHead({
   return (
     <th
       className={cn(
-        "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400",
+        "whitespace-nowrap px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400",
         className,
       )}
     >

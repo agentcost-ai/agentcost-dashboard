@@ -96,7 +96,7 @@ export default function AgentsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">
             Agents
@@ -169,7 +169,7 @@ export default function AgentsPage() {
 
       {/* Agents Table */}
       <Card padding="none">
-        <div className="border-b border-white/6 px-6 py-4">
+        <div className="border-b border-white/6 px-4 py-4 sm:px-6">
           <h3 className="text-[15px] font-semibold tracking-tight text-white">
             Agent Performance
           </h3>

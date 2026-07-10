@@ -104,7 +104,7 @@ export default function ModelsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">
             Models
@@ -113,10 +113,10 @@ export default function ModelsPage() {
             Usage and cost breakdown by LLM model
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/docs/models"
-            className="flex items-center gap-2 rounded-lg border border-white/6 px-4 py-2 text-[13px] font-medium text-neutral-300 hover:text-white hover:border-white/12 transition-colors"
+            className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-lg border border-white/6 px-4 py-2 text-[13px] font-medium text-neutral-300 hover:text-white hover:border-white/12 transition-colors sm:min-h-0"
           >
             <Database size={14} />
             Supported Models
@@ -178,7 +178,7 @@ export default function ModelsPage() {
 
       {/* Models Table */}
       <Card padding="none">
-        <div className="border-b border-white/6 px-6 py-4">
+        <div className="border-b border-white/6 px-4 py-4 sm:px-6">
           <h3 className="text-[15px] font-semibold tracking-tight text-white">
             Model Usage
           </h3>

@@ -138,7 +138,7 @@ export function DemoExperience() {
         onMouseLeave={scheduleHideBanner}
         className="fixed bottom-5 left-1/2 z-40 w-[calc(100%-2rem)] max-w-2xl"
       >
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl border border-sky-500/25 bg-[#0d1420]/95 backdrop-blur-md shadow-[0_8px_40px_rgba(2,132,199,0.18)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3 rounded-2xl border border-sky-500/25 bg-[#0d1420]/95 backdrop-blur-md shadow-[0_8px_40px_rgba(2,132,199,0.18)]">
           <div className="flex items-center gap-2.5 min-w-0">
             <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
             <p className="text-[13px] text-neutral-300 truncate">
@@ -147,11 +147,11 @@ export function DemoExperience() {
               could be your AI spend.
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex w-full sm:w-auto items-center gap-2 shrink-0">
             <Link
               href="/auth/register?from=demo"
               onClick={handleSignupClick}
-              className="group inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-colors"
+              className="group inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-2 min-h-11 sm:min-h-0 text-[13px] font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-colors"
             >
               Create free account
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -160,7 +160,7 @@ export function DemoExperience() {
               type="button"
               onClick={() => logout()}
               title="Exit demo"
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-[13px] text-neutral-500 hover:text-white rounded-full border border-white/8 hover:border-white/15 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-11 sm:min-h-0 text-[13px] text-neutral-500 hover:text-white rounded-full border border-white/8 hover:border-white/15 transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
               Exit
@@ -191,10 +191,10 @@ export function DemoExperience() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.98 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-105 overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c10] shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+              className="relative w-full max-w-105 max-h-full overflow-y-auto overflow-x-hidden rounded-3xl border border-white/10 bg-[#0c0c10] shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               {/* Aurora header */}
-              <div className="relative px-8 pt-9 pb-7 overflow-hidden">
+              <div className="relative px-6 sm:px-8 pt-9 pb-7 overflow-hidden">
                 <div
                   className="absolute inset-0 pointer-events-none"
                   aria-hidden
@@ -228,8 +228,8 @@ export function DemoExperience() {
                     </span>
                   </div>
 
-                  <div className="flex items-baseline gap-2.5 mb-1.5">
-                    <span className="text-[2.6rem] leading-none font-bold tracking-tight text-white tabular-nums">
+                  <div className="flex flex-wrap items-baseline gap-2.5 mb-1.5">
+                    <span className="text-4xl sm:text-[2.6rem] leading-none font-bold tracking-tight text-white tabular-nums">
                       ${savings.monthly.toLocaleString()}
                     </span>
                     <span className="text-sm text-neutral-400 font-medium">
@@ -244,7 +244,7 @@ export function DemoExperience() {
               </div>
 
               {/* Body */}
-              <div className="px-8 pb-8 pt-6 border-t border-white/6">
+              <div className="px-6 sm:px-8 pb-8 pt-6 border-t border-white/6">
                 <h2 className="text-lg font-semibold text-white tracking-tight mb-1.5">
                   {modalAction
                     ? `Ready to ${modalAction}?`
@@ -257,7 +257,7 @@ export function DemoExperience() {
                 </p>
 
                 {/* Proof chips */}
-                <div className="grid grid-cols-3 gap-2 mb-7">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-7">
                   {[
                     { icon: Terminal, top: "2 lines", bottom: "to integrate" },
                     { icon: Layers, top: "2,900+", bottom: "models tracked" },
@@ -265,7 +265,7 @@ export function DemoExperience() {
                   ].map(({ icon: Icon, top, bottom }) => (
                     <div
                       key={top}
-                      className="flex flex-col items-center gap-1 rounded-xl border border-white/6 bg-white/2 px-2 py-3"
+                      className="flex flex-col items-center gap-1 rounded-xl border border-white/6 bg-white/2 px-1.5 sm:px-2 py-3 text-center"
                     >
                       <Icon className="w-4 h-4 text-neutral-500 mb-0.5" />
                       <span className="text-[13px] font-semibold text-white leading-none">
@@ -287,7 +287,7 @@ export function DemoExperience() {
                   <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </Link>
 
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 mt-4">
                   <span className="text-[11.5px] text-neutral-600">
                     No credit card · Self-host forever
                   </span>

@@ -15,7 +15,7 @@ export default function DocsLayout({
   return (
     <div className="docs-layout fixed inset-0 z-50 bg-neutral-900 overflow-auto">
       {/* Top navigation bar */}
-      <nav className="sticky top-0 z-10 bg-neutral-900/95 backdrop-blur border-b border-neutral-800 px-6 py-4">
+      <nav className="sticky top-0 z-10 bg-neutral-900/95 backdrop-blur border-b border-neutral-800 px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link
             href="/settings"

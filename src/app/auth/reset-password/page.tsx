@@ -140,7 +140,9 @@ function ResetPasswordForm() {
       {error && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3 text-red-400">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <span className="text-sm leading-relaxed">{error}</span>
+          <span className="text-sm leading-relaxed wrap-break-word min-w-0">
+            {error}
+          </span>
         </div>
       )}
 
@@ -168,7 +170,8 @@ function ResetPasswordForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-400 transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-gray-500 hover:text-gray-400 transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />
@@ -229,7 +232,10 @@ function ResetPasswordForm() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-400 transition-colors"
+              aria-label={
+                showConfirmPassword ? "Hide password" : "Show password"
+              }
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-gray-500 hover:text-gray-400 transition-colors"
             >
               {showConfirmPassword ? (
                 <EyeOff className="w-5 h-5" />

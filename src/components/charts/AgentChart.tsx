@@ -36,7 +36,7 @@ export function AgentChart({ data }: AgentChartProps) {
     .slice(0, 8);
 
   return (
-    <div className="h-72">
+    <div className="h-72 min-w-0">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={sortedData}

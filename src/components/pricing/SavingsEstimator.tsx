@@ -39,9 +39,11 @@ export function SavingsEstimator() {
                 onChange={(e) =>
                   setSpend(Math.max(0, Number(e.target.value) || 0))
                 }
-                className="w-full bg-transparent text-lg font-semibold text-white outline-none tabular-nums"
+                className="w-full min-w-0 bg-transparent text-lg font-semibold text-white outline-none tabular-nums"
               />
-              <span className="text-[13px] text-neutral-600">/ mo</span>
+              <span className="shrink-0 whitespace-nowrap text-[13px] text-neutral-600">
+                / mo
+              </span>
             </div>
           </div>
 
@@ -61,7 +63,7 @@ export function SavingsEstimator() {
               step={1}
               value={rate}
               onChange={(e) => setRate(Number(e.target.value))}
-              className="w-full accent-sky-500"
+              className="h-8 w-full cursor-pointer accent-sky-500"
             />
             <p className="mt-2 text-[12px] leading-relaxed text-neutral-500">
               Most recoverable spend comes from right-sizing over-powered models
@@ -72,12 +74,12 @@ export function SavingsEstimator() {
         </div>
 
         {/* Output */}
-        <div className="flex flex-col justify-between gap-5 rounded-xl border border-white/6 bg-white/2 p-6">
+        <div className="flex flex-col justify-between gap-5 rounded-xl border border-white/6 bg-white/2 p-5 sm:p-6">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
               Estimated savings
             </p>
-            <p className="mt-2 text-[2.6rem] font-bold leading-none tracking-tight text-emerald-400 tabular-nums">
+            <p className="mt-2 wrap-break-word text-4xl font-bold leading-none tracking-tight text-emerald-400 tabular-nums sm:text-[2.6rem]">
               {formatUsd(monthly)}
               <span className="text-base font-medium text-neutral-500">
                 {" "}

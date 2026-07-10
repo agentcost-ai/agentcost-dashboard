@@ -175,7 +175,9 @@ function AcceptPoliciesContent() {
       {error && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3 text-red-400">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <span className="text-sm leading-relaxed">{error}</span>
+          <span className="text-sm leading-relaxed wrap-break-word min-w-0">
+            {error}
+          </span>
         </div>
       )}
 
@@ -269,7 +271,7 @@ function AcceptPoliciesContent() {
         )}
 
         {/* Buttons */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
           <button
             type="button"
             onClick={handleDecline}

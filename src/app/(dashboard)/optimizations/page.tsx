@@ -193,8 +193,8 @@ function OptimizationCard({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div className="flex flex-wrap items-start justify-between gap-2 sm:gap-4">
+            <div className="min-w-0">
               <h3 className="font-medium text-white">{suggestion.title}</h3>
               <p className="mt-1 text-sm text-neutral-400 line-clamp-2">
                 {suggestion.description}
@@ -204,7 +204,7 @@ function OptimizationCard({
           </div>
 
           {/* Savings and Model Info */}
-          <div className="mt-4 flex flex-wrap items-center gap-6">
+          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
             {showMonetary && (
               <div>
                 <span className="text-xs text-neutral-500 uppercase">
@@ -246,7 +246,7 @@ function OptimizationCard({
                 <span className="text-xs text-neutral-500 uppercase">
                   Agent
                 </span>
-                <p className="text-sm font-mono text-white">
+                <p className="text-sm font-mono text-white break-all">
                   {suggestion.agent_name}
                 </p>
               </div>
@@ -259,7 +259,7 @@ function OptimizationCard({
                   <span className="text-xs text-neutral-500 uppercase">
                     Switch Model
                   </span>
-                  <p className="text-sm text-white">
+                  <p className="text-sm text-white wrap-break-word">
                     <span className="text-neutral-400">{suggestion.model}</span>
                     <ArrowRight
                       size={14}
@@ -390,7 +390,7 @@ function OptimizationCard({
 
           {/* Action Buttons */}
           {recommendation && onImplement && onDismiss && (
-            <div className="mt-4 flex items-center gap-3 pt-4 border-t border-neutral-800">
+            <div className="mt-4 flex flex-wrap items-center gap-3 pt-4 border-t border-neutral-800">
               <button
                 onClick={() => onImplement(recommendation)}
                 disabled={isActioning}
@@ -558,7 +558,7 @@ export default function OptimizationsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-white">
             Cost Optimizations
@@ -594,7 +594,7 @@ export default function OptimizationsPage() {
 
       {/* Success Toast */}
       {successMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="fixed bottom-6 left-4 right-4 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300 sm:left-auto sm:right-6">
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-900/90 border border-emerald-700 shadow-lg backdrop-blur-sm">
             <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
             <p className="text-sm text-white">{successMessage}</p>
@@ -706,7 +706,7 @@ export default function OptimizationsPage() {
           {summary.empty_reason === "no_data" && (
             <Card className="border-blue-900/50 bg-blue-950/20">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-900/30">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-900/30">
                   <Database size={24} className="text-blue-400" />
                 </div>
                 <div>
@@ -731,7 +731,7 @@ export default function OptimizationsPage() {
           {summary.empty_reason === "insufficient_data" && (
             <Card className="border-yellow-900/50 bg-yellow-950/20">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-900/30">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-900/30">
                   <Clock size={24} className="text-yellow-400" />
                 </div>
                 <div>
@@ -755,7 +755,7 @@ export default function OptimizationsPage() {
           {summary.empty_reason === "no_baselines" && (
             <Card className="border-yellow-900/50 bg-yellow-950/20">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-900/30">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-900/30">
                   <TrendingDown size={24} className="text-yellow-400" />
                 </div>
                 <div>
@@ -780,7 +780,7 @@ export default function OptimizationsPage() {
           {summary.empty_reason === "optimized" && (
             <Card className="border-emerald-900/50 bg-emerald-950/20">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-900/30">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-900/30">
                   <CheckCircle2 size={24} className="text-emerald-400" />
                 </div>
                 <div>
@@ -805,7 +805,7 @@ export default function OptimizationsPage() {
           {!summary.empty_reason && (
             <Card className="border-emerald-900/50 bg-emerald-950/20">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-900/30">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-900/30">
                   <CheckCircle2 size={24} className="text-emerald-400" />
                 </div>
                 <div>
@@ -903,35 +903,35 @@ export default function OptimizationsPage() {
             </p>
             <ul className="mt-3 space-y-1 text-sm text-neutral-400">
               <li className="flex items-center gap-2">
-                <Cpu size={14} className="text-blue-400" />
+                <Cpu size={14} className="shrink-0 text-blue-400" />
                 <span>
                   <strong>Model Downgrades:</strong> Suggests cheaper models for
                   simple tasks
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <Database size={14} className="text-purple-400" />
+                <Database size={14} className="shrink-0 text-purple-400" />
                 <span>
                   <strong>Caching:</strong> Identifies repeated queries that can
                   be cached
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <AlertCircle size={14} className="text-amber-400" />
+                <AlertCircle size={14} className="shrink-0 text-amber-400" />
                 <span>
                   <strong>Anomaly Alerts:</strong> Detects unusual spending
                   spikes
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <XCircle size={14} className="text-red-400" />
+                <XCircle size={14} className="shrink-0 text-red-400" />
                 <span>
                   <strong>Error Patterns:</strong> Highlights agents with high
                   failure rates
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <Timer size={14} className="text-cyan-400" />
+                <Timer size={14} className="shrink-0 text-cyan-400" />
                 <span>
                   <strong>Latency Issues:</strong> Flags slow calls that may
                   benefit from optimization

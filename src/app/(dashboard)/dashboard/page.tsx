@@ -212,7 +212,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">
             Overview
@@ -221,7 +221,7 @@ export default function DashboardPage() {
             Cost and performance across your AI agents
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           {/* Refresh status */}
           <div className="hidden md:flex items-center gap-2 text-[12.5px] text-neutral-600">
             {autoRefreshEnabled && (
@@ -239,7 +239,7 @@ export default function DashboardPage() {
           <button
             onClick={refresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] text-neutral-400 hover:text-white border border-white/6 hover:border-white/12 transition-colors disabled:opacity-50"
+            className="flex min-h-11 items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] text-neutral-400 hover:text-white border border-white/6 hover:border-white/12 transition-colors disabled:opacity-50 sm:min-h-0"
             title="Refresh data"
           >
             <RefreshCw

@@ -86,8 +86,8 @@ export function ArchitectureSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-32">
-      <div className="mx-auto max-w-7xl px-6">
+    <section ref={sectionRef} className="relative py-20 sm:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -113,7 +113,7 @@ export function ArchitectureSection() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* Step selector tabs with progress bar */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
             {steps.map((s, i) => (
               <button
                 key={s.id}
@@ -177,7 +177,7 @@ export function ArchitectureSection() {
               className="grid lg:grid-cols-2 gap-6"
             >
               {/* Left — description */}
-              <div className="rounded-2xl border border-white/6 bg-[#0b0b0d] p-8 flex flex-col justify-between">
+              <div className="rounded-2xl border border-white/6 bg-[#0b0b0d] p-6 sm:p-8 flex flex-col justify-between">
                 <div>
                   <p className="text-xs font-mono text-neutral-600 mb-3">
                     {step.subtitle}

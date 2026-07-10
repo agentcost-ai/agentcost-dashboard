@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function ChangelogPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0b] text-neutral-100">
-      <div className="mx-auto max-w-4xl px-6 py-20">
+      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <p className="text-sm uppercase tracking-widest text-emerald-400 mb-4">Changelog</p>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-4">
           Product updates you can trust

@@ -16,7 +16,7 @@ export default function TermsOfServicePage() {
     <div className="min-h-screen bg-[#0a0a0b]">
       {/* Header */}
       <header className="border-b border-gray-800/50 bg-[#0a0a0b]/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/"
@@ -35,11 +35,11 @@ export default function TermsOfServicePage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
         <article className="prose prose-invert prose-lg max-w-none">
           {/* Title */}
           <div className="mb-12 pb-8 border-b border-gray-800/50">
-            <h1 className="text-4xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Terms of Service
             </h1>
             <p className="text-gray-400 text-base">
@@ -56,7 +56,7 @@ export default function TermsOfServicePage() {
               </span>
               Acceptance of Terms
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4 pl-11">
+            <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 By accessing or using AgentCost ("the Service"), you agree to be
                 bound by these Terms of Service ("Terms"). If you do not agree
@@ -79,7 +79,7 @@ export default function TermsOfServicePage() {
               </span>
               Description of Service
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4 pl-11">
+            <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 AgentCost is a cost tracking and analytics platform for AI
                 agents and Large Language Model (LLM) applications. The Service
@@ -103,7 +103,7 @@ export default function TermsOfServicePage() {
               </span>
               User Responsibilities
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <p className="mb-4">As a user of the Service, you agree to:</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
@@ -155,7 +155,7 @@ export default function TermsOfServicePage() {
               </span>
               Data Collection and Usage
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-white mb-3">
                   Data We Collect
@@ -223,7 +223,7 @@ export default function TermsOfServicePage() {
               </span>
               Limitations of Liability
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <p className="mb-4">
                 To the maximum extent permitted by applicable law, AgentCost and
                 its officers, directors, employees, and agents shall not be
@@ -271,7 +271,7 @@ export default function TermsOfServicePage() {
               </span>
               Account Termination
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4 pl-11">
+            <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 We reserve the right to suspend or terminate your account and
                 access to the Service at our sole discretion, without prior
@@ -296,7 +296,7 @@ export default function TermsOfServicePage() {
               </span>
               Modifications to Terms
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4 pl-11">
+            <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 We reserve the right to modify these Terms at any time. When we
                 make changes, we will update the "Last updated" date at the top
@@ -320,7 +320,7 @@ export default function TermsOfServicePage() {
               </span>
               Governing Law
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <p>
                 These Terms shall be governed by and construed in accordance
                 with applicable laws, without regard to conflict of law
@@ -339,7 +339,7 @@ export default function TermsOfServicePage() {
               </span>
               Contact Information
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <p className="mb-4">
                 For questions, concerns, or requests regarding these Terms of
                 Service, please contact us at:
@@ -347,7 +347,7 @@ export default function TermsOfServicePage() {
               <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
                 <a
                   href="mailto:hello@agentcost.tech"
-                  className="text-white hover:text-gray-300 transition-colors font-medium"
+                  className="text-white hover:text-gray-300 transition-colors font-medium wrap-break-word"
                 >
                   hello@agentcost.tech
                 </a>

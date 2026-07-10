@@ -66,7 +66,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         <div className="border-b border-white/4 last:border-0">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between gap-6 py-5 text-left group"
+                className="w-full flex items-center justify-between gap-4 sm:gap-6 py-5 text-left group"
             >
                 <span
                     className={`text-[15px] transition-colors duration-200 ${open ? "text-white" : "text-neutral-300 group-hover:text-white"
@@ -91,7 +91,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
                         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                         className="overflow-hidden"
                     >
-                        <p className="text-[14px] text-neutral-500 leading-relaxed pb-5 pr-10">
+                        <p className="text-[14px] text-neutral-500 leading-relaxed pb-5 pr-6 sm:pr-10">
                             {a}
                         </p>
                     </motion.div>
@@ -103,8 +103,8 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 
 export function FAQSection() {
     return (
-      <section id="faq" className="relative py-32 border-t border-white/3">
-        <div className="mx-auto max-w-3xl px-6">
+      <section id="faq" className="relative py-20 sm:py-32 border-t border-white/3">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           {/* Centered header */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -134,7 +134,7 @@ export function FAQSection() {
                 <p className="text-xs font-mono text-neutral-600 uppercase tracking-widest mb-4">
                   {group.category}
                 </p>
-                <div className="rounded-xl border border-white/6 bg-[#0b0b0d]/50 px-6">
+                <div className="rounded-xl border border-white/6 bg-[#0b0b0d]/50 px-4 sm:px-6">
                   {group.questions.map((faq) => (
                     <FAQItem key={faq.q} q={faq.q} a={faq.a} />
                   ))}

@@ -584,7 +584,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                       }
                     }}
                     placeholder="Add threshold (1–100)"
-                    className="w-56 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:border-primary-500 focus:outline-none"
+                    className="w-full sm:w-56 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:border-primary-500 focus:outline-none"
                   />
                   <button
                     type="button"

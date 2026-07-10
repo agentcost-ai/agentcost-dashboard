@@ -36,11 +36,12 @@ export function IntegrationSection() {
     };
 
     return (
-        <section id="integration" className="relative py-28">
-            <div className="mx-auto max-w-7xl px-6">
-                <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <section id="integration" className="relative py-16 sm:py-28">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                     {/* Left — Copy */}
                     <motion.div
+                        className="min-w-0"
                         initial={{ opacity: 0, y: 24 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -97,6 +98,7 @@ export function IntegrationSection() {
 
                     {/* Right — Code block */}
                     <motion.div
+                        className="min-w-0"
                         initial={{ opacity: 0, y: 24, scale: 0.97 }}
                         whileInView={{ opacity: 1, y: 0, scale: 1 }}
                         viewport={{ once: true }}
@@ -134,12 +136,12 @@ export function IntegrationSection() {
                             </div>
 
                             {/* Code */}
-                            <div className="p-5 font-mono text-[13px] leading-7 overflow-x-auto">
+                            <div className="py-5 font-mono text-[13px] leading-7 overflow-x-auto whitespace-nowrap">
                                 {codeLines.map((line, i) => (
                                     <div
                                         key={i}
-                                        className={`${line.highlight
-                                                ? "text-sky-300 bg-sky-400/5 -mx-5 px-5 border-l-2 border-sky-400/40"
+                                        className={`w-fit min-w-full px-5 ${line.highlight
+                                                ? "text-sky-300 bg-sky-400/5 border-l-2 border-sky-400/40"
                                                 : line.dim
                                                     ? "text-neutral-600"
                                                     : "text-neutral-300"

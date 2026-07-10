@@ -30,8 +30,8 @@ export function ModelChart({ data }: ModelChartProps) {
   const total = sortedData.reduce((sum, item) => sum + item.total_cost, 0);
 
   return (
-    <div className="flex h-72 items-center">
-      <div className="w-1/2">
+    <div className="flex flex-col items-center gap-4 sm:h-72 sm:flex-row sm:gap-0">
+      <div className="w-full min-w-0 sm:w-1/2">
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie
@@ -59,19 +59,22 @@ export function ModelChart({ data }: ModelChartProps) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="w-1/2 space-y-2">
+      <div className="w-full min-w-0 space-y-2 sm:w-1/2">
         {sortedData.map((item, index) => (
-          <div key={item.model} className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div
+            key={item.model}
+            className="flex items-center justify-between gap-3"
+          >
+            <div className="flex min-w-0 items-center gap-2">
               <div
-                className="h-3 w-3 rounded-full"
+                className="h-3 w-3 shrink-0 rounded-full"
                 style={{ backgroundColor: COLORS[index % COLORS.length] }}
               />
-              <span className="text-sm text-neutral-300 truncate max-w-30">
+              <span className="truncate text-sm text-neutral-300 sm:max-w-30">
                 {item.model}
               </span>
             </div>
-            <span className="text-sm font-medium text-neutral-200">
+            <span className="shrink-0 text-sm font-medium text-neutral-200">
               {total > 0 ? ((item.total_cost / total) * 100).toFixed(1) : 0}%
             </span>
           </div>

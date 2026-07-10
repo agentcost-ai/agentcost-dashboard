@@ -30,9 +30,9 @@ function DemoEntry() {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] flex flex-col items-center justify-center gap-4">
+    <div className="min-h-screen bg-[#0a0a0b] flex flex-col items-center justify-center gap-4 px-4">
       <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
-      <p className="text-neutral-400 text-sm">
+      <p className="text-neutral-400 text-sm text-center">
         Preparing your live demo — no signup needed…
       </p>
     </div>

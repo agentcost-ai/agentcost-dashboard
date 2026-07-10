@@ -78,7 +78,7 @@ function Section({
         </div>
         <h2 className="text-xl font-semibold text-white">{title}</h2>
       </div>
-      <div className="ml-13 space-y-4">{children}</div>
+      <div className="min-w-0 sm:ml-13 space-y-4">{children}</div>
     </section>
   );
 }
@@ -86,7 +86,7 @@ function Section({
 export default function SDKDocsPage() {
   return (
     <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-4xl px-6 py-8 pt-4">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-4">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">SDK Documentation</h1>
@@ -276,8 +276,8 @@ response = llm.invoke("Hello, world!")  # Automatically tracked`}
             <h4 className="text-lg font-medium text-white mt-6">
               Configuration Options
             </h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-150 text-sm">
                 <thead>
                   <tr className="border-b border-neutral-700">
                     <th className="text-left py-3 px-4 text-neutral-400 font-medium">
@@ -457,8 +457,8 @@ async for chunk in llm.astream("Tell me a story"):
               </p>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-120 text-sm">
                 <thead>
                   <tr className="border-b border-neutral-700">
                     <th className="text-left py-3 px-4 text-neutral-400 font-medium">
@@ -801,7 +801,7 @@ async def shutdown_event():
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-neutral-800">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <a
               href="/settings"
               className="text-neutral-400 hover:text-white transition-colors"

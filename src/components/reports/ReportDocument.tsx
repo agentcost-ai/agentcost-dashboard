@@ -478,7 +478,7 @@ export function ReportDocument({ report }: ReportDocumentProps) {
             subtitle={`${formatNumber(latency.sample_size)} calls${latency.approximate ? " · sampled" : ""}`}
             iconClass="bg-rose-500/10 text-rose-400"
           />
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="p50" value={formatLatency(latency.p50)} />
             <Stat label="p95" value={formatLatency(latency.p95)} />
             <Stat label="p99" value={formatLatency(latency.p99)} />

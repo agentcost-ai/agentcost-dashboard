@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
         <h1 className="text-2xl font-semibold text-white mb-2">
           Check your email
         </h1>
-        <p className="text-gray-400 mb-8 leading-relaxed">
+        <p className="text-gray-400 mb-8 leading-relaxed wrap-break-word">
           If an account exists for <span className="text-white">{email}</span>,
           we&apos;ve sent a password reset link. Please check your inbox.
         </p>
@@ -82,7 +82,9 @@ export default function ForgotPasswordPage() {
       {error && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3 text-red-400">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <span className="text-sm leading-relaxed">{error}</span>
+          <span className="text-sm leading-relaxed wrap-break-word min-w-0">
+            {error}
+          </span>
         </div>
       )}
 

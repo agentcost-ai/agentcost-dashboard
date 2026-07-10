@@ -87,9 +87,9 @@ export function MetricsSection() {
     <section
       id="metrics"
       ref={containerRef}
-      className="relative py-32 border-y border-white/3"
+      className="relative py-20 sm:py-32 border-y border-white/3"
     >
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Vertical scroll-driven line */}
         <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 overflow-hidden hidden lg:block">
           <motion.div
@@ -99,7 +99,7 @@ export function MetricsSection() {
         </div>
 
         {/* Stats — editorial staggered layout */}
-        <div className="space-y-24 lg:space-y-32">
+        <div className="space-y-16 sm:space-y-24 lg:space-y-32">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
