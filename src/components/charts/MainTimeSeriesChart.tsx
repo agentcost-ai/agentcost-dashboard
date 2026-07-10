@@ -117,7 +117,7 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
   return (
     <div>
       {/* Metric switcher */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-5">
         <div className="flex items-center gap-1 rounded-xl border border-white/6 bg-white/2 p-1">
           {METRICS.map((m) => (
             <button
@@ -144,7 +144,7 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
         </div>
       </div>
 
-      <div className="h-80">
+      <div className="h-64 min-w-0 sm:h-80">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={formattedData}

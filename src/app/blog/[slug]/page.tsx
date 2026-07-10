@@ -65,7 +65,7 @@ export default async function BlogPostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
       />
-      <article className="mx-auto max-w-3xl px-6 py-20">
+      <article className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <Link href="/blog" className="text-sm text-sky-300 hover:text-sky-200">
           ← Back to blog
         </Link>
@@ -76,11 +76,11 @@ export default async function BlogPostPage({
             <span>{post.publishedAt}</span>
             <span>{post.readTime}</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white mb-4">{post.title}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-4 sm:text-4xl">{post.title}</h1>
           <p className="text-lg text-neutral-400">{post.excerpt}</p>
         </header>
 
-        <div className="space-y-5 text-neutral-300 leading-8">
+        <div className="space-y-5 text-neutral-300 leading-7 sm:leading-8 wrap-break-word">
           {post.content.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}

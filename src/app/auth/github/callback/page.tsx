@@ -64,7 +64,7 @@ function GitHubCallback() {
         <h1 className="text-[1.75rem] font-semibold tracking-tight text-white mb-3">
           Sign-in failed
         </h1>
-        <p className="text-neutral-500 text-[15px] mb-10 leading-relaxed max-w-xs mx-auto">
+        <p className="text-neutral-500 text-[15px] mb-10 leading-relaxed max-w-xs mx-auto wrap-break-word">
           {error}
         </p>
         <Link

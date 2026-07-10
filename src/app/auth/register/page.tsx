@@ -251,7 +251,7 @@ export default function RegisterPage() {
         <h1 className="text-[1.75rem] font-semibold tracking-tight text-white mb-3">
           Check your email
         </h1>
-        <p className="text-neutral-500 text-[15px] mb-10 leading-relaxed max-w-xs mx-auto">
+        <p className="text-neutral-500 text-[15px] mb-10 leading-relaxed max-w-xs mx-auto wrap-break-word">
           We&apos;ve sent a verification link to{" "}
           <span className="text-white font-medium">{email}</span>. Click the
           link to activate your account.
@@ -374,7 +374,7 @@ export default function RegisterPage() {
           className="mb-6 p-4 bg-red-500/8 border border-red-500/15 rounded-xl flex items-start gap-3"
         >
           <AlertCircle className="w-4.5 h-4.5 text-red-400 shrink-0 mt-0.5" />
-          <span className="text-sm text-red-300/90 leading-relaxed">
+          <span className="text-sm text-red-300/90 leading-relaxed wrap-break-word min-w-0">
             {error}
           </span>
         </div>
@@ -448,7 +448,7 @@ export default function RegisterPage() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-400 transition-colors"
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-neutral-600 hover:text-neutral-400 transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="w-4.5 h-4.5" />
@@ -524,7 +524,7 @@ export default function RegisterPage() {
               aria-label={
                 showConfirmPassword ? "Hide password" : "Show password"
               }
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-400 transition-colors"
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-neutral-600 hover:text-neutral-400 transition-colors"
             >
               {showConfirmPassword ? (
                 <EyeOff className="w-4.5 h-4.5" />

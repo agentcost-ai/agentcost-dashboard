@@ -133,10 +133,10 @@ export function OnboardingScreen() {
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Welcome to AgentCost
           </h1>
-          <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-neutral-400 max-w-2xl mx-auto">
             The complete observability platform for your AI agents. Track costs,
             optimize performance, and gain insights into every LLM call.
           </p>
@@ -165,7 +165,7 @@ export function OnboardingScreen() {
         <div className="bg-neutral-800/50 rounded-2xl border border-neutral-700/50 overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Left Side - Setup Guide */}
-            <div className="p-8 border-b lg:border-b-0 lg:border-r border-neutral-700/50">
+            <div className="p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-neutral-700/50">
               <div className="flex items-center gap-2 text-primary-400 text-sm font-medium mb-4">
                 <Clock className="w-4 h-4" />
                 <span>Takes less than 2 minutes</span>
@@ -201,7 +201,7 @@ export function OnboardingScreen() {
             </div>
 
             {/* Right Side - CTA and Code Preview */}
-            <div className="p-8 bg-neutral-900/50">
+            <div className="p-6 sm:p-8 bg-neutral-900/50">
               <h3 className="text-lg font-semibold text-white mb-4">
                 Ready to get started?
               </h3>
@@ -252,7 +252,7 @@ export function OnboardingScreen() {
 
               {/* Trust Indicators */}
               <div className="mt-6 pt-6 border-t border-neutral-700/50">
-                <div className="flex items-center gap-4 text-sm text-neutral-400">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-400">
                   <div className="flex items-center gap-1.5">
                     <Shield className="w-4 h-4 text-emerald-400" />
                     <span>Secure</span>

@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
     <div className="min-h-screen bg-[#0a0a0b]">
       {/* Header */}
       <header className="border-b border-gray-800/50 bg-[#0a0a0b]/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/"
@@ -35,11 +35,11 @@ export default function PrivacyPolicyPage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
         <article className="prose prose-invert prose-lg max-w-none">
           {/* Title */}
           <div className="mb-12 pb-8 border-b border-gray-800/50">
-            <h1 className="text-4xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Privacy Policy
             </h1>
             <p className="text-gray-400 text-base">
@@ -66,7 +66,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Information We Collect
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-white mb-3">
                   Account Information
@@ -154,7 +154,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Information We Do NOT Collect
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-lg">
                 <p className="mb-4 font-medium text-green-400">
                   We are committed to your privacy. We explicitly do NOT
@@ -212,7 +212,7 @@ export default function PrivacyPolicyPage() {
               </span>
               How We Use Your Information
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-white mt-2.5 shrink-0" />
@@ -270,7 +270,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Data Storage and Security
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11 space-y-4">
+            <div className="text-gray-300 leading-relaxed sm:pl-11 space-y-4">
               <p>
                 Your data is stored securely using PostgreSQL with
                 industry-standard encryption. We implement multiple layers of
@@ -320,7 +320,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Data Sharing
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11 space-y-4">
+            <div className="text-gray-300 leading-relaxed sm:pl-11 space-y-4">
               <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
                 <p className="font-medium text-white mb-3">
                   Our commitment to your privacy:
@@ -363,7 +363,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Your Rights
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <p className="mb-4">
                 You have the following rights regarding your data:
               </p>
@@ -427,7 +427,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Data Retention
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11 space-y-4">
+            <div className="text-gray-300 leading-relaxed sm:pl-11 space-y-4">
               <p>
                 We retain your personal data for as long as your account is
                 active or as needed to provide you with the Service. Usage data
@@ -450,7 +450,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Changes to This Policy
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11 space-y-4">
+            <div className="text-gray-300 leading-relaxed sm:pl-11 space-y-4">
               <p>
                 We may update this Privacy Policy from time to time. When we
                 make significant changes, we will notify you by email and update
@@ -472,7 +472,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Contact Information
             </h2>
-            <div className="text-gray-300 leading-relaxed pl-11">
+            <div className="text-gray-300 leading-relaxed sm:pl-11">
               <p className="mb-4">
                 For questions, concerns, or requests regarding this Privacy
                 Policy or your personal data, please contact us at:
@@ -480,7 +480,7 @@ export default function PrivacyPolicyPage() {
               <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
                 <a
                   href="mailto:hello@agentcost.tech"
-                  className="text-white hover:text-gray-300 transition-colors font-medium"
+                  className="text-white hover:text-gray-300 transition-colors font-medium wrap-break-word"
                 >
                   hello@agentcost.tech
                 </a>

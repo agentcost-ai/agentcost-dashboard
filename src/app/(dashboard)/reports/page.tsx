@@ -65,7 +65,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       {/* Header / controls — excluded from print */}
-      <div className="no-print flex flex-wrap items-center justify-between gap-4 print:hidden">
+      <div className="no-print flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 print:hidden">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-white">
             <FileText size={22} className="text-sky-400" />

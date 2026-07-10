@@ -12,6 +12,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  X,
   Zap,
   LogOut,
   User,
@@ -42,10 +43,20 @@ const docsLinks = [
   { name: "Changelog", href: "/changelog" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  /** Whether the sidebar is open as a drawer on mobile (<lg). */
+  mobileOpen?: boolean;
+  /** Called when the mobile drawer should close. */
+  onMobileClose?: () => void;
+}
+
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  // The collapsed (icon-only) mode is desktop-only; the mobile drawer always
+  // renders the full expanded sidebar.
+  const isCollapsed = collapsed && !mobileOpen;
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showDocsMenu, setShowDocsMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -107,18 +118,22 @@ export function Sidebar() {
     <aside
       aria-label="Main sidebar"
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r border-neutral-800 bg-neutral-900/50 backdrop-blur-sm",
-        collapsed ? "w-16" : "w-64",
+        "fixed left-0 top-0 z-40 h-dvh border-r border-neutral-800 backdrop-blur-sm",
+        // Solid background when floating as a mobile drawer, translucent on desktop
+        "bg-neutral-950 lg:bg-neutral-900/50",
+        // Off-canvas drawer below lg; always visible on lg+
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        isCollapsed ? "w-16" : "w-64",
       )}
       style={{
-        transition: "width 0.2s ease-out",
-        willChange: "width",
+        transition: "width 0.2s ease-out, transform 0.2s ease-out",
+        willChange: "width, transform",
       }}
     >
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-16 items-center justify-between border-b border-neutral-800 px-4">
-          {!collapsed && (
+          {!isCollapsed && (
             <div className="flex items-center gap-2">
               <Grid2x2Plus className="size-7 text-sky-400" />
               <span className="text-lg font-semibold text-white">
@@ -126,22 +141,33 @@ export function Sidebar() {
               </span>
             </div>
           )}
-          {collapsed && (
+          {isCollapsed && (
             <Grid2x2Plus className="size-7 text-sky-400 mx-auto" />
           )}
-          {!collapsed && (
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              aria-label="Collapse sidebar"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white"
-            >
-              <ChevronLeft size={18} />
-            </button>
+          {!isCollapsed && (
+            <>
+              {/* Desktop: collapse to icon rail */}
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                aria-label="Collapse sidebar"
+                className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              {/* Mobile: close the drawer */}
+              <button
+                onClick={onMobileClose}
+                aria-label="Close navigation"
+                className="flex lg:hidden h-10 w-10 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </>
           )}
         </div>
 
         {/* Expand button when collapsed */}
-        {collapsed && (
+        {isCollapsed && (
           <button
             onClick={() => setCollapsed(false)}
             aria-label="Expand sidebar"
@@ -152,7 +178,7 @@ export function Sidebar() {
         )}
 
         {/* Project switcher */}
-        {!collapsed && (
+        {!isCollapsed && (
           <div className="px-3 pt-3 pb-1">
             <ProjectSwitcher />
           </div>
@@ -166,14 +192,15 @@ export function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={onMobileClose}
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-primary-600/10 text-primary-400"
                     : "text-neutral-400 hover:bg-neutral-800 hover:text-white",
-                  collapsed && "justify-center px-2",
+                  isCollapsed && "justify-center px-2",
                 )}
-                title={collapsed ? item.name : undefined}
+                title={isCollapsed ? item.name : undefined}
               >
                 <item.icon
                   size={20}
@@ -184,13 +211,13 @@ export function Sidebar() {
                       : "text-neutral-500 group-hover:text-white",
                   )}
                 />
-                {!collapsed && <span>{item.name}</span>}
+                {!isCollapsed && <span>{item.name}</span>}
               </Link>
             );
           })}
 
           {/* Documentation Dropdown */}
-          {!collapsed && (
+          {!isCollapsed && (
             <div ref={docsMenuRef} className="relative pt-2">
               <button
                 onClick={() => setShowDocsMenu(!showDocsMenu)}
@@ -219,7 +246,10 @@ export function Sidebar() {
                       key={doc.href}
                       href={doc.href}
                       className="block px-3 py-2 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800/50 rounded-lg transition-colors"
-                      onClick={() => setShowDocsMenu(false)}
+                      onClick={() => {
+                        setShowDocsMenu(false);
+                        onMobileClose?.();
+                      }}
                     >
                       {doc.name}
                     </Link>
@@ -230,7 +260,7 @@ export function Sidebar() {
           )}
 
           {/* Collapsed docs icon */}
-          {collapsed && (
+          {isCollapsed && (
             <Link
               href="/docs/sdk"
               className="group flex items-center justify-center rounded-lg px-2 py-2.5 text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"
@@ -248,12 +278,12 @@ export function Sidebar() {
         <div className="border-t border-neutral-800 p-3">
           <div ref={userMenuRef} className="relative">
             <button
-              onClick={() => !collapsed && setShowUserMenu(!showUserMenu)}
+              onClick={() => !isCollapsed && setShowUserMenu(!showUserMenu)}
               aria-haspopup="true"
               aria-expanded={showUserMenu}
               className={cn(
                 "w-full flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800 transition-colors",
-                collapsed && "justify-center",
+                isCollapsed && "justify-center",
               )}
             >
               {/* Avatar */}
@@ -261,7 +291,7 @@ export function Sidebar() {
                 {getUserInitials()}
               </div>
 
-              {!collapsed && (
+              {!isCollapsed && (
                 <>
                   <div className="flex-1 text-left min-w-0">
                     <p className="text-sm font-medium text-white truncate">
@@ -283,7 +313,7 @@ export function Sidebar() {
             </button>
 
             {/* User Dropdown Menu */}
-            {showUserMenu && !collapsed && (
+            {showUserMenu && !isCollapsed && (
               <div
                 role="menu"
                 className="absolute bottom-full left-0 right-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg overflow-hidden"
@@ -317,7 +347,7 @@ export function Sidebar() {
             )}
 
             {/* Collapsed logout button */}
-            {collapsed && (
+            {isCollapsed && (
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center p-2 mt-2 rounded-lg text-neutral-400 hover:bg-red-900/20 hover:text-red-400 transition-colors"
@@ -330,7 +360,7 @@ export function Sidebar() {
           </div>
 
           {/* Version */}
-          {!collapsed && (
+          {!isCollapsed && (
             <div className="mt-3 pt-3 border-t border-neutral-800">
               <p className="text-xs text-neutral-600 text-center">
                 AgentCost v0.1.0

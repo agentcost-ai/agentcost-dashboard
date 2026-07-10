@@ -123,17 +123,17 @@ export default function EventsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-white">Events</h1>
           <p className="mt-1 text-sm text-neutral-400">
             Raw event log of all LLM calls
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+            className={`flex min-h-11 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors sm:min-h-0 ${
               hasActiveFilters
                 ? "border-primary-600 bg-primary-900/30 text-primary-400"
                 : "border-neutral-700 bg-neutral-800/50 text-neutral-200 hover:border-neutral-600 hover:bg-neutral-800"
@@ -150,7 +150,7 @@ export default function EventsPage() {
           <button
             onClick={fetchData}
             disabled={loading}
-            className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-600 hover:bg-neutral-800 disabled:opacity-50"
+            className="flex min-h-11 items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-600 hover:bg-neutral-800 disabled:opacity-50 sm:min-h-0"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             Refresh
@@ -236,7 +236,7 @@ export default function EventsPage() {
 
       {/* Events Table */}
       <Card padding="none">
-        <div className="border-b border-neutral-800 px-6 py-4">
+        <div className="border-b border-neutral-800 px-4 py-4 sm:px-6">
           <h3 className="text-lg font-medium text-white">Event Log</h3>
         </div>
         {loading ? (
@@ -316,7 +316,7 @@ export default function EventsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-neutral-800 px-6 py-4">
+              <div className="flex flex-col gap-3 border-t border-neutral-800 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <p className="text-sm text-neutral-400">
                   Showing {page * pageSize + 1} to{" "}
                   {Math.min((page + 1) * pageSize, totalCount)} of {totalCount}
@@ -325,14 +325,14 @@ export default function EventsPage() {
                   <button
                     onClick={() => setPage(Math.max(0, page - 1))}
                     disabled={page === 0}
-                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-1.5 text-sm font-medium text-neutral-200 hover:border-neutral-600 disabled:opacity-50"
+                    className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-1.5 text-sm font-medium text-neutral-200 hover:border-neutral-600 disabled:opacity-50 sm:min-h-0"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                     disabled={page >= totalPages - 1}
-                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-1.5 text-sm font-medium text-neutral-200 hover:border-neutral-600 disabled:opacity-50"
+                    className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-1.5 text-sm font-medium text-neutral-200 hover:border-neutral-600 disabled:opacity-50 sm:min-h-0"
                   >
                     Next
                   </button>

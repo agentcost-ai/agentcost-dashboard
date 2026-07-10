@@ -22,8 +22,8 @@ export function Card({
       className={cn(
         "rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm",
         padding === "sm" && "p-4",
-        padding === "md" && "p-6",
-        padding === "lg" && "p-8",
+        padding === "md" && "p-4 sm:p-6",
+        padding === "lg" && "p-5 sm:p-8",
         className,
       )}
     >

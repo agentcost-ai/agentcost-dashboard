@@ -62,7 +62,7 @@ export function HeroSection() {
       />
 
       {/* ── Content ── */}
-      <div className="relative z-10 mx-auto max-w-7xl px-6 w-full flex flex-col items-center">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex flex-col items-center">
 
         {/* What's-new announcement (reusable on every release) */}
         <motion.div
@@ -132,12 +132,12 @@ export function HeroSection() {
             delay: 0.3,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="flex flex-wrap items-center justify-center gap-3 mb-8"
+          className="flex flex-col sm:flex-row sm:flex-wrap w-full sm:w-auto items-center justify-center gap-3 mb-8"
         >
-          <span className="relative">
+          <span className="relative w-full sm:w-auto">
             <Link
               href="/demo?src=hero"
-              className="group relative inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-all duration-200 shadow-[0_1px_32px_rgba(255,255,255,0.15)]"
+              className="group relative inline-flex w-full sm:w-auto items-center justify-center gap-2 px-8 py-3.5 text-sm font-medium text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-all duration-200 shadow-[0_1px_32px_rgba(255,255,255,0.15)]"
             >
               <Play className="size-3.5 fill-current" />
               Try the Live Demo
@@ -157,14 +157,14 @@ export function HeroSection() {
           <Link
             href="/auth/register"
             onClick={() => track("click_signup", { location: "hero" })}
-            className="group inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
+            className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
           >
             Get Started — Free
             <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
           <Link
             href="/docs/sdk"
-            className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium text-neutral-400 hover:text-white border border-white/8 hover:border-white/15 rounded-full transition-all duration-200 hover:bg-white/2"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-8 py-3.5 text-sm font-medium text-neutral-400 hover:text-white border border-white/8 hover:border-white/15 rounded-full transition-all duration-200 hover:bg-white/2"
           >
             Documentation
           </Link>

@@ -233,7 +233,7 @@ export default function ModelsPage() {
 
   return (
     <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-7xl px-6 py-8 pt-4">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pt-4">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -354,8 +354,31 @@ export default function ModelsPage() {
           <>
             {/* Models Table */}
             <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              {paginatedModels.length === 0 ? (
+                /* Empty state lives outside the scrollable table so it centers
+                   in the visible viewport on mobile instead of the table's
+                   min-width. */
+                <div className="py-12 px-4 text-center text-neutral-500">
+                  <div className="flex flex-col items-center gap-3">
+                    <Search size={32} className="text-neutral-600" />
+                    <p className="text-lg">No models found</p>
+                    <p className="text-sm">
+                      Try adjusting your search or{" "}
+                      <button
+                        onClick={() => {
+                          setSearchQuery("");
+                          setSelectedProvider("All Providers");
+                        }}
+                        className="text-primary-400 hover:text-primary-300"
+                      >
+                        clear all filters
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+              <div className="overflow-x-auto max-w-full">
+                <table className="w-full min-w-140 text-sm">
                   <thead>
                     <tr className="border-b border-neutral-700 bg-neutral-800/50">
                       <th
@@ -431,44 +454,20 @@ export default function ModelsPage() {
                         </td>
                       </tr>
                     ))}
-                    {paginatedModels.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="py-12 text-center text-neutral-500"
-                        >
-                          <div className="flex flex-col items-center gap-3">
-                            <Search size={32} className="text-neutral-600" />
-                            <p className="text-lg">No models found</p>
-                            <p className="text-sm">
-                              Try adjusting your search or{" "}
-                              <button
-                                onClick={() => {
-                                  setSearchQuery("");
-                                  setSelectedProvider("All Providers");
-                                }}
-                                className="text-primary-400 hover:text-primary-300"
-                              >
-                                clear all filters
-                              </button>
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
                 <div className="text-sm text-neutral-500">
                   Page {currentPage} of {totalPages} (
                   {filteredModels.length.toLocaleString()} results)
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}

@@ -36,11 +36,11 @@ export function FeedbackDialog({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
             onClick={handleClose}
         >
             <div
-                className="w-full max-w-md rounded-xl bg-neutral-900 shadow-2xl border border-neutral-700"
+                className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-xl bg-neutral-900 shadow-2xl border border-neutral-700"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

@@ -44,7 +44,7 @@ export default function PricingPage() {
     <main className="min-h-screen bg-[#0a0a0b] text-neutral-100">
       <Navbar />
 
-      <section className="relative overflow-hidden px-6 pt-36 pb-16">
+      <section className="relative overflow-hidden px-4 pt-32 pb-14 sm:px-6 sm:pt-36 sm:pb-16 lg:px-8">
         {/* Single-hue ambient glow (flat, on-brand) */}
         <div className="pointer-events-none absolute left-1/2 top-10 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-500/5 blur-[120px]" />
         <div className="relative mx-auto max-w-3xl text-center">
@@ -76,7 +76,7 @@ export default function PricingPage() {
       </section>
 
       {/* Savings estimator — the unique, interactive part */}
-      <section className="px-6 pb-8">
+      <section className="px-4 pb-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
           <div className="mb-6 flex items-center gap-2.5">
             <div className="flex size-7 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
@@ -97,9 +97,9 @@ export default function PricingPage() {
       </section>
 
       {/* The single free plan */}
-      <section className="px-6 py-16">
+      <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0b0b0d] p-8 sm:p-10">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0b0b0d] p-6 sm:p-10">
             <div className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-sky-500/5 blur-3xl" />
             <div className="relative flex flex-wrap items-end justify-between gap-6">
               <div>
@@ -114,7 +114,7 @@ export default function PricingPage() {
                 </p>
               </div>
               <div className="text-right">
-                <span className="text-5xl font-bold tracking-tight text-white">
+                <span className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
                   $0
                 </span>
                 <span className="text-base text-neutral-500"> / month</span>
@@ -142,14 +142,14 @@ export default function PricingPage() {
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
                 href="/auth/register"
-                className="group inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#0a0a0b] transition-colors hover:bg-neutral-100"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#0a0a0b] transition-colors hover:bg-neutral-100 sm:w-auto"
               >
                 Start tracking free
                 <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
                 href="/demo?src=pricing"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-6 py-3 text-sm font-medium text-neutral-300 transition-colors hover:border-white/20 hover:text-white"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-6 py-3 text-sm font-medium text-neutral-300 transition-colors hover:border-white/20 hover:text-white sm:w-auto"
               >
                 Explore the live demo
               </Link>

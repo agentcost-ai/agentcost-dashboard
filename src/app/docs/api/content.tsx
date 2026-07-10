@@ -104,9 +104,9 @@ function Endpoint({
   return (
     <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 overflow-hidden">
       <div className="p-4 border-b border-neutral-700/50">
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2">
           <MethodBadge method={method} />
-          <code className="text-white font-mono">{path}</code>
+          <code className="text-white font-mono break-all">{path}</code>
           {auth && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-yellow-900/30 text-yellow-400 border border-yellow-700/50">
               <Shield size={12} />
@@ -150,7 +150,7 @@ export default function APIReferencePage() {
 
   return (
     <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-4xl px-6 py-8 pt-4">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-4">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">API Reference</h1>
@@ -251,7 +251,7 @@ export default function APIReferencePage() {
           <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
             Base URL
           </h3>
-          <code className="text-primary-400 font-mono text-lg">
+          <code className="text-primary-400 font-mono text-lg break-all">
             {apiBaseUrl || "https://api.yourdomain.com"}
           </code>
           <p className="mt-2 text-sm text-neutral-500">
@@ -264,8 +264,8 @@ export default function APIReferencePage() {
           <p className="text-neutral-300 mb-4">
             AgentCost uses two types of authentication:
           </p>
-          <div className="overflow-x-auto mb-4">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto max-w-full mb-4">
+            <table className="w-full min-w-140 text-sm">
               <thead>
                 <tr className="border-b border-neutral-700">
                   <th className="text-left py-2 px-3 text-neutral-400 font-medium">
@@ -613,8 +613,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             endpoints require JWT authentication.
           </p>
 
-          <div className="overflow-x-auto mb-6">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto max-w-full mb-6">
+            <table className="w-full min-w-120 text-sm">
               <thead>
                 <tr className="border-b border-neutral-700">
                   <th className="text-left py-2 px-3 text-neutral-400 font-medium">
@@ -872,8 +872,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             description="Get recent events for the authenticated project"
           >
             <p className="text-sm text-neutral-400 mb-2">Query Parameters:</p>
-            <div className="overflow-x-auto mb-4">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto max-w-full mb-4">
+              <table className="w-full min-w-140 text-sm">
                 <thead>
                   <tr className="border-b border-neutral-700">
                     <th className="text-left py-2 px-3 text-neutral-400 font-medium">
@@ -929,8 +929,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             description="Get cost overview for the project"
           >
             <p className="text-sm text-neutral-400 mb-2">Query Parameters:</p>
-            <div className="overflow-x-auto mb-4">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto max-w-full mb-4">
+              <table className="w-full min-w-120 text-sm">
                 <thead>
                   <tr className="border-b border-neutral-700">
                     <th className="text-left py-2 px-3 text-neutral-400 font-medium">
@@ -1132,8 +1132,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "detail": "Invalid API key"
 }`}
           />
-          <div className="overflow-x-auto mt-4">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto max-w-full mt-4">
+            <table className="w-full min-w-100 text-sm">
               <thead>
                 <tr className="border-b border-neutral-700">
                   <th className="text-left py-3 px-4 text-neutral-400 font-medium">
@@ -1312,7 +1312,8 @@ X-RateLimit-Reset: 45`}
             .
           </p>
           <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-4">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full min-w-105 text-sm">
               <thead>
                 <tr className="border-b border-neutral-700">
                   <th className="text-left py-2 px-4 text-neutral-400 font-medium">
@@ -1339,7 +1340,8 @@ X-RateLimit-Reset: 45`}
                   </td>
                 </tr>
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
           <p className="text-neutral-400 text-sm mt-4">
             We follow semantic versioning. Breaking changes will result in a new
@@ -1350,7 +1352,7 @@ X-RateLimit-Reset: 45`}
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-neutral-800">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <a
               href="/docs/sdk"
               className="text-neutral-400 hover:text-white transition-colors"

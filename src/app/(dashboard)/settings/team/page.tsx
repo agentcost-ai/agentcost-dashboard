@@ -150,7 +150,7 @@ function RoleDropdown({
                 <div className={`p-1.5 rounded ${config.color} mt-0.5`}>
                   <Icon size={14} />
                 </div>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-white">
                       {config.label}
@@ -406,7 +406,7 @@ export default function TeamPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Link
             href="/settings"
@@ -444,10 +444,10 @@ export default function TeamPage() {
       {staleConfig && (
         <Card className="border-amber-900/50">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400">
               <AlertTriangle size={24} />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <h3 className="text-lg font-medium text-white">
                 This API key belongs to a different account
               </h3>
@@ -496,10 +496,10 @@ export default function TeamPage() {
       {pendingInvitations.length > 0 && (
         <Card>
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-900/30 text-yellow-400">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-yellow-900/30 text-yellow-400">
               <Mail size={24} />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <h3 className="text-lg font-medium text-white">
                 Pending Invitations
               </h3>
@@ -510,10 +510,10 @@ export default function TeamPage() {
                 {pendingInvitations.map((inv) => (
                   <div
                     key={inv.project_id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-neutral-800/50 border border-neutral-700"
+                    className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-neutral-800/50 border border-neutral-700"
                   >
-                    <div>
-                      <p className="font-medium text-white">
+                    <div className="min-w-0">
+                      <p className="font-medium text-white truncate">
                         {inv.project_name}
                       </p>
                       <p className="text-sm text-neutral-400">
@@ -551,10 +551,10 @@ export default function TeamPage() {
       {/* Team Members */}
       <Card>
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
             <Users size={24} />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium text-white">Team Members</h3>
@@ -579,13 +579,13 @@ export default function TeamPage() {
             <div className="mt-4 divide-y divide-neutral-800">
               {members.map((member) => (
                 <div key={member.user_id} className="py-4 first:pt-0 last:pb-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-medium">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-medium">
                         {(member.name || member.email).charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-medium text-white">
                             {member.name || member.email}
                           </span>
@@ -602,7 +602,7 @@ export default function TeamPage() {
                           )}
                           <StatusBadge isPending={member.is_pending} />
                         </div>
-                        <p className="text-sm text-neutral-400">
+                        <p className="text-sm text-neutral-400 truncate">
                           {member.email}
                         </p>
                       </div>
@@ -711,10 +711,10 @@ export default function TeamPage() {
       {/* Role Permissions Info */}
       <Card>
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-900/30 text-purple-400">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-purple-900/30 text-purple-400">
             <Shield size={24} />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-medium text-white">Role Permissions</h3>
             <p className="text-sm text-neutral-400">
               Understanding what each role can do
@@ -753,8 +753,8 @@ export default function TeamPage() {
 
       {/* Invite Modal */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md mx-4 bg-neutral-900 rounded-xl border border-neutral-700 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-neutral-900 rounded-xl border border-neutral-700 shadow-xl">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">

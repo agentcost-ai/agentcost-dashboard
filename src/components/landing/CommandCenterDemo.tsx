@@ -73,7 +73,7 @@ export function CommandCenterDemo() {
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.2 }}
-                        className="p-6 md:p-8 font-mono text-sm"
+                        className="p-4 sm:p-6 md:p-8 font-mono text-sm"
                     >
                         <div className="space-y-6">
                             {/* Step 1: Install */}
@@ -82,8 +82,8 @@ export function CommandCenterDemo() {
                                     <ChevronRight className="size-4" />
                                     <span>1. Install</span>
                                 </div>
-                                <div className="flex items-center justify-between bg-black/40 border border-white/5 p-4 rounded-lg">
-                                    <code className="text-sky-300">
+                                <div className="flex items-center justify-between gap-3 bg-black/40 border border-white/5 p-4 rounded-lg">
+                                    <code className="text-sky-300 min-w-0 overflow-x-auto whitespace-nowrap">
                                         <span className="text-neutral-600 mr-1">$</span> {INSTALL_CMD}
                                     </code>
                                     <CheckCircle2 className="size-4 text-emerald-500/60" />
@@ -105,8 +105,8 @@ export function CommandCenterDemo() {
                                         {copied ? "Copied" : "Copy"}
                                     </button>
                                 </div>
-                                <div className="relative bg-[#1e1e1e] border border-white/5 rounded-lg overflow-hidden">
-                                    <pre className="text-neutral-300 leading-7 text-[13px]">
+                                <div className="relative bg-[#1e1e1e] border border-white/5 rounded-lg overflow-hidden max-w-full">
+                                    <pre className="text-neutral-300 leading-7 text-[13px] overflow-x-auto">
                                         <code>
                                             <div className="border-l-2 border-emerald-400/40 pl-3 ml-1 py-0.5">
                                                 <span className="text-purple-400">from</span> <span className="text-sky-300">agentcost</span> <span className="text-purple-400">import</span> <span className="text-sky-300">track_costs</span>

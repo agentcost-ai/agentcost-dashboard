@@ -46,7 +46,7 @@ export function ReportRangePicker({ value, onChange }: ReportRangePickerProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="flex items-center gap-1 rounded-xl border border-white/6 bg-white/2 p-1">
+      <div className="flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-white/6 bg-white/2 p-1">
         {PRESETS.map((p) => (
           <button
             key={p.value}
@@ -80,7 +80,7 @@ export function ReportRangePicker({ value, onChange }: ReportRangePickerProps) {
       </div>
 
       {customOpen && (
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <input
             type="date"
             value={start}

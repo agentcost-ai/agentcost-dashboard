@@ -282,10 +282,10 @@ export default function SettingsPage() {
       {showCreateProject && (
         <Card>
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
               <Plus size={24} />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <h3 className="text-lg font-medium text-white">
                 Create new project
               </h3>
@@ -305,7 +305,7 @@ export default function SettingsPage() {
                     }
                   }}
                   placeholder="Project name"
-                  className="flex-1 min-w-55 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-white focus:border-primary-500 focus:outline-none"
+                  className="flex-1 min-w-0 sm:min-w-55 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-white focus:border-primary-500 focus:outline-none"
                 />
                 <button
                   onClick={createProject}
@@ -341,10 +341,10 @@ export default function SettingsPage() {
       {/* API Key & Project */}
       <Card>
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400">
             <Key size={24} />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-medium text-white">
               API Key & Project
             </h3>
@@ -362,7 +362,7 @@ export default function SettingsPage() {
                     </label>
                     <div className="mt-1 flex gap-2">
                       <div className="relative flex-1 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 pr-20">
-                        <code className="text-white font-mono text-sm">
+                        <code className="text-white font-mono text-sm break-all">
                           {config.apiKey
                             ? showApiKey
                               ? config.apiKey
@@ -417,12 +417,12 @@ export default function SettingsPage() {
 
                     {/* Project ID with Copy */}
                     <div className="p-3 bg-neutral-900/50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
                           <span className="text-sm text-neutral-400">
                             Project ID
                           </span>
-                          <p className="text-white font-mono text-sm">
+                          <p className="text-white font-mono text-sm break-all">
                             {project.id}
                           </p>
                         </div>
@@ -451,11 +451,11 @@ export default function SettingsPage() {
       {project && (
         <Card>
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
               <Pencil size={24} />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div>
                   <h3 className="text-lg font-medium text-white">
                     Project Details
@@ -576,11 +576,11 @@ export default function SettingsPage() {
       {project && (
         <Card>
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-900/30 text-blue-400">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-900/30 text-blue-400">
               <Users size={24} />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-lg font-medium text-white">
                     Team Management
@@ -610,11 +610,11 @@ export default function SettingsPage() {
       {project && (
         <Card className="border-red-900/50">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-900/30 text-red-400">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-900/30 text-red-400">
               <AlertTriangle size={24} />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-lg font-medium text-white">
                     Danger Zone
@@ -637,7 +637,7 @@ export default function SettingsPage() {
 
               {dangerZoneExpanded && (
                 <div className="mt-4 border border-red-900/50 rounded-lg p-4 bg-red-950/20">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h4 className="font-medium text-white">Delete Project</h4>
                       <p className="text-sm text-neutral-400 mt-1">
@@ -663,7 +663,7 @@ export default function SettingsPage() {
                         </code>{" "}
                         to confirm.
                       </p>
-                      <div className="flex gap-3">
+                      <div className="flex flex-col gap-3 sm:flex-row">
                         <input
                           type="text"
                           value={deleteConfirmText}
@@ -745,10 +745,10 @@ export default function SettingsPage() {
       {/* Auto-Refresh */}
       <Card>
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-900/30 text-emerald-400">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-900/30 text-emerald-400">
             <Activity size={24} />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-medium text-white">Auto-Refresh</h3>
             <p className="text-sm text-neutral-400">
               Automatically refresh dashboard data
@@ -790,7 +790,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Save Button */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <button
           onClick={saveConfig}
           disabled={!hasChanges || isSaving}
@@ -820,10 +820,10 @@ export default function SettingsPage() {
       {/* Quick Start */}
       <Card>
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-900/30 text-purple-400">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-purple-900/30 text-purple-400">
             <Code size={24} />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-medium text-white">Quick Start</h3>
             <p className="text-sm text-neutral-400">
               Use your configuration in your Python code
@@ -887,7 +887,7 @@ export default function SettingsPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-900/30 text-blue-400">
             <BookOpen size={24} />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-medium text-white">Documentation</h3>
             <p className="text-sm text-neutral-400">
               Learn how to use AgentCost effectively

@@ -32,7 +32,7 @@ export function CostChart({ data }: CostChartProps) {
   const yDomain: [number, number] = [0, maxCost > 0 ? maxCost * 1.1 : 1];
 
   return (
-    <div className="h-72">
+    <div className="h-72 min-w-0">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={formattedData}

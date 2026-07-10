@@ -222,7 +222,7 @@ function MiniChart() {
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="relative py-32">
+    <section id="features" className="relative py-20 sm:py-32">
       {/* Subtle grain */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.008]"
@@ -233,7 +233,7 @@ export function FeaturesSection() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* ── Section header ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -256,7 +256,7 @@ export function FeaturesSection() {
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           {/* Real-time tracking with live feed */}
           <SpotlightCard>
-            <div className="p-8">
+            <div className="p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/10">
                   <Activity className="size-4 text-sky-400/80" />
@@ -281,7 +281,7 @@ export function FeaturesSection() {
 
           {/* Zero code changes with highlighted code */}
           <SpotlightCard delay={0.06}>
-            <div className="p-8">
+            <div className="p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/10">
                   <Code2 className="size-4 text-emerald-400/80" />
@@ -313,7 +313,7 @@ export function FeaturesSection() {
                     my_agent.py
                   </span>
                 </div>
-                <div className="p-4 font-mono text-[12px] leading-7">
+                <div className="p-4 font-mono text-[12px] leading-7 overflow-x-auto whitespace-nowrap">
                   <div className="flex items-start gap-3">
                     <span className="select-none text-neutral-800 w-4 text-right text-[10px] leading-7 shrink-0">
                       1

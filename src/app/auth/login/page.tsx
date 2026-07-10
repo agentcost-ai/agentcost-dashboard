@@ -254,7 +254,7 @@ function LoginContent() {
           className="mb-6 p-4 bg-emerald-500/8 border border-emerald-500/15 rounded-xl flex items-start gap-3"
         >
           <CheckCircle className="w-4.5 h-4.5 text-emerald-400 shrink-0 mt-0.5" />
-          <span className="text-sm text-emerald-300/90 leading-relaxed">
+          <span className="text-sm text-emerald-300/90 leading-relaxed wrap-break-word min-w-0">
             {successMessage}
           </span>
         </div>
@@ -267,7 +267,7 @@ function LoginContent() {
           className="mb-6 p-4 bg-red-500/8 border border-red-500/15 rounded-xl flex items-start gap-3"
         >
           <AlertCircle className="w-4.5 h-4.5 text-red-400 shrink-0 mt-0.5" />
-          <div className="text-sm leading-relaxed">
+          <div className="text-sm leading-relaxed wrap-break-word min-w-0">
             <span className="text-red-300/90">{error}</span>
             {isEmailNotVerified && !resendSuccess && (
               <button
@@ -344,7 +344,7 @@ function LoginContent() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-400 transition-colors"
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-neutral-600 hover:text-neutral-400 transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="w-4.5 h-4.5" />

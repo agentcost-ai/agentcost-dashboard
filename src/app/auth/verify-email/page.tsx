@@ -83,7 +83,7 @@ function VerifyEmailContent() {
           <h1 className="text-2xl font-semibold text-white mb-2">
             Email Verified
           </h1>
-          <p className="text-gray-400 mb-6">{message}</p>
+          <p className="text-gray-400 mb-6 wrap-break-word">{message}</p>
           <p className="text-gray-500 text-sm mb-6">
             Redirecting you to login...
           </p>
@@ -104,7 +104,7 @@ function VerifyEmailContent() {
           <h1 className="text-2xl font-semibold text-white mb-2">
             Verification Failed
           </h1>
-          <p className="text-gray-400 mb-6">{message}</p>
+          <p className="text-gray-400 mb-6 wrap-break-word">{message}</p>
           <div className="space-y-3">
             <Link
               href="/auth/login"

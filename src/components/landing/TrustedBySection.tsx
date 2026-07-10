@@ -25,7 +25,7 @@ export function TrustedBySection() {
       {/* Subtle background accent */}
       <div className="absolute inset-0 bg-linear-to-b from-transparent via-sky-500/1 to-transparent pointer-events-none" />
 
-      <div className="mx-auto max-w-7xl px-6 mb-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-10">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -43,8 +43,8 @@ export function TrustedBySection() {
       {/* Marquee */}
       <div className="relative">
         {/* Fade edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-40 bg-linear-to-r from-[#0a0a0b] to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-40 bg-linear-to-l from-[#0a0a0b] to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-40 bg-linear-to-r from-[#0a0a0b] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-40 bg-linear-to-l from-[#0a0a0b] to-transparent z-10 pointer-events-none" />
 
         <div className="flex animate-marquee">
           {[...providers, ...providers].map((name, i) => (

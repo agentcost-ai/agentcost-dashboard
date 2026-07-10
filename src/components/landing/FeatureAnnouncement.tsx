@@ -27,7 +27,7 @@ export function FeatureAnnouncement({
     <Link
       href={href}
       className={cn(
-        "group inline-flex items-center gap-2.5 rounded-full border border-sky-500/25 bg-sky-500/[0.06] py-1.5 pl-1.5 pr-4 text-[13px] backdrop-blur-sm transition-colors duration-200 hover:border-sky-400/40 hover:bg-sky-500/10",
+        "group inline-flex max-w-full items-center gap-2.5 rounded-full border border-sky-500/25 bg-sky-500/[0.06] py-1.5 pl-1.5 pr-4 text-[13px] backdrop-blur-sm transition-colors duration-200 hover:border-sky-400/40 hover:bg-sky-500/10",
         className,
       )}
     >

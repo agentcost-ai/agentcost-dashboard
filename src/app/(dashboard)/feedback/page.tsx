@@ -188,12 +188,12 @@ function ToastContainer({
   onDismiss: (id: number) => void;
 }) {
   return (
-    <div className="pointer-events-none fixed bottom-6 right-6 z-100 flex flex-col-reverse gap-3">
+    <div className="pointer-events-none fixed bottom-6 left-4 right-4 z-100 flex flex-col-reverse items-end gap-3 sm:left-auto sm:right-6">
       {toasts.map((t) => (
         <div
           key={t.id}
           role="status"
-          className={`pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium shadow-xl backdrop-blur-md animate-fade-up ${
+          className={`pointer-events-auto flex max-w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium shadow-xl backdrop-blur-md animate-fade-up ${
             t.variant === "success"
               ? "border-emerald-800/60 bg-emerald-950/80 text-emerald-300"
               : "border-red-800/60 bg-red-950/80 text-red-300"
@@ -670,7 +670,7 @@ export default function FeedbackPage() {
         {/* ---- Filters & search ---- */}
         <Card className="border-neutral-800 bg-neutral-900/60">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-1 items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-800 text-neutral-400">
                 <Search size={18} />
               </div>

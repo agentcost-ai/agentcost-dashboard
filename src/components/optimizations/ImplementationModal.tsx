@@ -248,11 +248,11 @@ export function ImplementationModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-neutral-900 shadow-2xl border border-neutral-700">
+            <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl bg-neutral-900 shadow-2xl border border-neutral-700">
                 {/* Header */}
-                <div className="sticky top-0 bg-neutral-900 border-b border-neutral-800 p-6 flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-900/30">
+                <div className="sticky top-0 bg-neutral-900 border-b border-neutral-800 p-4 sm:p-6 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-900/30">
                             <CheckCircle2 size={24} className="text-emerald-400" />
                         </div>
                         <div>
@@ -266,21 +266,21 @@ export function ImplementationModal({
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-neutral-400 hover:text-white transition-colors p-1"
+                        className="shrink-0 text-neutral-400 hover:text-white transition-colors p-1"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6">
                     {/* Summary */}
-                    <div className="flex items-center gap-4 p-4 rounded-lg bg-neutral-800/50 border border-neutral-700">
+                    <div className="flex flex-wrap items-center gap-4 p-4 rounded-lg bg-neutral-800/50 border border-neutral-700">
                         {getTypeIcon(recommendation.type)}
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-white">{recommendation.title}</h3>
                             {recommendation.model && recommendation.alternative_model && (
-                                <p className="text-sm text-neutral-400 mt-1">
+                                <p className="text-sm text-neutral-400 mt-1 wrap-break-word">
                                     <span className="text-neutral-500">{recommendation.model}</span>
                                     <ArrowRight size={12} className="inline mx-2 text-emerald-400" />
                                     <span className="text-emerald-400">{recommendation.alternative_model}</span>
