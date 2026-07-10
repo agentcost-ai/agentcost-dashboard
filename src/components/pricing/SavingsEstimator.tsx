@@ -76,7 +76,7 @@ export function SavingsEstimator() {
         {/* Output */}
         <div className="flex flex-col justify-between gap-5 rounded-xl border border-white/6 bg-white/2 p-5 sm:p-6">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
+            <p className="text-[11px] font-medium uppercase tracking-widest text-neutral-500">
               Estimated savings
             </p>
             <p className="mt-2 wrap-break-word text-4xl font-bold leading-none tracking-tight text-emerald-400 tabular-nums sm:text-[2.6rem]">
