@@ -454,6 +454,99 @@ export interface SessionInfo {
   is_current: boolean;
 }
 
+// ── Stored config (localStorage: "agentcost_config") ───────────────────────
+// v1 held a single { apiKey, projectId } pair, which meant switching projects
+// could silently authenticate requests with ANOTHER project's key. v2 keeps a
+// per-project key map plus the owning user id, so keys survive logout but
+// never cross projects or accounts. v1 fields are still read (and mirrored on
+// write) for back-compat with older bundles in other tabs.
+type RawStoredConfig = {
+  apiKeys?: Record<string, string>; // v2: projectId -> apiKey
+  ownerUserId?: string; // v2: which account these keys belong to
+  apiKey?: string; // v1: single key…
+  projectId?: string; // …saved for this project
+  baseUrl?: string;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+};
+
+function readRawConfig(): RawStoredConfig {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem("agentcost_config") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeRawConfig(cfg: RawStoredConfig): void {
+  localStorage.setItem("agentcost_config", JSON.stringify(cfg));
+  window.dispatchEvent(new Event("agentcost_config_updated"));
+}
+
+/** Resolve the key stored for one project. A v1 single key only counts when
+ *  it was saved for that same project. Returns "" when nothing is stored. */
+export function getStoredApiKeyForProject(projectId: string | null): string {
+  if (!projectId) return "";
+  const cfg = readRawConfig();
+  if (cfg.apiKeys?.[projectId]) return cfg.apiKeys[projectId];
+  if (cfg.projectId === projectId && cfg.apiKey) return cfg.apiKey;
+  return "";
+}
+
+/** Store a project's API key, remembering which account it belongs to. */
+export function storeProjectApiKey(
+  projectId: string,
+  apiKey: string,
+  ownerUserId?: string,
+): void {
+  const cfg = readRawConfig();
+  cfg.apiKeys = { ...cfg.apiKeys, [projectId]: apiKey };
+  // Mirror to the v1 fields so an older bundle in another tab keeps working.
+  cfg.apiKey = apiKey;
+  cfg.projectId = projectId;
+  if (ownerUserId) cfg.ownerUserId = ownerUserId;
+  writeRawConfig(cfg);
+}
+
+/** Drop a single project's key (e.g. after the project is deleted). */
+export function removeStoredProjectApiKey(projectId: string): void {
+  const cfg = readRawConfig();
+  if (cfg.apiKeys) delete cfg.apiKeys[projectId];
+  if (cfg.projectId === projectId) {
+    delete cfg.apiKey;
+    delete cfg.projectId;
+  }
+  writeRawConfig(cfg);
+}
+
+/**
+ * Keep stored keys scoped to the signed-in account. Called on login/session
+ * restore: adopts pre-v2 configs that have no owner (the old code cleared the
+ * config on logout, so an existing one can only belong to the signed-in user)
+ * and wipes all keys when a DIFFERENT account signs in on this browser.
+ */
+export function reconcileStoredConfigOwner(userId: string): void {
+  const cfg = readRawConfig();
+  const hasKeys = !!cfg.apiKey || Object.keys(cfg.apiKeys ?? {}).length > 0;
+  if (!hasKeys && !cfg.ownerUserId) return;
+  if (!cfg.ownerUserId) {
+    cfg.ownerUserId = userId;
+    writeRawConfig(cfg);
+    return;
+  }
+  if (cfg.ownerUserId !== userId) {
+    writeRawConfig({
+      autoRefresh: cfg.autoRefresh,
+      refreshInterval: cfg.refreshInterval,
+      baseUrl: cfg.baseUrl,
+      ownerUserId: userId,
+    });
+    localStorage.removeItem("agentcost_active_project_id");
+    window.dispatchEvent(new Event("agentcost_active_project_changed"));
+  }
+}
+
 // Get config from localStorage (client-side only)
 function getStoredConfig(): {
   apiKey: string;
@@ -473,16 +566,25 @@ function getStoredConfig(): {
   try {
     const saved = localStorage.getItem("agentcost_config");
     const authToken = localStorage.getItem("access_token");
-    const activeProjectId =
+    const storedActiveId =
       localStorage.getItem("agentcost_active_project_id") || null;
 
     if (saved) {
-      const parsed = JSON.parse(saved);
+      const parsed = JSON.parse(saved) as RawStoredConfig;
+      const activeProjectId = storedActiveId || parsed.projectId || null;
+      // Only authenticate with a key that belongs to the active project —
+      // a v1 key saved for a different project must NOT be used (it would
+      // silently serve that other project's data). With no active project
+      // at all (legacy SDK-only setups), fall back to the v1 key.
+      const projectKey = activeProjectId
+        ? (parsed.apiKeys?.[activeProjectId] ??
+          (parsed.projectId === activeProjectId ? (parsed.apiKey ?? "") : ""))
+        : (parsed.apiKey ?? "");
       return {
-        apiKey: parsed.apiKey || process.env.NEXT_PUBLIC_API_KEY || "",
+        apiKey: projectKey || process.env.NEXT_PUBLIC_API_KEY || "",
         baseUrl: parsed.baseUrl || DEFAULT_API_BASE_URL,
         authToken,
-        activeProjectId: activeProjectId || parsed.projectId || null,
+        activeProjectId,
       };
     }
 
@@ -490,7 +592,7 @@ function getStoredConfig(): {
       apiKey: process.env.NEXT_PUBLIC_API_KEY || "",
       baseUrl: DEFAULT_API_BASE_URL,
       authToken,
-      activeProjectId,
+      activeProjectId: storedActiveId,
     };
   } catch {
     // Ignore parse errors

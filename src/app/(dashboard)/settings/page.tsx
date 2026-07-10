@@ -5,8 +5,14 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { BudgetSettingsCard } from "@/components/settings/BudgetSettingsCard";
-import { api } from "@/lib/api";
+import {
+  api,
+  getStoredApiKeyForProject,
+  storeProjectApiKey,
+  removeStoredProjectApiKey,
+} from "@/lib/api";
 import { useActiveProject } from "@/contexts/ActiveProjectContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Key,
   Check,
@@ -81,6 +87,7 @@ export default function SettingsPage() {
     refresh: refreshProjectList,
     selectProject,
   } = useActiveProject();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const [project, setProject] = useState<ProjectInfo | null>(null);
   const [showCreateProject, setShowCreateProject] = useState(false);
@@ -118,18 +125,28 @@ export default function SettingsPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setConfig({
-          ...DEFAULT_CONFIG,
-          apiKey: parsed.apiKey || "",
-          projectId: parsed.projectId || "",
+        setConfig((prev) => ({
+          ...prev,
           autoRefresh: parsed.autoRefresh ?? true,
           refreshInterval: parsed.refreshInterval ?? 30,
-        });
+        }));
       } catch {
         console.error("Failed to parse saved config");
       }
     }
   }, []);
+
+  // The displayed key must belong to the displayed project — keys are stored
+  // per project, so switching projects re-resolves (and never shows another
+  // project's key).
+  useEffect(() => {
+    const displayedId = project?.id ?? activeProject?.id ?? "";
+    setConfig((prev) => ({
+      ...prev,
+      projectId: displayedId,
+      apiKey: displayedId ? getStoredApiKeyForProject(displayedId) : "",
+    }));
+  }, [project?.id, activeProject?.id]);
 
   const fetchProject = useCallback(async () => {
     // Prefer the active project from the JWT-backed list (works for members
@@ -169,18 +186,28 @@ export default function SettingsPage() {
   const saveConfig = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem("agentcost_config", JSON.stringify(config));
+      // Only the refresh preferences are editable here — merge them into the
+      // stored config so the per-project API key map is never clobbered.
+      let saved: Record<string, unknown> = {};
+      try {
+        saved = JSON.parse(localStorage.getItem("agentcost_config") || "{}");
+      } catch {
+        // Corrupt config: fall through and rewrite it from scratch.
+      }
+      localStorage.setItem(
+        "agentcost_config",
+        JSON.stringify({
+          ...saved,
+          autoRefresh: config.autoRefresh,
+          refreshInterval: config.refreshInterval,
+        }),
+      );
 
       // Dispatch a custom event so other components know config changed
       window.dispatchEvent(new Event("agentcost_config_updated"));
 
       setSaveMessage({ type: "success", text: "Configuration saved!" });
       setHasChanges(false);
-
-      // If API key was cleared, refresh the page to show onboarding
-      if (!config.apiKey) {
-        window.location.reload();
-      }
     } catch {
       setSaveMessage({ type: "error", text: "Failed to save" });
     }
@@ -195,17 +222,16 @@ export default function SettingsPage() {
       const newProject = await api.createProject(newProjectName.trim());
       setProject(newProject);
 
-      // Auto-save the API key and project ID to localStorage
-      const updatedConfig = {
-        ...config,
+      // Auto-save the new project's API key (per-project, owner-scoped).
+      // storeProjectApiKey dispatches "agentcost_config_updated" itself.
+      if (newProject.api_key) {
+        storeProjectApiKey(newProject.id, newProject.api_key, user?.id);
+      }
+      setConfig((prev) => ({
+        ...prev,
         apiKey: newProject.api_key ?? "",
         projectId: newProject.id,
-      };
-      localStorage.setItem("agentcost_config", JSON.stringify(updatedConfig));
-      setConfig(updatedConfig);
-
-      // Dispatch a custom event so other components know config changed
-      window.dispatchEvent(new Event("agentcost_config_updated"));
+      }));
 
       // Make the new project the active one for the switcher + refresh list
       selectProject(newProject.id);
@@ -234,14 +260,15 @@ export default function SettingsPage() {
     setIsRotatingKey(true);
     try {
       const result = await api.rotateProjectApiKey(project.id);
-      const updatedConfig = {
-        ...config,
+      // Per-project, owner-scoped save; dispatches the config-updated event.
+      if (result.api_key) {
+        storeProjectApiKey(project.id, result.api_key, user?.id);
+      }
+      setConfig((prev) => ({
+        ...prev,
         apiKey: result.api_key ?? "",
         projectId: project.id,
-      };
-      localStorage.setItem("agentcost_config", JSON.stringify(updatedConfig));
-      setConfig(updatedConfig);
-      window.dispatchEvent(new Event("agentcost_config_updated"));
+      }));
 
       setSaveMessage({
         type: "success",
@@ -367,7 +394,7 @@ export default function SettingsPage() {
                             ? showApiKey
                               ? config.apiKey
                               : "•".repeat(Math.min(config.apiKey.length, 32))
-                            : "API keys are shown once at creation."}
+                            : "No key stored in this browser — rotate to generate a new one."}
                         </code>
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                           <button
@@ -386,8 +413,10 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     <p className="mt-2 text-xs text-neutral-500">
-                      API keys are write-only secrets and are shown once at
-                      creation. Store them securely.
+                      API keys are shown once at creation and kept only in the
+                      browser where they were created — the server can&apos;t
+                      re-display them. Missing here? Rotating generates a new
+                      key.
                     </p>
                     <div className="mt-3">
                       <button
@@ -677,15 +706,14 @@ export default function SettingsPage() {
                             setIsDeleting(true);
                             try {
                               await api.deleteProject(project.id);
-                              // Clear ALL project-scoped local state so the
-                              // dashboard doesn't render stale data from the
-                              // deleted project on the next render.
-                              localStorage.removeItem("agentcost_config");
+                              // Drop only the deleted project's key (other
+                              // projects keep theirs) and clear the active
+                              // selection so the dashboard doesn't render
+                              // stale data. removeStoredProjectApiKey fires
+                              // the config-updated event itself.
+                              removeStoredProjectApiKey(project.id);
                               localStorage.removeItem(
                                 "agentcost_active_project_id",
-                              );
-                              window.dispatchEvent(
-                                new Event("agentcost_config_updated"),
                               );
                               window.dispatchEvent(
                                 new Event("agentcost_active_project_changed"),
@@ -829,9 +857,9 @@ export default function SettingsPage() {
               Use your configuration in your Python code
             </p>
             <p className="mt-2 text-xs text-neutral-500">
-              API keys are shown once at creation and stored locally if you save
-              them. If your key is not stored, rotate the key to generate a new
-              one.
+              API keys are stored only in the browser where they were created.
+              If your key is not shown here, rotate it in the card above to
+              generate a new one.
             </p>
             <div className="mt-4 bg-neutral-900 rounded-lg overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2 bg-neutral-800 border-b border-neutral-700">
