@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { isDemoMode, exitDemoMode } from "@/lib/demo/demo";
+import { reconcileStoredConfigOwner } from "@/lib/api";
 
 interface User {
   id: string;
@@ -124,6 +125,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
   }, []);
+
+  // Scope locally stored API keys to the signed-in account: adopt legacy
+  // configs with no recorded owner, wipe keys when a different account signs
+  // in on this browser. The demo's synthetic user must never claim (or wipe)
+  // a real account's keys.
+  useEffect(() => {
+    if (user && user.id !== DEMO_USER.id && !isDemoMode()) {
+      reconcileStoredConfigOwner(user.id);
+    }
+  }, [user]);
 
   // Listen for token refresh events from API client
   useEffect(() => {
@@ -401,13 +412,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
-      // Clear project-scoped config so a fresh login on a different account
-      // doesn't reuse the previous account's API key and trip 403s on
-      // permission-checked endpoints (members, budget, etc.).
-      localStorage.removeItem("agentcost_config");
-      localStorage.removeItem("agentcost_active_project_id");
-      window.dispatchEvent(new Event("agentcost_config_updated"));
-      window.dispatchEvent(new Event("agentcost_active_project_changed"));
+      // Stored API keys and project selection deliberately survive logout —
+      // they're scoped to the account via reconcileStoredConfigOwner(), which
+      // wipes them if a DIFFERENT account signs in on this browser. This way
+      // signing back into the same account keeps its keys visible.
       setToken(null);
       setRefreshTokenValue(null);
       setUser(null);
