@@ -38,7 +38,7 @@ export default function AgentsPage() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!api.isConfigured()) {
+      if (!api.hasProjectAccess()) {
         setLoading(false);
         return;
       }

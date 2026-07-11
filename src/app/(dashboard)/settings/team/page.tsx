@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
-import { api, ProjectMember, PendingInvitation } from "@/lib/api";
+import {
+  api,
+  removeStoredProjectApiKey,
+  ProjectMember,
+  PendingInvitation,
+} from "@/lib/api";
 import { parseApiError } from "@/lib/utils";
 import { useActiveProject } from "@/contexts/ActiveProjectContext";
 import {
@@ -286,12 +291,17 @@ export default function TeamPage() {
   }, [activeProject?.id]);
 
   const handleClearStaleConfig = useCallback(() => {
-    localStorage.removeItem("agentcost_config");
+    // Only the stale (active) project's key and selection are cleared —
+    // other projects' keys are unrecoverable write-only secrets and must
+    // survive. removeStoredProjectApiKey fires the config-updated event.
+    if (activeProject?.id) {
+      removeStoredProjectApiKey(activeProject.id);
+    }
     localStorage.removeItem("agentcost_active_project_id");
     window.dispatchEvent(new Event("agentcost_config_updated"));
     window.dispatchEvent(new Event("agentcost_active_project_changed"));
     window.location.href = "/settings";
-  }, []);
+  }, [activeProject?.id]);
 
   useEffect(() => {
     fetchData();

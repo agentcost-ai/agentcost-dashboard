@@ -8,6 +8,7 @@ import { BudgetSettingsCard } from "@/components/settings/BudgetSettingsCard";
 import {
   api,
   getStoredApiKeyForProject,
+  getFallbackProjectKey,
   storeProjectApiKey,
   removeStoredProjectApiKey,
 } from "@/lib/api";
@@ -138,14 +139,25 @@ export default function SettingsPage() {
 
   // The displayed key must belong to the displayed project — keys are stored
   // per project, so switching projects re-resolves (and never shows another
-  // project's key).
+  // project's key). With no resolved project at all (legacy SDK-only setups
+  // whose project isn't in the JWT list), fall back to the stored legacy pair
+  // so fetchProject's api.getProject() path can still identify the project.
   useEffect(() => {
     const displayedId = project?.id ?? activeProject?.id ?? "";
-    setConfig((prev) => ({
-      ...prev,
-      projectId: displayedId,
-      apiKey: displayedId ? getStoredApiKeyForProject(displayedId) : "",
-    }));
+    if (displayedId) {
+      setConfig((prev) => ({
+        ...prev,
+        projectId: displayedId,
+        apiKey: getStoredApiKeyForProject(displayedId),
+      }));
+    } else {
+      const fallback = getFallbackProjectKey();
+      setConfig((prev) => ({
+        ...prev,
+        projectId: fallback.projectId,
+        apiKey: fallback.apiKey,
+      }));
+    }
   }, [project?.id, activeProject?.id]);
 
   const fetchProject = useCallback(async () => {

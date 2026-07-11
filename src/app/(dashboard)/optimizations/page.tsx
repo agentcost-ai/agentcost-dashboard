@@ -436,7 +436,7 @@ export default function OptimizationsPage() {
     useState<Recommendation | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!api.isConfigured()) {
+    if (!api.hasProjectAccess()) {
       setLoading(false);
       return;
     }

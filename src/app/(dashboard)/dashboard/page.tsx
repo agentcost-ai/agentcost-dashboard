@@ -103,7 +103,7 @@ export default function DashboardPage() {
 
   const fetchData = useCallback(async () => {
     // Don't fetch if not configured
-    if (!api.isConfigured()) {
+    if (!api.hasProjectAccess()) {
       return;
     }
 
@@ -148,7 +148,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function initialFetch() {
       // Skip fetch if not configured
-      if (!api.isConfigured()) {
+      if (!api.hasProjectAccess()) {
         setLoading(false);
         return;
       }

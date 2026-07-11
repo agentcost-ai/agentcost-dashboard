@@ -47,7 +47,7 @@ export default function ModelsPage() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!api.isConfigured()) {
+      if (!api.hasProjectAccess()) {
         setLoading(false);
         return;
       }
