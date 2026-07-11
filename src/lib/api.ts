@@ -494,6 +494,31 @@ export function getStoredApiKeyForProject(projectId: string | null): string {
   return "";
 }
 
+/** Fold a v1 single-key pair into the v2 map so overwriting the v1 mirror
+ *  never destroys the browser's only copy of another project's key. */
+function adoptLegacyKey(cfg: RawStoredConfig): void {
+  if (cfg.apiKey && cfg.projectId && !cfg.apiKeys?.[cfg.projectId]) {
+    cfg.apiKeys = { ...cfg.apiKeys, [cfg.projectId]: cfg.apiKey };
+  }
+}
+
+/** Legacy fallback for when no active/JWT project is resolved: the v1 pair,
+ *  or the sole map entry. Keeps SDK-only setups working. */
+export function getFallbackProjectKey(): {
+  projectId: string;
+  apiKey: string;
+} {
+  const cfg = readRawConfig();
+  if (cfg.projectId && cfg.apiKey) {
+    return { projectId: cfg.projectId, apiKey: cfg.apiKey };
+  }
+  const entries = Object.entries(cfg.apiKeys ?? {});
+  if (entries.length === 1) {
+    return { projectId: entries[0][0], apiKey: entries[0][1] };
+  }
+  return { projectId: "", apiKey: "" };
+}
+
 /** Store a project's API key, remembering which account it belongs to. */
 export function storeProjectApiKey(
   projectId: string,
@@ -501,6 +526,7 @@ export function storeProjectApiKey(
   ownerUserId?: string,
 ): void {
   const cfg = readRawConfig();
+  adoptLegacyKey(cfg);
   cfg.apiKeys = { ...cfg.apiKeys, [projectId]: apiKey };
   // Mirror to the v1 fields so an older bundle in another tab keeps working.
   cfg.apiKey = apiKey;
@@ -512,6 +538,7 @@ export function storeProjectApiKey(
 /** Drop a single project's key (e.g. after the project is deleted). */
 export function removeStoredProjectApiKey(projectId: string): void {
   const cfg = readRawConfig();
+  adoptLegacyKey(cfg);
   if (cfg.apiKeys) delete cfg.apiKeys[projectId];
   if (cfg.projectId === projectId) {
     delete cfg.apiKey;
@@ -531,6 +558,7 @@ export function reconcileStoredConfigOwner(userId: string): void {
   const hasKeys = !!cfg.apiKey || Object.keys(cfg.apiKeys ?? {}).length > 0;
   if (!hasKeys && !cfg.ownerUserId) return;
   if (!cfg.ownerUserId) {
+    adoptLegacyKey(cfg);
     cfg.ownerUserId = userId;
     writeRawConfig(cfg);
     return;
