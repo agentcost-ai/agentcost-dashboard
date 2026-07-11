@@ -46,7 +46,7 @@ export default function PricingPage() {
 
       <section className="relative overflow-hidden px-4 pt-32 pb-14 sm:px-6 sm:pt-36 sm:pb-16 lg:px-8">
         {/* Single-hue ambient glow (flat, on-brand) */}
-        <div className="pointer-events-none absolute left-1/2 top-10 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-500/5 blur-[120px]" />
+        <div className="pointer-events-none absolute left-1/2 top-10 h-72 w-2xl -translate-x-1/2 rounded-full bg-sky-500/5 blur-[120px]" />
         <div className="relative mx-auto max-w-3xl text-center">
           <p className="mb-5 font-mono text-xs uppercase tracking-[0.2em] text-sky-400/80">
             Pricing
