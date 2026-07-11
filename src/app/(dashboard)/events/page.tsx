@@ -59,7 +59,7 @@ export default function EventsPage() {
   }, []);
 
   const fetchData = useCallback(async () => {
-    if (!api.isConfigured()) {
+    if (!api.hasProjectAccess()) {
       setLoading(false);
       return;
     }
@@ -103,7 +103,7 @@ export default function EventsPage() {
   }, [fetchData]);
 
   useEffect(() => {
-    if (api.isConfigured()) {
+    if (api.hasProjectAccess()) {
       fetchFilterOptions();
     }
   }, [fetchFilterOptions]);

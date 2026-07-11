@@ -28,7 +28,7 @@ export default function ReportsPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const fetchReport = useCallback(async () => {
-    if (!api.isConfigured()) {
+    if (!api.hasProjectAccess()) {
       setLoading(false);
       return;
     }
