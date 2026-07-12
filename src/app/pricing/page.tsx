@@ -18,16 +18,14 @@ import { CTASection } from "@/components/landing/CTASection";
 import { SavingsEstimator } from "@/components/pricing/SavingsEstimator";
 
 export const metadata: Metadata = {
-  title: "Pricing — Free & Open Source | AgentCost",
+  title: "Pricing — Free & Open Source",
   description:
     "AgentCost is free, open-source LLM cost observability under the MIT License — no tiers, no seat limits, no paywalls. Estimate what you could recover from your AI spend.",
   alternates: { canonical: "https://agentcost.tech/pricing" },
-  openGraph: {
-    title: "AgentCost Pricing — Free & Open Source",
-    description:
-      "Free forever, MIT-licensed, self-hosted. Estimate what you could recover from your LLM spend.",
-    url: "https://agentcost.tech/pricing",
-  },
+  // No openGraph override: a partial object here replaces the root's entirely
+  // (shallow merge) and strips og:image/site_name/type — the exact bug this
+  // page shipped with. og falls back to the page title/description + the
+  // file-based opengraph-image.
 };
 
 const INCLUDED = [
