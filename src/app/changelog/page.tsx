@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { changelogEntries } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "AgentCost Changelog",
+  title: "Changelog",
   description: "Track product releases, fixes, and platform improvements.",
   alternates: { canonical: "https://agentcost.tech/changelog" },
 };

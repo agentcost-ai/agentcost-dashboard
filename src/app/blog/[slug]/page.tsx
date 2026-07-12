@@ -22,7 +22,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${post.title} | AgentCost Blog`,
+    title: post.title,
     description: post.excerpt,
     alternates: {
       canonical: `https://agentcost.tech/blog/${post.slug}`,

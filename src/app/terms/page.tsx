@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Grid2x2Plus, ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | AgentCost",
+  title: "Terms of Service",
   description:
     "The terms and conditions governing your use of AgentCost, the open-source LLM cost tracking platform.",
   alternates: { canonical: "https://agentcost.tech/terms" },

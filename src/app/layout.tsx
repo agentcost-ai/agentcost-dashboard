@@ -29,7 +29,12 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "AgentCost — Track OpenAI, Anthropic & LangChain Costs",
+  // `template` auto-brands every page that sets its own title; pages therefore
+  // must NOT hand-write " | AgentCost" in their title strings (double-brand).
+  title: {
+    default: "AgentCost — Track OpenAI, Anthropic & LangChain Costs",
+    template: "%s | AgentCost",
+  },
   description:
     "Track OpenAI, Anthropic, and LangChain costs in real-time. At AgentCost, see which agents are expensive, set budget guardrails, and get optimization suggestions.",
   keywords: [
@@ -46,25 +51,19 @@ export const metadata: Metadata = {
     shortcut: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
+  // Deliberately minimal:
+  // - no `url`/`title`/`description` here — they would leak the homepage's
+  //   values onto every page that doesn't override openGraph (Next.js metadata
+  //   merging is shallow).
+  // - no `images` here — config images SUPPRESS the file-based
+  //   app/opengraph-image.tsx; with them absent, Next serves that 1200×630 PNG
+  //   as both og:image and twitter:image (the old icon.svg broke Twitter cards).
   openGraph: {
     type: "website",
-    url: "https://agentcost.tech/",
-    title: "AgentCost - Cost Tracking for OpenAI, Anthropic, and LangChain",
-    description:
-      "Track OpenAI, Anthropic, and LangChain costs in real-time. Free & open source.",
-    images: [
-      {
-        url: "https://agentcost.tech/icon.svg",
-        alt: "AgentCost - LLM Cost Tracking Platform",
-      },
-    ],
     siteName: "AgentCost",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AgentCost - Cost Tracking for OpenAI, Anthropic, and LangChain",
-    description: "Track OpenAI, Anthropic, and LangChain costs in real-time.",
-    images: ["https://agentcost.tech/icon.svg"],
   },
   // NOTE: do NOT set a fixed `alternates.canonical` here — it leaks to every
   // page that doesn't override it, making them look like duplicates of the
@@ -108,7 +107,11 @@ export default function RootLayout({
                   slogan: "Real-time LLM cost observability",
                   description:
                     "AgentCost is an open-source LLM cost observability platform. Track, analyze, and optimize OpenAI, Anthropic, and LangChain spending in real time across 2,900+ models.",
-                  sameAs: ["https://github.com/agentcost-ai"],
+                  sameAs: [
+                    "https://github.com/agentcost-ai",
+                    "https://pypi.org/project/agentcost/",
+                    "https://dev.to/kushagra125",
+                  ],
                   founder: { "@id": "https://agentcost.tech/#founder" },
                 },
                 {
@@ -132,10 +135,12 @@ export default function RootLayout({
                 {
                   "@type": "SoftwareApplication",
                   name: "AgentCost",
+                  url: "https://agentcost.tech",
                   applicationCategory: "DeveloperApplication",
                   operatingSystem: "Any",
                   description:
                     "Real-time LLM cost tracking and optimization for OpenAI, Anthropic, and LangChain across 2,900+ models.",
+                  downloadUrl: "https://pypi.org/project/agentcost/",
                   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
                 },
               ],

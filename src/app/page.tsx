@@ -7,11 +7,14 @@ import { ArchitectureSection } from "@/components/landing/ArchitectureSection";
 import { IntegrationSection } from "@/components/landing/IntegrationSection";
 import { MetricsSection } from "@/components/landing/MetricsSection";
 import { FAQSection } from "@/components/landing/FAQSection";
+import { faqs } from "@/components/landing/faq-data";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
 
 export const metadata: Metadata = {
-  title: "AgentCost — Track OpenAI, Anthropic & LangChain Costs",
+  // `absolute` opts out of the root title.template — the homepage title is
+  // already brand-first and must not become "AgentCost — … | AgentCost".
+  title: { absolute: "AgentCost — Track OpenAI, Anthropic & LangChain Costs" },
   alternates: { canonical: "/" },
 };
 
@@ -20,8 +23,24 @@ export const metadata: Metadata = {
 // render fine underneath. Do NOT gate this behind an auth/loading spinner —
 // that would ship an empty page to search engines.
 export default function LandingPage() {
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs
+      .flatMap((group) => group.questions)
+      .map((faq) => ({
+        "@type": "Question",
+        name: faq.q,
+        acceptedAnswer: { "@type": "Answer", text: faq.a },
+      })),
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0a0a0b] text-neutral-100">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
       <Navbar />
       <HeroSection />
       <TrustedBySection />

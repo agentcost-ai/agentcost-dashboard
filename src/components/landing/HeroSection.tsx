@@ -106,8 +106,11 @@ export function HeroSection() {
           did it?
         </motion.h1>
 
-        {/* Subtext */}
-        <motion.p
+        {/* Subtext — an h2 (not a p) so the site's primary brand-bearing
+            heading exists in the document outline: no other heading on the
+            entire site contains the word "AgentCost". Preflight resets
+            headings to inherit, so this renders identically to the old <p>. */}
+        <motion.h2
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -115,13 +118,13 @@ export function HeroSection() {
             delay: 0.2,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="text-[17px] sm:text-lg text-neutral-400 text-center max-w-2xl leading-relaxed mb-10"
+          className="text-[17px] sm:text-lg font-normal text-neutral-400 text-center max-w-2xl leading-relaxed mb-10"
         >
           AgentCost traces every LLM call back to the agent that made it —
           OpenAI, Anthropic, LangChain, 2,900+ models.{" "}
           <span className="text-neutral-200 font-medium">Two lines of Python.</span>{" "}
           Open source. Self-hosted.
-        </motion.p>
+        </motion.h2>
 
         {/* CTA buttons */}
         <motion.div
