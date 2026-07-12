@@ -27,7 +27,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/docs/models`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/blog`, lastModified: lastmod, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/changelog`, lastModified: lastmod, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${BASE_URL}/demo`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.6 },
+    // /demo is intentionally absent: it's a client-side redirect into the
+    // robots-blocked app (a "soft redirect") and is noindexed via header in
+    // next.config.ts — a sitemap must never list noindexed URLs.
     { url: `${BASE_URL}/terms`, lastModified: lastmod, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE_URL}/privacy`, lastModified: lastmod, changeFrequency: "yearly", priority: 0.3 },
   ];
