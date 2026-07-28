@@ -31,46 +31,58 @@ export interface SyncStatus {
   models_by_provider: Record<string, number>;
 }
 
+/**
+ * The API host sleeps when idle, and the first request after that can take
+ * ~60s. A single short-timeout fetch therefore loses the race during a cold
+ * Vercel build and the catalog ships EMPTY — which is exactly what happened on
+ * the first deploy. So: wake the host with a cheap call, then retry the real
+ * one. Never throws; an empty result just means the client component fetches.
+ */
+async function fetchJson(url: string, attempts: number): Promise<any | null> {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(90_000),
+        next: { revalidate },
+      });
+      if (res.ok) return await res.json();
+    } catch {
+      // cold start / transient — fall through to the next attempt
+    }
+  }
+  return null;
+}
+
 async function getCatalog(): Promise<{
   models: ModelPricing[];
   syncStatus: SyncStatus | null;
 }> {
-  // A cold backend can take a while; tolerate it at build time, but never let
-  // a slow/failed API break the build — the client component still fetches as
-  // a fallback when it receives an empty list.
-  const opts = {
-    signal: AbortSignal.timeout(60_000),
-    next: { revalidate },
-  } as const;
+  // Warm the host first so the (much larger) pricing request isn't the one
+  // paying the cold-start cost.
+  await fetchJson(`${PRICING_API}/v1/health`, 2);
 
-  const [pricing, status] = await Promise.allSettled([
-    fetch(`${PRICING_API}/v1/pricing`, opts).then((r) => r.json()),
-    fetch(`${PRICING_API}/v1/pricing/sync/status`, opts).then((r) => r.json()),
-  ]);
+  const pricing = await fetchJson(`${PRICING_API}/v1/pricing`, 3);
+  const status = await fetchJson(`${PRICING_API}/v1/pricing/sync/status`, 2);
 
-  const models: ModelPricing[] =
-    pricing.status === "fulfilled"
-      ? Object.entries(
-          (pricing.value?.pricing ?? {}) as Record<
-            string,
-            { input?: number; output?: number; provider?: string }
-          >,
-        ).map(([model_name, p]) => ({
-          model_name,
-          input: p.input ?? 0,
-          output: p.output ?? 0,
-          provider: p.provider ?? "unknown",
-        }))
-      : [];
+  const models: ModelPricing[] = Object.entries(
+    (pricing?.pricing ?? {}) as Record<
+      string,
+      { input?: number; output?: number; provider?: string }
+    >,
+  ).map(([model_name, p]) => ({
+    model_name,
+    input: p.input ?? 0,
+    output: p.output ?? 0,
+    provider: p.provider ?? "unknown",
+  }));
 
-  const syncStatus: SyncStatus | null =
-    status.status === "fulfilled" && status.value
-      ? {
-          total_models: status.value.total_models ?? models.length,
-          last_updated: status.value.last_updated ?? null,
-          models_by_provider: status.value.models_by_provider ?? {},
-        }
-      : null;
+  const syncStatus: SyncStatus | null = status
+    ? {
+        total_models: status.total_models ?? models.length,
+        last_updated: status.last_updated ?? null,
+        models_by_provider: status.models_by_provider ?? {},
+      }
+    : null;
 
   return { models, syncStatus };
 }
