@@ -79,7 +79,7 @@ export default async function ComparePage({
           AgentCost vs {c.competitor} at a glance
         </h2>
         <div className="overflow-x-auto rounded-2xl border border-white/10">
-          <table className="w-full min-w-[640px] text-left text-[14px]">
+          <table className="w-full min-w-160 text-left text-[14px]">
             <thead className="bg-white/3 text-neutral-400">
               <tr>
                 <th className="px-4 py-3 font-medium">Feature</th>
