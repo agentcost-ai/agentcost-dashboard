@@ -62,6 +62,9 @@ const publicRoutes = [
   "/pricing", // Pricing page is public
   "/blog", // Blog is public
   "/changelog", // Changelog is public
+  "/compare", // Competitor comparison pages — these exist to be found by
+  // strangers via search, so they must never bounce to login. Anything added
+  // to sitemap.ts belongs in this list too.
   "/auth/login",
   "/auth/register",
   "/auth/forgot-password",
