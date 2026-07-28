@@ -168,13 +168,9 @@ export default function PricingPage() {
           {/* Anyone on this page is comparing prices — so show the comparison
               here, with the real numbers, instead of a generic "compare" CTA. */}
           <div className="mt-14">
-            <h2 className="mb-1.5 text-[17px] font-semibold tracking-tight text-white">
+            <h2 className="mb-5 text-[17px] font-semibold tracking-tight text-white">
               How $0 compares
             </h2>
-            <p className="mb-5 text-[13px] text-neutral-500">
-              Read from each vendor&apos;s own pricing page on{" "}
-              {comparisons[0].verifiedOn}.
-            </p>
             <div className="divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/10">
               {comparisons.map((c) => (
                 <Link
