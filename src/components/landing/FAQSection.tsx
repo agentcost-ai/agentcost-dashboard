@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Plus, Minus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { faqs } from "./faq-data";
+import { comparisons } from "@/lib/comparisons";
 
 function FAQItem({ q, a }: { q: string; a: string }) {
     const [open, setOpen] = useState(false);
@@ -90,13 +91,39 @@ export function FAQSection() {
             ))}
           </motion.div>
 
+          {/* Evaluating alternatives? — placed right under the FAQ because
+              that's where comparison-minded readers already are, and it gives
+              the /compare pages a real in-content entry point. */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="mt-12 rounded-xl border border-white/6 bg-[#0b0b0d]/50 px-5 py-4"
+          >
+            <p className="text-sm text-neutral-400">
+              Weighing up alternatives? Honest side-by-side breakdowns:
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {comparisons.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/compare/${c.slug}`}
+                  className="rounded-full border border-white/10 px-3.5 py-1.5 text-[13px] text-neutral-400 transition-colors hover:border-sky-500/30 hover:text-sky-300"
+                >
+                  AgentCost vs {c.competitor}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Bottom help line */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="mt-12 text-center"
+            className="mt-8 text-center"
           >
             <p className="text-sm text-neutral-600">
               Have another question?{" "}

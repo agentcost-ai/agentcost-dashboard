@@ -48,6 +48,10 @@ export const faqs = [
                 a: "Yes. AgentCost is fully open-source under the MIT License. You can use it commercially, modify it, and deploy it on your own infrastructure at no cost. There are no usage limits, tiers, or premium features hidden behind a paywall.",
             },
             {
+                q: "How does AgentCost compare to Helicone, Langfuse, or LiteLLM?",
+                a: "Helicone and Langfuse are hosted platforms with free tiers and paid plans — Helicone from $79/month, Langfuse from $29/month — and Langfuse covers evaluations and prompt management as well as tracing. LiteLLM is a gateway that routes traffic rather than a cost tracker, and AgentCost actually sources its model pricing from LiteLLM's database. AgentCost is free at any scale, MIT-licensed, self-hosted by default, and focused only on attributing spend to the agent that caused it. There are detailed side-by-side comparisons at agentcost.tech/compare.",
+            },
+            {
                 q: "What's the tech stack?",
                 a: "Backend: Python with FastAPI, async SQLAlchemy, and PostgreSQL. Frontend: Next.js with React, Tailwind CSS, Recharts, and Framer Motion. SDK: Python package using tiktoken for token counting and httpx for async HTTP. Everything is containerized with Docker.",
             },
