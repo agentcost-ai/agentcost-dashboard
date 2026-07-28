@@ -260,7 +260,7 @@ export function DemoExperience() {
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-7">
                   {[
                     { icon: Terminal, top: "2 lines", bottom: "to integrate" },
-                    { icon: Layers, top: "2,900+", bottom: "models tracked" },
+                    { icon: Layers, top: "3,500+", bottom: "models tracked" },
                     { icon: Github, top: "MIT", bottom: "open source" },
                   ].map(({ icon: Icon, top, bottom }) => (
                     <div

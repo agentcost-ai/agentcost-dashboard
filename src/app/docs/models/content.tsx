@@ -74,11 +74,31 @@ function formatDate(isoString: string | null): string {
   });
 }
 
-export default function ModelsPage() {
-  const [models, setModels] = useState<ModelPricing[]>([]);
-  const [providers, setProviders] = useState<string[]>(["All Providers"]);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+interface ModelsPageProps {
+  /** Catalog fetched on the server (page.tsx) so it ships in crawlable HTML. */
+  initialModels?: ModelPricing[];
+  initialSyncStatus?: SyncStatus | null;
+}
+
+export default function ModelsPage({
+  initialModels = [],
+  initialSyncStatus = null,
+}: ModelsPageProps) {
+  const hasServerData = initialModels.length > 0;
+
+  const [models, setModels] = useState<ModelPricing[]>(initialModels);
+  const [providers, setProviders] = useState<string[]>(() =>
+    initialSyncStatus?.models_by_provider
+      ? [
+          "All Providers",
+          ...Object.keys(initialSyncStatus.models_by_provider).sort(),
+        ]
+      : ["All Providers"],
+  );
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(
+    initialSyncStatus,
+  );
+  const [loading, setLoading] = useState(!hasServerData);
   const [error, setError] = useState<string | null>(null);
   const [copiedModel, setCopiedModel] = useState<string | null>(null);
 
@@ -104,8 +124,13 @@ export default function ModelsPage() {
   }, []);
 
   useEffect(() => {
+    // Server already supplied the catalog (the normal path) — don't refetch.
+    // The client fetch stays as a fallback for when the build-time request to
+    // the pricing API failed.
+    if (hasServerData) return;
     fetchModels();
     fetchSyncStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function fetchModels() {

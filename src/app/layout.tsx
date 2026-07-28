@@ -32,15 +32,16 @@ export const metadata: Metadata = {
   // `template` auto-brands every page that sets its own title; pages therefore
   // must NOT hand-write " | AgentCost" in their title strings (double-brand).
   title: {
-    default: "AgentCost — Track OpenAI, Anthropic & LangChain Costs",
+    default: "AgentCost — Track OpenAI, Anthropic, Gemini & LangChain Costs",
     template: "%s | AgentCost",
   },
   description:
-    "Track OpenAI, Anthropic, and LangChain costs in real-time. At AgentCost, see which agents are expensive, set budget guardrails, and get optimization suggestions.",
+    "Track OpenAI, Anthropic, Gemini, and LangChain costs in real-time. At AgentCost, see which agents are expensive, set budget guardrails, and get optimization suggestions.",
   keywords: [
     "langchain",
     "openai",
     "anthropic",
+    "gemini",
     "ai cost tracking",
     "llm costs",
     "agent monitoring",
@@ -106,7 +107,7 @@ export default function RootLayout({
                   logo: "https://agentcost.tech/icon.svg",
                   slogan: "Real-time LLM cost observability",
                   description:
-                    "AgentCost is an open-source LLM cost observability platform. Track, analyze, and optimize OpenAI, Anthropic, and LangChain spending in real time across 2,900+ models.",
+                    "AgentCost is an open-source LLM cost observability platform. Track, analyze, and optimize OpenAI, Anthropic, Gemini, and LangChain spending in real time across 3,500+ models.",
                   sameAs: [
                     "https://github.com/agentcost-ai",
                     "https://pypi.org/project/agentcost/",
@@ -139,7 +140,7 @@ export default function RootLayout({
                   applicationCategory: "DeveloperApplication",
                   operatingSystem: "Any",
                   description:
-                    "Real-time LLM cost tracking and optimization for OpenAI, Anthropic, and LangChain across 2,900+ models.",
+                    "Real-time LLM cost tracking and optimization for OpenAI, Anthropic, Gemini, and LangChain across 3,500+ models.",
                   downloadUrl: "https://pypi.org/project/agentcost/",
                   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
                 },

@@ -885,7 +885,7 @@ export default function SettingsPage() {
                     {showSnippetKey ? "Hide key" : "Show key"}
                   </button>
                   <CopyButton
-                    text={`from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your OpenAI, Anthropic, and LangChain calls are now tracked!`}
+                    text={`from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your OpenAI, Anthropic, Gemini, and LangChain calls are now tracked!`}
                   />
                 </div>
               </div>
@@ -912,7 +912,7 @@ export default function SettingsPage() {
                   </span>
                   ,{"\n"}){"\n\n"}
                   <span className="text-neutral-500">
-                    # Your OpenAI, Anthropic, and LangChain calls are now tracked!
+                    # Your OpenAI, Anthropic, Gemini, and LangChain calls are now tracked!
                   </span>
                 </code>
               </pre>
