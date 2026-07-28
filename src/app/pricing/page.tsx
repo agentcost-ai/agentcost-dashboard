@@ -16,6 +16,7 @@ import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { CTASection } from "@/components/landing/CTASection";
 import { SavingsEstimator } from "@/components/pricing/SavingsEstimator";
+import { comparisons } from "@/lib/comparisons";
 
 export const metadata: Metadata = {
   title: "Pricing — Free & Open Source",
@@ -163,6 +164,40 @@ export default function PricingPage() {
             is open source so you can read every line, run it yourself, and trust
             that the numbers it reports are the only thing it&apos;s after.
           </p>
+
+          {/* Anyone on this page is comparing prices — so show the comparison
+              here, with the real numbers, instead of a generic "compare" CTA. */}
+          <div className="mt-14">
+            <h2 className="mb-1.5 text-[17px] font-semibold tracking-tight text-white">
+              How $0 compares
+            </h2>
+            <p className="mb-5 text-[13px] text-neutral-500">
+              Read from each vendor&apos;s own pricing page on{" "}
+              {comparisons[0].verifiedOn}.
+            </p>
+            <div className="divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/10">
+              {comparisons.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/compare/${c.slug}`}
+                  className="group flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-white/2"
+                >
+                  <div>
+                    <p className="text-[14px] font-medium text-white">
+                      {c.competitor}
+                    </p>
+                    <p className="text-[12.5px] text-neutral-500">
+                      {c.priceHeadline}
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-[13px] text-sky-300 group-hover:text-sky-200">
+                    AgentCost vs {c.competitor}
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

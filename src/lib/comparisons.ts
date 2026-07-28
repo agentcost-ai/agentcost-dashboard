@@ -21,6 +21,8 @@ export type Comparison = {
   description: string;
   /** One-liner describing what the competitor actually is, neutrally. */
   whatTheyAre: string;
+  /** Short price summary used in contextual links (e.g. on /pricing). */
+  priceHeadline: string;
   intro: string[];
   rows: ComparisonRow[];
   chooseThem: string[];
@@ -41,6 +43,7 @@ export const comparisons: Comparison[] = [
       "An honest comparison of AgentCost and Helicone for LLM cost tracking — pricing, self-hosting, integration method, and which one fits your team.",
     whatTheyAre:
       "Helicone is an LLM observability and monitoring platform, offered as a hosted service with a free tier and paid plans.",
+    priceHeadline: "Free tier, then $79/mo (Pro) and $799/mo (Team)",
     intro: [
       "Both AgentCost and Helicone answer the same underlying question: where is your LLM spend actually going? They differ mainly in how you integrate them and what you pay.",
       "Helicone is a hosted product with a generous free tier and paid plans that scale with usage. AgentCost is MIT-licensed, free at every level, and designed to run on your own infrastructure — you install a Python SDK and host the backend yourself.",
@@ -124,6 +127,7 @@ export const comparisons: Comparison[] = [
       "An honest comparison of AgentCost and Langfuse — pricing, self-hosting, tracing depth, and which tool fits your LLM cost tracking needs.",
     whatTheyAre:
       "Langfuse is an open-source LLM engineering platform covering tracing, evaluation, and prompt management, available both self-hosted and as a paid cloud service.",
+    priceHeadline: "Free tier, then $29/mo (Core) up to $2,499/mo (Enterprise)",
     intro: [
       "Langfuse is the broader product. It covers tracing, evaluations, prompt management, and datasets — cost tracking is one part of a larger LLM engineering platform.",
       "AgentCost is deliberately narrower: it answers which agent spent what, across which models, and what to do about it. If you want a full evaluation and prompt-management stack, Langfuse does considerably more. If you want cost attribution without adopting a platform, AgentCost is smaller.",
@@ -207,6 +211,7 @@ export const comparisons: Comparison[] = [
       "AgentCost and LiteLLM solve different problems — one tracks LLM cost, the other routes LLM traffic. Here's how they compare and how they work together.",
     whatTheyAre:
       "LiteLLM is an open-source AI gateway and LLM proxy that gives you one interface across many providers, with routing, budgets, and rate limits.",
+    priceHeadline: "Free Forever tier, Enterprise at custom pricing",
     intro: [
       "These two are often compared but they sit at different layers, and the honest answer is that they complement each other more than they compete.",
       "LiteLLM is a gateway: it normalizes 140+ providers behind one interface and handles routing, virtual keys, and rate limits. AgentCost is cost observability: it attributes spend to the agent that caused it. AgentCost's own pricing database is in fact synced from LiteLLM's — that's where the 3,500+ model prices come from.",

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Grid2x2Plus } from "lucide-react";
 import { track } from "@/lib/analytics";
+import { comparisons } from "@/lib/comparisons";
 
 const columns = [
   {
@@ -29,6 +30,15 @@ const columns = [
     ],
   },
   {
+    // Generated from lib/comparisons.ts so a new comparison page is linked
+    // site-wide the moment it exists — no crawl-orphan pages.
+    title: "Compare",
+    links: comparisons.map((c) => ({
+      label: `vs ${c.competitor}`,
+      href: `/compare/${c.slug}`,
+    })),
+  },
+  {
     title: "Legal",
     links: [
       { label: "Terms of Service", href: "/terms" },
@@ -45,7 +55,7 @@ export function Footer() {
   return (
     <footer className="border-t border-white/6 bg-[#07070a]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 sm:gap-10">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
