@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { blogPosts, changelogEntries } from "@/lib/content";
+import { comparisons } from "@/lib/comparisons";
 
 const BASE_URL = "https://agentcost.tech";
 
@@ -41,5 +42,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...blogRoutes];
+  // Comparison pages are added from lib/comparisons.ts, so a new competitor
+  // page enters the sitemap automatically — no separate step to forget.
+  const compareRoutes: MetadataRoute.Sitemap = comparisons.map((c) => ({
+    url: `${BASE_URL}/compare/${c.slug}`,
+    lastModified: c.verifiedOn,
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }));
+
+  return [...staticRoutes, ...blogRoutes, ...compareRoutes];
 }
