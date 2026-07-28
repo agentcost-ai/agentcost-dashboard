@@ -51,7 +51,7 @@ function AnimatedCounter({
 
 const stats = [
   {
-    value: 2900,
+    value: 3500,
     suffix: "+",
     label: "models tracked",
     detail: "OpenAI · Anthropic · Google · Mistral · and 50+ providers",

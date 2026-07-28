@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 // Site-wide social/preview card (1200×630). Next auto-injects this as the
 // default og:image / twitter:image across pages.
 export const alt =
-  "AgentCost — Real-time LLM cost tracking for OpenAI, Anthropic & LangChain";
+  "AgentCost — Real-time LLM cost tracking for OpenAI, Anthropic, Gemini & LangChain";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -92,7 +92,7 @@ export default function OpenGraphImage() {
 
         {/* Chips */}
         <div style={{ display: "flex", alignItems: "center" }}>
-          {["2,900+ models", "OpenAI · Anthropic · LangChain", "Free & MIT"].map(
+          {["3,500+ models", "OpenAI · Anthropic · Gemini · LangChain", "Free & MIT"].map(
             (label) => (
               <div
                 key={label}

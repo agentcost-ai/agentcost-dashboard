@@ -121,7 +121,7 @@ export function HeroSection() {
           className="text-[17px] sm:text-lg font-normal text-neutral-400 text-center max-w-2xl leading-relaxed mb-10"
         >
           AgentCost traces every LLM call back to the agent that made it —
-          OpenAI, Anthropic, LangChain, 2,900+ models.{" "}
+          OpenAI, Anthropic, Gemini, LangChain, 3,500+ models.{" "}
           <span className="text-neutral-200 font-medium">Two lines of Python.</span>{" "}
           Open source. Self-hosted.
         </motion.h2>

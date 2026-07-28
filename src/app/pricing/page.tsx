@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 const INCLUDED = [
   { icon: InfinityIcon, label: "Unlimited events & history", sub: "No row caps, no sampling, no retention limits" },
   { icon: Users, label: "Unlimited team members", sub: "Owner / admin / member / viewer roles" },
-  { icon: Database, label: "2,900+ models tracked", sub: "Pricing synced from LiteLLM, always current" },
+  { icon: Database, label: "3,500+ models tracked", sub: "Pricing synced from LiteLLM, always current" },
   { icon: Gauge, label: "Real-time analytics & alerts", sub: "Dashboards, budgets, anomaly detection" },
   { icon: Server, label: "Self-host anywhere", sub: "Docker-ready · your data never leaves your infra" },
   { icon: ShieldCheck, label: "No telemetry, no lock-in", sub: "We can't see your data — you own all of it" },

@@ -92,7 +92,7 @@ export default function SDKDocsPage() {
           <h1 className="text-3xl font-bold text-white">SDK Documentation</h1>
           <p className="mt-2 text-neutral-400">
             Complete guide to integrating AgentCost into your OpenAI, Anthropic,
-            and LangChain applications
+            Gemini, and LangChain applications
           </p>
         </div>
 
@@ -221,6 +221,11 @@ from anthropic import Anthropic
 client = Anthropic()
 message = client.messages.create(model="claude-3-5-sonnet-20241022", max_tokens=100, messages=[{"role": "user", "content": "Hello!"}])
 
+# Gemini — automatically tracked (Google Gen AI SDK)
+from google import genai
+client = genai.Client()
+response = client.models.generate_content(model="gemini-2.5-flash", contents="Hello!")
+
 # LangChain — automatically tracked
 from langchain_openai import ChatOpenAI
 llm = ChatOpenAI(model="gpt-4")
@@ -229,7 +234,7 @@ response = llm.invoke("Hello, world!")  # Automatically tracked`}
             <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-4">
               <p className="text-blue-300 text-sm">
                 <strong>Note:</strong> The SDK uses monkey patching to intercept
-                OpenAI, Anthropic, and LangChain calls. Your existing code
+                OpenAI, Anthropic, Gemini, and LangChain calls. Your existing code
                 requires no modifications.
               </p>
             </div>
@@ -427,7 +432,7 @@ async for chunk in llm.astream("Tell me a story"):
           >
             <p className="text-neutral-300">
               AgentCost supports over{" "}
-              <strong className="text-white">2,900+ models</strong> from all
+              <strong className="text-white">3,500+ models</strong> from all
               major providers. Pricing is automatically synced from{" "}
               <a
                 href="https://github.com/BerriAI/litellm"

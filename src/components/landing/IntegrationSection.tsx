@@ -57,7 +57,7 @@ export function IntegrationSection() {
                         <p className="text-neutral-400 text-lg leading-relaxed mb-8 max-w-md">
                             No wrappers, no decorators, no middleware. AgentCost uses
                             lightweight interception to instrument OpenAI, Anthropic,
-                            and LangChain calls transparently. Your code stays clean.
+                            Gemini, and LangChain calls transparently. Your code stays clean.
                         </p>
 
                         <div className="space-y-5">
