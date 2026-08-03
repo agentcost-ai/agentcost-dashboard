@@ -12,7 +12,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { format } from "date-fns";
-import { formatCurrency, formatNumber, cn } from "@/lib/utils";
+import { formatCurrency, formatNumber, cn, dayBucketDate } from "@/lib/utils";
 import type { TimeSeriesPoint } from "@/lib/api";
 
 type Metric = "cost" | "calls" | "tokens";
@@ -96,14 +96,16 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
 
   const formattedData = useMemo(
     () =>
-      data.map((item) => ({
-        ...item,
-        label: format(
-          new Date(item.timestamp),
-          hourly ? "MMM d, HH:mm" : "EEE, MMM d",
-        ),
-        tick: format(new Date(item.timestamp), hourly ? "HH:mm" : "MMM d"),
-      })),
+      data.map((item) => {
+        // Hour buckets read naturally in the viewer's zone; day buckets must
+        // keep their UTC calendar date (see dayBucketDate).
+        const d = hourly ? new Date(item.timestamp) : dayBucketDate(item.timestamp);
+        return {
+          ...item,
+          label: format(d, hourly ? "MMM d, HH:mm" : "EEE, MMM d"),
+          tick: format(d, hourly ? "HH:mm" : "MMM d"),
+        };
+      }),
     [data, hourly],
   );
 

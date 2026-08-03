@@ -38,6 +38,14 @@ export function formatPercentage(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+export function dayBucketDate(iso: string): Date {
+  // Day buckets are UTC-midnight ("2026-08-03T00:00:00+00:00"). new Date(iso)
+  // shifts that to the viewer's zone, so every chart label west of UTC showed
+  // the previous day. Build the Date from the calendar date alone instead.
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export function formatDate(date: string | Date): string {
   const d = new Date(date);
   return d.toLocaleDateString("en-US", {

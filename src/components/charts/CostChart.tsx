@@ -10,7 +10,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { format } from "date-fns";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, dayBucketDate } from "@/lib/utils";
 
 interface CostChartProps {
   data: Array<{
@@ -23,7 +23,7 @@ interface CostChartProps {
 export function CostChart({ data }: CostChartProps) {
   const formattedData = data.map((item) => ({
     ...item,
-    date: format(new Date(item.timestamp), "MMM d"),
+    date: format(dayBucketDate(item.timestamp), "MMM d"),
     formattedCost: formatCurrency(item.cost),
   }));
 
