@@ -337,7 +337,13 @@ export function FeaturesSection() {
                       <span className="text-neutral-400">api_key</span>
                       <span className="text-neutral-600">=</span>
                       <span className="text-sky-400/60">
-                        &quot;ac_...&quot;
+                        &quot;sk_...&quot;
+                      </span>
+                      <span className="text-neutral-600">, </span>
+                      <span className="text-neutral-400">project_id</span>
+                      <span className="text-neutral-600">=</span>
+                      <span className="text-sky-400/60">
+                        &quot;6b3f2e1d-9c4a-4f8e-b2d7-3a5c8e9f0a1b&quot;
                       </span>
                       <span className="text-neutral-600">)</span>
                     </div>

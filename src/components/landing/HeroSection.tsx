@@ -72,17 +72,11 @@ export function HeroSection() {
           className="relative mb-9"
         >
           <FeatureAnnouncement
-            badge="New"
-            href="/blog/executive-cost-and-usage-reports"
+            badge="MIT"
+            href="https://github.com/agentcost-ai"
           >
-            Turn your AI spend into board-ready reports
+            Open source — star AgentCost on GitHub
           </FeatureAnnouncement>
-          <AnnotatedArrow
-            label="just shipped!"
-            dir="left"
-            delay={0.5}
-            className="absolute left-full top-1/2 ml-3 hidden -translate-y-1/2 lg:flex"
-          />
         </motion.div>
 
         {/* Headline */}
@@ -123,7 +117,7 @@ export function HeroSection() {
           AgentCost traces every LLM call back to the agent that made it —
           OpenAI, Anthropic, Gemini, LangChain, 3,500+ models.{" "}
           <span className="text-neutral-200 font-medium">Two lines of Python.</span>{" "}
-          Open source. Self-hosted.
+          Free hosted cloud — or self-host the MIT code.
         </motion.h2>
 
         {/* CTA buttons */}
@@ -139,31 +133,31 @@ export function HeroSection() {
         >
           <span className="relative w-full sm:w-auto">
             <Link
-              href="/demo?src=hero"
+              href="/auth/register"
+              onClick={() => track("click_signup", { location: "hero" })}
               className="group relative inline-flex w-full sm:w-auto items-center justify-center gap-2 px-8 py-3.5 text-sm font-medium text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-all duration-200 shadow-[0_1px_32px_rgba(255,255,255,0.15)]"
             >
-              <Play className="size-3.5 fill-current" />
-              Try the Live Demo
-              <span className="text-[11px] font-mono text-neutral-500">
-                no signup
-              </span>
+              Get Started — Free
+              <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
-            {/* Sits beside the button (like "just shipped!" on the pill) so it
-                never collides with the proof line below the CTA row. */}
+            {/* Sits beside the button so it never collides with the proof line
+                below the CTA row. */}
             <AnnotatedArrow
-              label="fully interactive!"
+              label="no credit card!"
               dir="right"
               delay={0.85}
               className="absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 lg:flex"
             />
           </span>
           <Link
-            href="/auth/register"
-            onClick={() => track("click_signup", { location: "hero" })}
+            href="/demo?src=hero"
             className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 px-8 py-3.5 text-sm font-medium text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-400/50 rounded-full transition-all duration-200 hover:bg-sky-500/5"
           >
-            Get Started — Free
-            <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+            <Play className="size-3.5 fill-current" />
+            Try the Live Demo
+            <span className="text-[11px] font-mono text-sky-500/70">
+              no signup
+            </span>
           </Link>
           <Link
             href="/docs/sdk"
@@ -190,9 +184,8 @@ export function HeroSection() {
           <span className="text-neutral-300">44% in two weeks</span>.{" "}
           <a
             href="https://dev.to/kushagra125/launching-agentcost-14lf"
-            target="_blank"
             rel="noopener"
-            className="text-sky-400/80 hover:text-sky-300 underline underline-offset-2 decoration-sky-500/30"
+            className="text-neutral-500 hover:text-neutral-300 underline underline-offset-2 decoration-neutral-600"
           >
             Read the story
           </a>

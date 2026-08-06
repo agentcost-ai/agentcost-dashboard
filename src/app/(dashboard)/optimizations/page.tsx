@@ -1,7 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { Card, MetricCard } from "@/components/ui/Card";
+import { useAuth } from "@/contexts/AuthContext";
+import { trackDemo } from "@/lib/demo/demo";
+import { demoOptimizationSummary } from "@/lib/demo/demoData";
+import { track } from "@/lib/analytics";
+import { prewarmBackend } from "@/lib/prewarm";
 import { Badge } from "@/components/ui/Badge";
 import {
   api,
@@ -419,8 +425,65 @@ function OptimizationCard({
   );
 }
 
+/**
+ * Demo-only conversion CTA placed right after the optimization list — the
+ * moment the "$/month savings" proof has just landed.
+ */
+function DemoOptimizationsCTA() {
+  const demoSavings = useMemo(() => {
+    const summary = demoOptimizationSummary();
+    return {
+      monthly: Math.round(summary.total_potential_savings_monthly),
+      count: summary.suggestion_count,
+    };
+  }, []);
+
+  const handleClick = () => {
+    trackDemo("signup_click", { page: "/optimizations" });
+    track("click_signup", { location: "demo_optimizations" });
+    prewarmBackend(true);
+  };
+
+  return (
+    <Card className="border-emerald-900/50 bg-emerald-950/20">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-900/30 text-emerald-400">
+            <TrendingDown size={22} />
+          </div>
+          <div>
+            <h3 className="font-medium text-white">
+              These {demoSavings.count} changes would save NovaDesk{" "}
+              <span className="text-emerald-400">
+                {formatCurrency(demoSavings.monthly)}/mo
+              </span>
+              .
+            </h3>
+            <p className="mt-1 text-sm text-neutral-400">
+              See what&apos;s hiding in your spend — connect your agents with
+              two lines of Python.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/auth/register?from=demo"
+          onClick={handleClick}
+          className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-white hover:bg-neutral-100 px-5 py-2.5 text-sm font-semibold text-[#0a0a0b] transition-colors"
+        >
+          Create free account
+          <ArrowRight
+            size={15}
+            className="transition-transform group-hover:translate-x-0.5"
+          />
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
 export default function OptimizationsPage() {
   const { isConfigured } = useApiConfiguration();
+  const { isDemo } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<OptimizationSuggestion[]>([]);
@@ -888,6 +951,9 @@ export default function OptimizationsPage() {
           </div>
         </div>
       )}
+
+      {/* Demo conversion CTA — after the savings proof, demo mode only */}
+      {isDemo && !loading && suggestions.length > 0 && <DemoOptimizationsCTA />}
 
       {/* Info Card */}
       <Card className="border-blue-900/50 bg-blue-950/10">

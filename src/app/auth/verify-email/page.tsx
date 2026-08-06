@@ -1,26 +1,39 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { track } from "@/lib/analytics";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { token: sessionToken, isLoading: authLoading, refreshUser } = useAuth();
   const token = searchParams.get("token");
 
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );
   const [message, setMessage] = useState("");
+  // Verification tokens are single-use — never let a re-render (or the auth
+  // state resolving) trigger a second POST with the same token.
+  const verified = useRef(false);
+  // Users register signed-in now, so most verification clicks happen with a
+  // live session — those go straight back to the dashboard, no re-login.
+  const hasSession = !!sessionToken;
 
   useEffect(() => {
+    // Wait for the stored session to load so we know where to send the user.
+    if (authLoading || verified.current) return;
+
     if (!token) {
       setStatus("error");
       setMessage("Invalid verification link. No token provided.");
       return;
     }
+    verified.current = true;
 
     const verifyEmail = async () => {
       try {
@@ -38,11 +51,19 @@ function VerifyEmailContent() {
         if (response.ok) {
           setStatus("success");
           setMessage("Your email has been verified successfully.");
+          track("email_verified");
 
-          // Redirect to login after 3 seconds
-          setTimeout(() => {
-            router.push("/auth/login?verified=true");
-          }, 3000);
+          if (sessionToken) {
+            // Sync the cached user (email_verified flag) so the dashboard
+            // banner disappears, then continue without a forced re-login.
+            await refreshUser();
+            router.push("/dashboard");
+          } else {
+            // No session on this browser — redirect to login after 3 seconds
+            setTimeout(() => {
+              router.push("/auth/login?verified=true");
+            }, 3000);
+          }
         } else {
           const data = await response.json();
           setStatus("error");
@@ -57,7 +78,10 @@ function VerifyEmailContent() {
     };
 
     verifyEmail();
-  }, [token, router]);
+    // refreshUser deliberately omitted (stable enough here); the ref guard
+    // above makes re-runs a no-op anyway.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, router, authLoading, sessionToken]);
 
   return (
     <div className="w-full max-w-sm px-4 py-8 text-center">
@@ -85,13 +109,15 @@ function VerifyEmailContent() {
           </h1>
           <p className="text-gray-400 mb-6 wrap-break-word">{message}</p>
           <p className="text-gray-500 text-sm mb-6">
-            Redirecting you to login...
+            {hasSession
+              ? "Taking you to your dashboard..."
+              : "Redirecting you to login..."}
           </p>
           <Link
-            href="/auth/login"
+            href={hasSession ? "/dashboard" : "/auth/login"}
             className="inline-flex items-center justify-center bg-white hover:bg-gray-100 text-slate-900 font-medium py-3 px-8 rounded-xl transition-colors shadow-lg shadow-white/10"
           >
-            Continue to Login
+            {hasSession ? "Go to Dashboard" : "Continue to Login"}
           </Link>
         </>
       )}

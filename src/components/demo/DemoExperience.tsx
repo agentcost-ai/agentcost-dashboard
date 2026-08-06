@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackDemo } from "@/lib/demo/demo";
+import { track } from "@/lib/analytics";
 import { prewarmBackend } from "@/lib/prewarm";
 import { DEMO_SIGNUP_PROMPT_EVENT } from "@/lib/demo/demoApi";
 import { demoOptimizationSummary } from "@/lib/demo/demoData";
@@ -37,26 +38,6 @@ export function DemoExperience() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState<string | null>(null);
   const visitedPages = useRef(new Set<string>());
-
-  // Floating banner peek behavior: after an initial reveal it tucks toward the
-  // bottom edge; hovering brings it back for a few seconds. Hover-capable
-  // devices only — touch devices keep it fully visible (no hover to reveal).
-  const [bannerRevealed, setBannerRevealed] = useState(true);
-  const bannerHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const clearBannerTimer = () => {
-    if (bannerHideTimer.current) {
-      clearTimeout(bannerHideTimer.current);
-      bannerHideTimer.current = null;
-    }
-  };
-  const revealBanner = useCallback(() => {
-    clearBannerTimer();
-    setBannerRevealed(true);
-  }, []);
-  const scheduleHideBanner = useCallback(() => {
-    clearBannerTimer();
-    bannerHideTimer.current = setTimeout(() => setBannerRevealed(false), 3500);
-  }, []);
 
   // The savings number shown in the modal comes from the same dataset the
   // visitor has been looking at — specific beats generic.
@@ -109,35 +90,26 @@ export function DemoExperience() {
     return () => window.removeEventListener("keydown", onKey);
   }, [modalOpen]);
 
-  // Initial auto-tuck after a few seconds (hover devices only).
-  useEffect(() => {
-    if (!isDemo || typeof window === "undefined") return;
-    if (!window.matchMedia("(hover: hover)").matches) return;
-    bannerHideTimer.current = setTimeout(() => setBannerRevealed(false), 6000);
-    return clearBannerTimer;
-  }, [isDemo]);
-
-  const handleSignupClick = useCallback(() => {
-    trackDemo("signup_click", { page: pathname ?? undefined });
-    // Strongest intent signal — make sure the backend is hot before the
-    // register page makes its first real API call.
-    prewarmBackend(true);
-  }, [pathname]);
+  const handleSignupClick = useCallback(
+    (location: "demo_banner" | "demo_modal") => {
+      trackDemo("signup_click", { page: pathname ?? undefined });
+      // GA4 sees this too — the backend demo tracker alone left the GA
+      // funnel blind to demo conversions.
+      track("click_signup", { location });
+      // Strongest intent signal — make sure the backend is hot before the
+      // register page makes its first real API call.
+      prewarmBackend(true);
+    },
+    [pathname],
+  );
 
   if (!isDemo) return null;
 
   return (
     <>
-      {/* ── Floating demo banner (auto-tucks; hover to reveal) ── */}
-      <motion.div
-        initial={false}
-        animate={{ y: bannerRevealed ? 0 : 48 }}
-        transition={{ type: "spring", stiffness: 240, damping: 30 }}
-        style={{ x: "-50%" }}
-        onMouseEnter={revealBanner}
-        onMouseLeave={scheduleHideBanner}
-        className="fixed bottom-5 left-1/2 z-40 w-[calc(100%-2rem)] max-w-2xl"
-      >
+      {/* ── Floating demo banner (persistent — the signup CTA must never
+          hide; the dashboard layout reserves bottom padding for it) ── */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-2xl">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3 rounded-2xl border border-sky-500/25 bg-[#0d1420]/95 backdrop-blur-md shadow-[0_8px_40px_rgba(2,132,199,0.18)]">
           <div className="flex items-center gap-2.5 min-w-0">
             <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
@@ -150,7 +122,7 @@ export function DemoExperience() {
           <div className="flex w-full sm:w-auto items-center gap-2 shrink-0">
             <Link
               href="/auth/register?from=demo"
-              onClick={handleSignupClick}
+              onClick={() => handleSignupClick("demo_banner")}
               className="group inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-2 min-h-11 sm:min-h-0 text-[13px] font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-colors"
             >
               Create free account
@@ -167,7 +139,7 @@ export function DemoExperience() {
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ── Conversion modal ── */}
       <AnimatePresence>
@@ -253,7 +225,7 @@ export function DemoExperience() {
                 <p className="text-[13.5px] text-neutral-400 leading-relaxed mb-6">
                   {modalAction
                     ? "The demo is read-only. On your own data, this takes one click — and connecting takes two lines of Python."
-                    : "Connect your agents with two lines of Python and this dashboard fills with your real costs, live."}
+                    : "Connect your agents with two lines of Python — or paste an OpenAI/Anthropic admin key and see your real last-30-days spend in 60 seconds, no code."}
                 </p>
 
                 {/* Proof chips */}
@@ -280,7 +252,7 @@ export function DemoExperience() {
 
                 <Link
                   href="/auth/register?from=demo"
-                  onClick={handleSignupClick}
+                  onClick={() => handleSignupClick("demo_modal")}
                   className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-2xl transition-all duration-200 shadow-[0_1px_24px_rgba(255,255,255,0.12)]"
                 >
                   Start tracking free
@@ -289,7 +261,7 @@ export function DemoExperience() {
 
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 mt-4">
                   <span className="text-[11.5px] text-neutral-600">
-                    No credit card · Self-host forever
+                    No credit card · Free cloud · MIT open source
                   </span>
                   <button
                     type="button"

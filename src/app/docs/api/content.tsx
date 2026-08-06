@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Copy, Check, Code, Server, Database, Shield, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -350,19 +351,31 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             <CodeBlock
               language="json"
               code={`{
-  "message": "Registration successful. Please check your email to verify your account.",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
   "user": {
     "id": "usr_abc123",
     "email": "user@example.com",
     "name": "John Doe",
     "email_verified": false
+  },
+  "verification_email_sent": true,
+  "default_project": {
+    "id": "123e4567-e89b-42d3-a456-426614174000",
+    "name": "My First Project",
+    "api_key": "sk_live_xxxxxxxxxxxx"
   }
 }`}
             />
             <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3">
               <p className="text-blue-300 text-sm">
-                A verification email will be sent. Users must verify their email
-                before logging in.
+                Registration signs you in immediately — the response carries
+                the same tokens as login. A verification email is sent in the
+                background; verify whenever convenient. The default
+                project&apos;s{" "}
+                <code className="bg-blue-900/30 px-1 rounded">api_key</code> is
+                shown only this once — store it securely.
               </p>
             </div>
           </Endpoint>
@@ -835,6 +848,42 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/events/batch"
             description="Ingest a batch of LLM call events (used by SDK)"
           >
+            <p className="text-sm text-neutral-400 mb-2">
+              Try it from your terminal — this one command ingests a sample
+              event and lights up your dashboard:
+            </p>
+            <CodeBlock
+              code={`curl -X POST "${apiBaseUrl || "https://api.agentcost.tech"}/v1/events/batch" \\
+  -H "Authorization: Bearer sk_your_project_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "project_id": "123e4567-e89b-42d3-a456-426614174000",
+    "events": [
+      {
+        "agent_name": "my-first-agent",
+        "model": "gpt-4o-mini",
+        "input_tokens": 150,
+        "output_tokens": 80,
+        "latency_ms": 1234,
+        "timestamp": "2026-08-04T10:30:45Z",
+        "success": true
+      }
+    ]
+  }'`}
+            />
+            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3 mb-4">
+              <p className="text-blue-300 text-sm">
+                <code className="bg-blue-900/30 px-1 rounded">project_id</code>{" "}
+                is your project&apos;s <strong>UUID</strong> from Settings (not
+                its name) and must match the API key&apos;s project — a
+                mismatch returns 403.{" "}
+                <code className="bg-blue-900/30 px-1 rounded">
+                  total_tokens
+                </code>{" "}
+                and <code className="bg-blue-900/30 px-1 rounded">cost</code>{" "}
+                are optional; the server derives and prices them for you.
+              </p>
+            </div>
             <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
             <CodeBlock
               language="json"
@@ -1359,12 +1408,20 @@ X-RateLimit-Reset: 45`}
             >
               ← SDK Documentation
             </a>
-            <a
-              href="/settings"
-              className="text-primary-400 hover:text-primary-300 transition-colors"
-            >
-              Back to Settings
-            </a>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="text-neutral-400 hover:text-white transition-colors"
+              >
+                Home
+              </Link>
+              <Link
+                href="/auth/register"
+                className="text-primary-400 hover:text-primary-300 transition-colors"
+              >
+                Get started free
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -475,7 +475,7 @@ export function demoProject(): ProjectInfo {
     description:
       "Demo workspace — sample data from a fictional AI support platform.",
     api_key: null,
-    key_prefix: "ac_demo",
+    key_prefix: "sk_demo",
     created_at: new Date(Date.now() - 92 * 86400_000).toISOString(),
     is_active: true,
     monthly_budget_usd: 3500,

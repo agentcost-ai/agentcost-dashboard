@@ -42,7 +42,7 @@ export function CTASection() {
             </h2>
 
             <p className="text-neutral-500 text-base sm:text-lg max-w-lg mx-auto mb-10 leading-relaxed">
-              Set up in under two minutes. Self-host on your infrastructure. No
+              Set up in under two minutes. Free cloud — or self-host. No
               credit card, no vendor lock-in.
             </p>
 
@@ -75,7 +75,7 @@ export function CTASection() {
 
             {/* Micro detail */}
             <p className="mt-8 text-xs text-neutral-700 font-mono tracking-wide">
-              MIT License · Docker-ready · No telemetry
+              MIT License · Free cloud or Docker self-host · No lock-in
             </p>
           </div>
         </motion.div>

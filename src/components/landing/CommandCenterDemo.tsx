@@ -19,7 +19,7 @@ const SETUP_CODE = `from agentcost import track_costs
 import openai
 
 # Initialize with one line
-track_costs.init(api_key="ac_kp...")
+track_costs.init(api_key="sk_...", project_id="6b3f2e1d-9c4a-4f8e-b2d7-3a5c8e9f0a1b")
 
 # Use your LLM as usual
 client = openai.OpenAI()
@@ -68,7 +68,7 @@ export function CommandCenterDemo() {
                 </div>
 
                 {/* ─── Content Area ─── */}
-                <div className="relative min-h-105 bg-[#0a0a0b]">
+                <div className="relative bg-[#0a0a0b]">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -121,7 +121,7 @@ export function CommandCenterDemo() {
                                                 <span className="text-neutral-500"># Initialize</span>
                                             </div>
                                             <div className="border-l-2 border-emerald-400/40 pl-3 ml-1 py-0.5">
-                                                <span className="text-yellow-300">track_costs</span>.<span className="text-blue-300">init</span>(api_key=<span className="text-green-400">&quot;ac_kp...&quot;</span>)
+                                                <span className="text-yellow-300">track_costs</span>.<span className="text-blue-300">init</span>(api_key=<span className="text-green-400">&quot;sk_...&quot;</span>, project_id=<span className="text-green-400">&quot;6b3f2e1d-9c4a-4f8e-b2d7-3a5c8e9f0a1b&quot;</span>)
                                             </div>
                                             <div className="px-4 py-0.5">
                                                 <span className="text-neutral-600">&nbsp;</span>
@@ -146,6 +146,25 @@ export function CommandCenterDemo() {
                                             </div>
                                         </code>
                                     </pre>
+                                </div>
+                            </div>
+
+                            {/* Step 3: Outcome — figures match the live demo dataset */}
+                            <div>
+                                <div className="flex items-center gap-2 text-neutral-500 mb-2">
+                                    <ChevronRight className="size-4" />
+                                    <span>3. Watch the dashboard</span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 bg-black/40 border border-white/5 p-4 rounded-lg">
+                                    <span className="text-neutral-400">
+                                        <span className="text-emerald-400 font-semibold">$3,412</span>/mo tracked
+                                    </span>
+                                    <span className="text-neutral-400">
+                                        <span className="text-sky-300 font-semibold">$1,532</span>/mo savings found
+                                    </span>
+                                    <span className="text-[11px] text-neutral-600">
+                                        see it live in the demo — no signup
+                                    </span>
                                 </div>
                             </div>
                         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Copy,
   Check,
@@ -207,8 +208,8 @@ pip install -e .`}
 
 # Initialize tracking
 track_costs.init(
-    api_key="your_api_key",
-    project_id="my-project"
+    api_key="sk_...",  # Settings → your project → API Key
+    project_id="123e4567-e89b-42d3-a456-426614174000"  # Settings → your project → UUID
 )
 
 # OpenAI — automatically tracked
@@ -245,6 +246,38 @@ response = llm.invoke("Hello, world!")  # Automatically tracked`}
                 needed.
               </p>
             </div>
+
+            <h4 className="text-lg font-medium text-white mt-6">
+              Verify it worked
+            </h4>
+            <p className="text-neutral-300">
+              Force-send any pending events, then check your dashboard — your
+              first calls should appear within seconds:
+            </p>
+            <CodeBlock
+              code={`# Push any batched events to the backend immediately
+track_costs.flush()
+
+# Now open your dashboard — the calls above should be there.`}
+            />
+            <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-4">
+              <p className="text-yellow-300 text-sm">
+                <strong>Nothing showing up?</strong> If your{" "}
+                <code className="bg-yellow-900/30 px-1 rounded">api_key</code>{" "}
+                and{" "}
+                <code className="bg-yellow-900/30 px-1 rounded">
+                  project_id
+                </code>{" "}
+                don&apos;t match (e.g. the project name was used instead of its
+                UUID), the backend returns 403 and the SDK emits a{" "}
+                <code className="bg-yellow-900/30 px-1 rounded">
+                  RuntimeWarning
+                </code>{" "}
+                plus an error on the{" "}
+                <code className="bg-yellow-900/30 px-1 rounded">agentcost</code>{" "}
+                logger. Check your console output.
+              </p>
+            </div>
           </Section>
 
           <Section id="configuration" title="Configuration" icon={Settings}>
@@ -255,7 +288,7 @@ response = llm.invoke("Hello, world!")  # Automatically tracked`}
               code={`track_costs.init(
     # Required for cloud mode
     api_key="sk_...",
-    project_id="my-project",
+    project_id="123e4567-e89b-42d3-a456-426614174000",  # project UUID, not its name
 
     # Optional settings
     base_url="https://api.agentcost.tech",  # Your backend URL
@@ -314,7 +347,10 @@ response = llm.invoke("Hello, world!")  # Automatically tracked`}
                     </td>
                     <td className="py-3 px-4">str</td>
                     <td className="py-3 px-4">None</td>
-                    <td className="py-3 px-4">Your project identifier</td>
+                    <td className="py-3 px-4">
+                      Your project&apos;s UUID (Settings → your project), not
+                      its name
+                    </td>
                   </tr>
                   <tr className="border-b border-neutral-800">
                     <td className="py-3 px-4 font-mono text-primary-400">
@@ -629,7 +665,11 @@ except Exception as e:
     print(f"LLM error: {e}")
 
 # To see tracking errors, enable debug mode
-track_costs.init(api_key="...", debug=True)  # Logs errors to console`}
+track_costs.init(
+    api_key="sk_...",
+    project_id="123e4567-e89b-42d3-a456-426614174000",
+    debug=True,  # Logs errors to console
+)`}
             />
           </Section>
 
@@ -648,7 +688,10 @@ track_costs.init(api_key="...", debug=True)  # Logs errors to console`}
                 <CodeBlock
                   code={`# Correct: Initialize before importing LLM
 from agentcost import track_costs
-track_costs.init(api_key="sk_...")
+track_costs.init(
+    api_key="sk_...",
+    project_id="123e4567-e89b-42d3-a456-426614174000",
+)
 
 from langchain_openai import ChatOpenAI
 llm = ChatOpenAI(model="gpt-4")
@@ -658,7 +701,10 @@ from langchain_openai import ChatOpenAI
 llm = ChatOpenAI(model="gpt-4")
 
 from agentcost import track_costs
-track_costs.init(api_key="sk_...")  # Too late!`}
+track_costs.init(
+    api_key="sk_...",
+    project_id="123e4567-e89b-42d3-a456-426614174000",
+)  # Too late!`}
                 />
               </div>
 
@@ -694,7 +740,8 @@ track_costs.set_agent_name("default")  # Might not run`}
 from agentcost import track_costs
 
 track_costs.init(
-    api_key=os.environ["AGENTCOST_API_KEY"],
+    api_key=os.environ["AGENTCOST_API_KEY"],       # sk_...
+    project_id=os.environ["AGENTCOST_PROJECT_ID"], # project UUID
     base_url=os.environ.get("AGENTCOST_URL", "https://api.agentcost.tech"),
     debug=os.environ.get("DEBUG", "false").lower() == "true"
 )`}
@@ -712,7 +759,10 @@ track_costs.init(
                   code={`import atexit
 from agentcost import track_costs
 
-track_costs.init(api_key="sk_...")
+track_costs.init(
+    api_key="sk_...",
+    project_id="123e4567-e89b-42d3-a456-426614174000",
+)
 
 # Register shutdown handler
 atexit.register(track_costs.shutdown)
@@ -734,6 +784,15 @@ async def shutdown_event():
                   Events not appearing in dashboard
                 </h4>
                 <ul className="list-disc list-inside text-neutral-400 text-sm space-y-1">
+                  <li>
+                    <strong className="text-neutral-200">
+                      #1 cause:
+                    </strong>{" "}
+                    <code className="text-primary-400">project_id</code> must
+                    be the project <strong>UUID</strong> from Settings, not its
+                    name — a mismatch returns 403 and the SDK logs an{" "}
+                    <code className="text-primary-400">agentcost</code> error
+                  </li>
                   <li>
                     Ensure{" "}
                     <code className="text-primary-400">track_costs.init()</code>{" "}
@@ -807,12 +866,20 @@ async def shutdown_event():
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-neutral-800">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <a
-              href="/settings"
-              className="text-neutral-400 hover:text-white transition-colors"
-            >
-              Back to Settings
-            </a>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="text-neutral-400 hover:text-white transition-colors"
+              >
+                ← Home
+              </Link>
+              <Link
+                href="/auth/register"
+                className="text-primary-400 hover:text-primary-300 transition-colors"
+              >
+                Get started free
+              </Link>
+            </div>
             <a
               href="/docs/api"
               className="text-primary-400 hover:text-primary-300 transition-colors"

@@ -16,7 +16,13 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { parseApiError } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { track } from "@/lib/analytics";
 import { Checkbox, GitHubSignInButton } from "@/components/auth/AuthComponents";
+
+// Unconfigured OAuth providers are hidden entirely — a permanently disabled
+// half-opacity button is worse than no button.
+const GOOGLE_CONFIGURED = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const GITHUB_CONFIGURED = !!process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
 
 declare global {
   interface Window {
@@ -80,6 +86,7 @@ function LoginContent() {
       setIsGoogleLoading(true);
       try {
         await googleLogin(response.credential);
+        track("login_completed", { method: "google" });
       } catch (err) {
         setError(parseApiError(err));
       } finally {
@@ -144,6 +151,7 @@ function LoginContent() {
 
     try {
       await login(email, password, rememberMe);
+      track("login_completed", { method: "email" });
     } catch (err) {
       setError(parseApiError(err));
     } finally {
@@ -179,14 +187,10 @@ function LoginContent() {
         </p>
       </div>
 
-      {/* Google Sign In */}
-      <div className="relative w-full">
+      {/* Google Sign In (hidden entirely when not configured) */}
+      <div className={GOOGLE_CONFIGURED ? "relative w-full" : "hidden"}>
         {/* Custom styled button (visual only, clicks pass through to Google overlay) */}
-        <div
-          className={`w-full flex items-center justify-center gap-3 bg-white/2 border border-white/8 text-neutral-300 font-medium py-3 rounded-xl select-none pointer-events-none ${
-            !process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "opacity-50" : ""
-          }`}
-        >
+        <div className="w-full flex items-center justify-center gap-3 bg-white/2 border border-white/8 text-neutral-300 font-medium py-3 rounded-xl select-none pointer-events-none">
           {isGoogleLoading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
@@ -230,22 +234,26 @@ function LoginContent() {
         />
       </div>
 
-      {/* GitHub Sign In */}
-      <div className="mt-3">
-        <GitHubSignInButton label="Continue with GitHub" from="login" />
-      </div>
+      {/* GitHub Sign In (hidden entirely when not configured) */}
+      {GITHUB_CONFIGURED && (
+        <div className={GOOGLE_CONFIGURED ? "mt-3" : ""}>
+          <GitHubSignInButton label="Continue with GitHub" from="login" />
+        </div>
+      )}
 
       {/* Divider */}
-      <div role="separator" className="my-7 flex items-center gap-4">
-        <div className="flex-1 h-px bg-white/6" />
-        <span
-          aria-hidden="true"
-          className="text-xs font-mono text-neutral-600 uppercase tracking-wider"
-        >
-          or
-        </span>
-        <div className="flex-1 h-px bg-white/6" />
-      </div>
+      {(GOOGLE_CONFIGURED || GITHUB_CONFIGURED) && (
+        <div role="separator" className="my-7 flex items-center gap-4">
+          <div className="flex-1 h-px bg-white/6" />
+          <span
+            aria-hidden="true"
+            className="text-xs font-mono text-neutral-600 uppercase tracking-wider"
+          >
+            or
+          </span>
+          <div className="flex-1 h-px bg-white/6" />
+        </div>
+      )}
 
       {/* Success Message */}
       {successMessage && (

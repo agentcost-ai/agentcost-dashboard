@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { useActiveProject } from "@/contexts/ActiveProjectContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { track } from "@/lib/analytics";
 import {
   Key,
   Check,
@@ -233,6 +234,7 @@ export default function SettingsPage() {
     try {
       const newProject = await api.createProject(newProjectName.trim());
       setProject(newProject);
+      track("project_created");
 
       // Auto-save the new project's API key (per-project, owner-scoped).
       // storeProjectApiKey dispatches "agentcost_config_updated" itself.

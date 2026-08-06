@@ -63,6 +63,26 @@ export function useAutoRefresh({
     }
   }, [isRefreshing, onRefresh]);
 
+  // Refetch when the active project changes (project switcher, or the
+  // post-login reconciliation in ActiveProjectContext replacing a stale id).
+  // Without this, the page that mounted with the old id keeps its error
+  // state until a manual browser refresh.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleProjectChange = () => {
+      refresh();
+    };
+    window.addEventListener(
+      "agentcost_active_project_changed",
+      handleProjectChange,
+    );
+    return () =>
+      window.removeEventListener(
+        "agentcost_active_project_changed",
+        handleProjectChange,
+      );
+  }, [refresh]);
+
   // Set up auto-refresh interval
   useEffect(() => {
     if (intervalRef.current) {

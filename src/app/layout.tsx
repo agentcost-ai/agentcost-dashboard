@@ -48,8 +48,13 @@ export const metadata: Metadata = {
     "openai pricing",
   ],
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    shortcut: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    // favicon.ico lives at src/app/favicon.ico (app-router file convention) so
+    // browsers hard-requesting /favicon.ico get a real ICO instead of a 404.
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48 32x32 16x16" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: [{ url: "/favicon.ico" }],
     apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
   // Deliberately minimal:
@@ -107,7 +112,7 @@ export default function RootLayout({
                   logo: "https://agentcost.tech/icon.svg",
                   slogan: "Real-time LLM cost observability",
                   description:
-                    "AgentCost is an open-source LLM cost observability platform. Track, analyze, and optimize OpenAI, Anthropic, Gemini, and LangChain spending in real time across 3,500+ models.",
+                    "AgentCost is an open-source LLM cost observability platform with a free hosted cloud. Track, analyze, and optimize OpenAI, Anthropic, Gemini, and LangChain spending in real time across 3,500+ models.",
                   sameAs: [
                     "https://github.com/agentcost-ai",
                     "https://pypi.org/project/agentcost/",

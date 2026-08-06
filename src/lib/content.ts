@@ -66,6 +66,21 @@ export const blogPosts: BlogPost[] = [
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "v1.10.0",
+    date: "2026-08-04",
+    summary:
+      "Hosted-cloud positioning, instant onboarding, OpenAI & Anthropic spend import, and corrected integration snippets",
+    changes: [
+      "Clarified positioning across the site: AgentCost is a free hosted cloud (api.agentcost.tech + this dashboard), and the same MIT-licensed stack remains fully self-hostable — claims like 'your data never leaves your infrastructure' are now correctly scoped to the self-hosted option.",
+      "Instant onboarding: signing up now auto-creates a project with an API key, so you can go from register to tracked calls without any manual setup.",
+      "Added OpenAI 30-day spend import so new accounts see real historical spend immediately after connecting.",
+      "Corrected every integration snippet on the site: API keys use the real sk_ prefix and init() examples include the required project_id (a UUID you copy from Settings).",
+      "Fixed an analytics error on the Models page.",
+      "Unified the public model count (3,500+) across the landing page, pricing page, FAQ, docs, and metadata — it previously varied between pages.",
+      "Added a real favicon.ico (previously only an SVG icon was declared, so /favicon.ico returned 404).",
+    ],
+  },
+  {
     version: "v1.9.0",
     date: "2026-06-28",
     summary:
