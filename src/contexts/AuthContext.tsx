@@ -9,7 +9,11 @@ import React, {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { isDemoMode, exitDemoMode } from "@/lib/demo/demo";
-import { reconcileStoredConfigOwner } from "@/lib/api";
+import {
+  api,
+  reconcileStoredConfigOwner,
+  storeProjectApiKey,
+} from "@/lib/api";
 
 interface User {
   id: string;
@@ -34,6 +38,59 @@ const DEMO_USER: User = {
   last_login_at: null,
 };
 
+/**
+ * The registration endpoint's default project, normalized. All parsing of the
+ * auth payload's project/verification fields lives in the two helpers below so
+ * a backend field rename is a one-line fix.
+ */
+export interface DefaultProject {
+  id: string;
+  name: string;
+  apiKey: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseDefaultProject(data: any): DefaultProject | null {
+  const raw = data?.default_project ?? data?.defaultProject ?? null;
+  if (!raw) return null;
+  const id = raw.id ?? raw.project_id ?? "";
+  const apiKey = raw.api_key ?? raw.apiKey ?? "";
+  if (!id || !apiKey) return null;
+  return { id, name: raw.name ?? "", apiKey };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseVerificationEmailSent(data: any): boolean {
+  return Boolean(
+    data?.verification_email_sent ?? data?.verificationEmailSent ?? false,
+  );
+}
+
+/** Store the default project's API key and make it the active project. */
+function adoptDefaultProject(
+  project: DefaultProject | null,
+  ownerUserId?: string,
+): void {
+  if (!project) return;
+  storeProjectApiKey(project.id, project.apiKey, ownerUserId);
+  api.setActiveProjectId(project.id);
+}
+
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  name?: string;
+  accept_terms: boolean;
+  accept_privacy: boolean;
+  terms_version: string;
+  privacy_version: string;
+}
+
+export interface RegisterResult {
+  verificationEmailSent: boolean;
+  defaultProject: DefaultProject | null;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -47,7 +104,7 @@ interface AuthContextType {
   ) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
   githubLogin: (code: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<RegisterResult>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
@@ -76,13 +133,15 @@ const publicRoutes = [
   "/privacy",
 ];
 
-// Routes that authenticated users should be redirected away from (auth pages only)
+// Routes that authenticated users should be redirected away from (auth pages
+// only). /auth/verify-email is deliberately NOT here: users are now signed in
+// immediately after registration and must be able to open the verification
+// link without being bounced to the dashboard before it completes.
 const authOnlyRoutes = [
   "/auth/login",
   "/auth/register",
   "/auth/forgot-password",
   "/auth/reset-password",
-  "/auth/verify-email",
 ];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -280,6 +339,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(data.access_token);
       setUser(data.user);
 
+      // First OAuth sign-in creates a default project — store its API key
+      // (shown only this once) so the dashboard works immediately.
+      adoptDefaultProject(parseDefaultProject(data), data.user?.id);
+
       // Check if user needs to accept updated policies
       try {
         const policyResponse = await fetch(
@@ -338,6 +401,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(data.access_token);
       setUser(data.user);
 
+      // First OAuth sign-in creates a default project — store its API key
+      // (shown only this once) so the dashboard works immediately.
+      adoptDefaultProject(parseDefaultProject(data), data.user?.id);
+
       // Check if user needs to accept updated policies
       try {
         const policyResponse = await fetch(
@@ -366,17 +433,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    async (email: string, password: string, name?: string) => {
+    async (payload: RegisterPayload): Promise<RegisterResult> => {
       const response = await fetch(`${API_URL}/v1/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -385,8 +448,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.detail || "Registration failed");
       }
 
-      // Registration successful - user needs to verify email
-      // Don't auto-login
+      // Registration now returns the same token payload as login — the user
+      // is signed in immediately (email verification happens via the banner).
+      exitDemoMode(false);
+
+      localStorage.setItem("access_token", data.access_token);
+      if (data.refresh_token) {
+        localStorage.setItem("refresh_token", data.refresh_token);
+        setRefreshTokenValue(data.refresh_token);
+      }
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      setToken(data.access_token);
+      setUser(data.user);
+
+      const defaultProject = parseDefaultProject(data);
+      // The default project's API key is shown only this once — store it the
+      // same way settings does after project creation.
+      adoptDefaultProject(defaultProject, data.user?.id);
+
+      return {
+        verificationEmailSent: parseVerificationEmailSent(data),
+        defaultProject,
+      };
     },
     [API_URL],
   );

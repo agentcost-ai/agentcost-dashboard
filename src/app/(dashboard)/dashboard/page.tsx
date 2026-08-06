@@ -10,6 +10,8 @@ import {
   Crown,
   Timer,
   Gauge,
+  KeyRound,
+  ArrowRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { TimeRangeSelector } from "@/components/layout/TimeRangeSelector";
@@ -20,6 +22,8 @@ import { HeroStatCard, type Delta } from "@/components/dashboard/HeroStatCard";
 import { MetricCardSkeleton, ChartSkeleton } from "@/components/ui/Skeleton";
 import {
   api,
+  getStoredApiKeyForProject,
+  getFallbackProjectKey,
   AnalyticsOverview,
   AgentStats,
   ModelStats,
@@ -38,6 +42,9 @@ import {
   OnboardingScreen,
   LoadingSpinner,
 } from "@/hooks/useApiConfiguration";
+import { OpenAIImportModal } from "@/components/onboarding/OpenAIImportModal";
+import { isDemoMode } from "@/lib/demo/demo";
+import { track } from "@/lib/analytics";
 
 /** Percent change of the second half of the window vs the first half. */
 function seriesDelta(
@@ -62,6 +69,80 @@ function seriesDelta(
     value: Math.abs(change),
     direction: change > 2 ? "up" : change < -2 ? "down" : "neutral",
   };
+}
+
+/**
+ * Zero-events snippet card: the user's REAL credentials, copy-paste-run.
+ * Without this, the working snippet only existed on the (skipped-when-
+ * configured) onboarding screen and in Settings — invisible exactly when
+ * a new user is staring at an empty dashboard.
+ */
+function TrackAppSnippetCard() {
+  const [creds, setCreds] = useState<{ apiKey: string; projectId: string }>({
+    apiKey: "",
+    projectId: "",
+  });
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const read = () => {
+      const activeId = api.getActiveProjectId();
+      if (activeId) {
+        setCreds({
+          projectId: activeId,
+          apiKey: getStoredApiKeyForProject(activeId),
+        });
+      } else {
+        const fallback = getFallbackProjectKey();
+        setCreds({ projectId: fallback.projectId, apiKey: fallback.apiKey });
+      }
+    };
+    read();
+    window.addEventListener("agentcost_config_updated", read);
+    window.addEventListener("agentcost_active_project_changed", read);
+    return () => {
+      window.removeEventListener("agentcost_config_updated", read);
+      window.removeEventListener("agentcost_active_project_changed", read);
+    };
+  }, []);
+
+  if (!creds.apiKey || !creds.projectId) return null;
+
+  const snippet = `pip install agentcost\n\nfrom agentcost import track_costs\ntrack_costs.init(\n    api_key="${creds.apiKey}",\n    project_id="${creds.projectId}"\n)`;
+
+  const copy = () => {
+    navigator.clipboard.writeText(snippet).then(() => {
+      track("api_key_copied");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="font-medium text-white">
+            Track your app — 2 lines of Python
+          </h3>
+          <p className="mt-1 text-sm text-neutral-400">
+            Your key and project are already filled in. Events appear here
+            within seconds of your first LLM call.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={copy}
+          className="shrink-0 rounded-lg border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white hover:border-neutral-500 transition-colors"
+        >
+          {copied ? "Copied!" : "Copy"}
+        </button>
+      </div>
+      <pre className="mt-3 overflow-x-auto rounded-lg bg-neutral-900 border border-neutral-800 p-3 text-[12.5px] leading-relaxed text-neutral-300 font-mono">
+        {snippet}
+      </pre>
+    </Card>
+  );
 }
 
 /** Snapshot cell in the operational strip below the hero cards. */
@@ -100,6 +181,7 @@ export default function DashboardPage() {
   const [agents, setAgents] = useState<AgentStats[]>([]);
   const [models, setModels] = useState<ModelStats[]>([]);
   const [timeSeries, setTimeSeries] = useState<TimeSeriesPoint[]>([]);
+  const [importOpen, setImportOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     // Don't fetch if not configured
@@ -122,6 +204,17 @@ export default function DashboardPage() {
       setTimeSeries(timeSeriesData);
       setError(null);
       setShowOnboarding(false);
+
+      // Funnel milestone: first time this browser sees real data for this
+      // project. Fired once per project (localStorage flag), never in demo.
+      if (!isDemoMode() && overviewData.total_calls > 0) {
+        const projectId = api.getActiveProjectId() ?? "default";
+        const flagKey = `agentcost_first_data_${projectId}`;
+        if (!localStorage.getItem(flagKey)) {
+          localStorage.setItem(flagKey, new Date().toISOString());
+          track("first_data_seen");
+        }
+      }
     } catch (err) {
       const errorMessage = parseApiError(err);
 
@@ -262,6 +355,48 @@ export default function DashboardPage() {
           </p>
         </Card>
       )}
+
+      {/* Zero-events state: quick OpenAI import entry point. Disappears the
+          moment the project has any tracked events. */}
+      {!loading &&
+        !error &&
+        overview &&
+        overview.total_calls === 0 &&
+        !isDemoMode() && (
+          <Card className="border-sky-900/50 bg-sky-950/20">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+                  <KeyRound size={18} />
+                </div>
+                <div>
+                  <h3 className="font-medium text-white">
+                    No events yet — see your spend anyway
+                  </h3>
+                  <p className="mt-1 text-sm text-neutral-400">
+                    Import your last 30 days of OpenAI or Anthropic spend with an Admin key.
+                    60 seconds, no code, key never stored.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setImportOpen(true)}
+                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 hover:bg-primary-500 px-4 py-2 text-sm font-medium text-white transition-colors"
+              >
+                Import spend
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </Card>
+        )}
+
+      {/* Zero-events state: the 2-line SDK snippet with real credentials. */}
+      {!loading &&
+        !error &&
+        overview &&
+        overview.total_calls === 0 &&
+        !isDemoMode() && <TrackAppSnippetCard />}
 
       {/* Hero stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -512,6 +647,11 @@ export default function DashboardPage() {
           )}
         </div>
       )}
+
+      <OpenAIImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+      />
     </div>
   );
 }

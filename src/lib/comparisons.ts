@@ -46,7 +46,7 @@ export const comparisons: Comparison[] = [
     priceHeadline: "Free tier, then $79/mo (Pro) and $799/mo (Team)",
     intro: [
       "Both AgentCost and Helicone answer the same underlying question: where is your LLM spend actually going? They differ mainly in how you integrate them and what you pay.",
-      "Helicone is a hosted product with a generous free tier and paid plans that scale with usage. AgentCost is MIT-licensed, free at every level, and designed to run on your own infrastructure — you install a Python SDK and host the backend yourself.",
+      "Helicone is a hosted product with a generous free tier and paid plans that scale with usage. AgentCost is MIT-licensed and free at every level — use the free hosted cloud, or run the same stack on your own infrastructure.",
     ],
     rows: [
       {
@@ -66,7 +66,7 @@ export const comparisons: Comparison[] = [
       },
       {
         feature: "Self-hosting",
-        agentcost: "The default — Docker, your infrastructure",
+        agentcost: "Yes, free — Docker on your infrastructure (hosted cloud also free)",
         competitor: "On-prem deployment listed under the Enterprise tier",
       },
       {
@@ -98,7 +98,7 @@ export const comparisons: Comparison[] = [
     ],
     chooseUs: [
       "You don't want request volume to determine your bill — AgentCost is free at any scale.",
-      "Your data cannot leave your infrastructure. AgentCost self-hosts by default, with no telemetry.",
+      "You want a free hosted cloud with a self-host escape hatch — same MIT code either way, no lock-in.",
       "You'd rather not put a proxy in the path of every LLM call. AgentCost instruments the client libraries in-process instead.",
       "You want per-agent attribution in a multi-agent system as a first-class feature.",
     ],
@@ -109,7 +109,7 @@ export const comparisons: Comparison[] = [
       },
       {
         q: "Is AgentCost really free, or is there a paid tier later?",
-        a: "It is MIT-licensed and free, with no tiers, seat limits, or paywalled features. You self-host it, so your only cost is the infrastructure you already run.",
+        a: "It is MIT-licensed and free, with no tiers, seat limits, or paywalled features. Use the free hosted cloud, or self-host it — then your only cost is the infrastructure you already run.",
       },
       {
         q: "Can I run both?",
@@ -135,7 +135,7 @@ export const comparisons: Comparison[] = [
     rows: [
       {
         feature: "Price (cloud)",
-        agentcost: "No cloud tier — self-hosted and free",
+        agentcost: "Free hosted cloud — or self-host, also free",
         competitor: "Hobby free; Core $29/mo; Pro $199/mo; Enterprise $2,499/mo",
       },
       {
@@ -150,7 +150,7 @@ export const comparisons: Comparison[] = [
       },
       {
         feature: "Self-hosting",
-        agentcost: "The default — Docker, your infrastructure",
+        agentcost: "Yes, free — Docker on your infrastructure (hosted cloud also free)",
         competitor: "Yes, free and open source, via Docker Compose or Kubernetes",
       },
       {

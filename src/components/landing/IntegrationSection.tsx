@@ -7,9 +7,9 @@ import { useState } from "react";
 const codeLines = [
     { text: "from agentcost import track_costs", highlight: true },
     { text: "" },
-    { text: "# Initialize tracking — that's it", dim: true },
+    { text: "# Settings → your project → copy UUID + API key", dim: true },
     {
-        text: 'track_costs.init(api_key="ac_...", project_id="my-app")',
+        text: 'track_costs.init(api_key="sk_...", project_id="6b3f2e1d-9c4a-4f8e-b2d7-3a5c8e9f0a1b")',
         highlight: true,
     },
     { text: "" },
@@ -75,7 +75,7 @@ export function IntegrationSection() {
                                 {
                                     step: "03",
                                     title: "See your costs",
-                                    desc: "Open the dashboard at localhost:3000",
+                                    desc: "Open your dashboard at agentcost.tech",
                                 },
                             ].map((s) => (
                                 <div

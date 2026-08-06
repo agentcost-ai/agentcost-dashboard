@@ -3,10 +3,10 @@ import Link from "next/link";
 import {
   Check,
   ArrowRight,
+  Cloud,
   Infinity as InfinityIcon,
   Server,
   GitBranch,
-  ShieldCheck,
   Sparkles,
   Users,
   Database,
@@ -30,12 +30,12 @@ export const metadata: Metadata = {
 };
 
 const INCLUDED = [
+  { icon: Cloud, label: "Hosted cloud included", sub: "We run it at api.agentcost.tech — no infrastructure for you to manage" },
   { icon: InfinityIcon, label: "Unlimited events & history", sub: "No row caps, no sampling, no retention limits" },
   { icon: Users, label: "Unlimited team members", sub: "Owner / admin / member / viewer roles" },
   { icon: Database, label: "3,500+ models tracked", sub: "Pricing synced from LiteLLM, always current" },
   { icon: Gauge, label: "Real-time analytics & alerts", sub: "Dashboards, budgets, anomaly detection" },
-  { icon: Server, label: "Self-host anywhere", sub: "Docker-ready · your data never leaves your infra" },
-  { icon: ShieldCheck, label: "No telemetry, no lock-in", sub: "We can't see your data — you own all of it" },
+  { icon: Server, label: "Self-host option (MIT)", sub: "Docker-ready — when self-hosted, your data never leaves your infra and we can't see it" },
 ];
 
 export default function PricingPage() {
@@ -56,9 +56,9 @@ export default function PricingPage() {
             <span className="text-neutral-500">The savings are not.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-neutral-400 sm:text-lg">
-            AgentCost is fully open-source under the MIT License — no tiers, no
-            seat limits, no paywalled features. You pay nothing; you keep
-            everything you save.
+            The hosted cloud is free and the code is open source under the MIT
+            License — no tiers, no seat limits, no paywalled features. You pay
+            nothing; you keep everything you save.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3 text-[13px]">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-3 py-1.5 text-emerald-300">
@@ -68,7 +68,7 @@ export default function PricingPage() {
               <GitBranch className="size-3.5" /> MIT open source
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/3 px-3 py-1.5 text-neutral-300">
-              <Server className="size-3.5" /> Self-hosted
+              <Cloud className="size-3.5" /> Free cloud · self-host optional
             </span>
           </div>
         </div>
@@ -109,7 +109,8 @@ export default function PricingPage() {
                   Free
                 </h3>
                 <p className="mt-1 text-[14px] text-neutral-500">
-                  Everything, for everyone. Self-hosted on your infrastructure.
+                  Everything, for everyone. Signing up gets you the free hosted
+                  cloud — or self-host the same MIT stack instead.
                 </p>
               </div>
               <div className="text-right">

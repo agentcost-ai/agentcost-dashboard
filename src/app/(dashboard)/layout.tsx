@@ -7,6 +7,7 @@ import { Menu, Grid2x2Plus } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { DemoExperience } from "@/components/demo/DemoExperience";
+import { VerifyEmailBanner } from "@/components/dashboard/VerifyEmailBanner";
 import { ActiveProjectProvider } from "@/contexts/ActiveProjectContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -85,6 +86,7 @@ export default function DashboardLayout({
         <div className="fixed top-4 right-6 z-30 hidden lg:block print:hidden">
           <NotificationBell />
         </div>
+        <VerifyEmailBanner />
         {children}
       </main>
       <DemoExperience />

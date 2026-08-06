@@ -49,6 +49,13 @@ export function exitDemoMode(track = true): void {
   if (!isDemoMode()) return;
   if (track) trackDemo("demo_exit");
   localStorage.removeItem(DEMO_FLAG_KEY);
+  // Using the project switcher inside the demo persists the demo project as
+  // the active one; carried into a real session it 403s every analytics call
+  // ("You don't have access to this project") until a manual refresh.
+  if (localStorage.getItem("agentcost_active_project_id") === "demo-project") {
+    localStorage.removeItem("agentcost_active_project_id");
+    window.dispatchEvent(new Event("agentcost_active_project_changed"));
+  }
 }
 
 /** Fire-and-forget tracking ping. Never throws, never blocks the UI. */

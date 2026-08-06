@@ -162,7 +162,7 @@ export default async function ComparePage({
             Try AgentCost in two minutes
           </h2>
           <p className="mt-2 text-[14px] text-neutral-400">
-            Free, MIT-licensed, self-hosted. No signup needed for the live demo.
+            Free hosted cloud, MIT-licensed, self-host optional. No signup needed for the live demo.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link

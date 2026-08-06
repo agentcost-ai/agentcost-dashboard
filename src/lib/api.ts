@@ -1449,9 +1449,10 @@ class ApiClient {
    */
   hasProjectAccess(): boolean {
     if (typeof window !== "undefined" && isDemoMode()) return true;
-    const { apiKey, authToken, activeProjectId } = this.getConfig();
+    const { apiKey, authToken } = this.getConfig();
     if (apiKey && apiKey.length > 0) return true;
-    return !!(authToken && activeProjectId);
+    // Sanitized getter: a leftover demo id counts as "no project selected".
+    return !!(authToken && this.getActiveProjectId());
   }
 
   /**
@@ -1460,7 +1461,9 @@ class ApiClient {
    */
   getActiveProjectId(): string | null {
     if (typeof window !== "undefined" && isDemoMode()) return "demo-project";
-    return this.getConfig().activeProjectId;
+    const id = this.getConfig().activeProjectId;
+    // A demo leftover must never reach the real backend — it guarantees 403s.
+    return id === "demo-project" ? null : id;
   }
 
   setActiveProjectId(projectId: string | null): void {

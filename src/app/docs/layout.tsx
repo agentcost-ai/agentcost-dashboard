@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 const DOCS_NAV = [
   { href: "/docs/sdk", label: "SDK" },
@@ -63,6 +64,13 @@ export default function DocsLayout({
               className="hidden sm:inline text-neutral-400 hover:text-white transition-colors"
             >
               Blog
+            </Link>
+            <Link
+              href="/auth/register"
+              onClick={() => track("click_signup", { location: "docs" })}
+              className="shrink-0 rounded-lg bg-white px-3 py-1.5 text-[13px] font-semibold text-neutral-900 hover:bg-neutral-200 transition-colors"
+            >
+              Get started free
             </Link>
           </div>
         </div>

@@ -97,6 +97,16 @@ export async function resolveDemoRequest<T>(
     demoNotifications().items.forEach((n) => readNotificationIds.add(n.id));
     return { unread_count: 0 } as T;
   }
+  // "Generate" is a POST but semantically a read — the optimizations page
+  // calls it on every load. Blocking it errored the whole page (no
+  // suggestions rendered) and popped the conversion modal before the visitor
+  // saw any value.
+  if (
+    method === "POST" &&
+    path === "/v1/optimizations/recommendations/generate"
+  ) {
+    return demoOptimizationSuggestions() as T;
+  }
 
   // ── Everything else mutating → conversion prompt ──
   if (method !== "GET") {

@@ -48,6 +48,8 @@ function GitHubCallback() {
       .then(() => {
         if (from === "register") {
           track("signup_completed", { method: "github" });
+        } else {
+          track("login_completed", { method: "github" });
         }
       })
       .catch((err) => {
