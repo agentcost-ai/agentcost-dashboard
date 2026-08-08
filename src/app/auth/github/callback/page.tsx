@@ -30,7 +30,10 @@ function GitHubCallback() {
     const from = sessionStorage.getItem("github_oauth_from");
 
     if (searchParams.get("error")) {
-      // User cancelled on GitHub's side
+      // User cancelled on GitHub's side. This whole effect is an external-system
+      // exchange -- it reads sessionStorage and spends a single-use OAuth code --
+      // so the validation branches cannot move into render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError("GitHub sign-in was cancelled.");
       return;
     }

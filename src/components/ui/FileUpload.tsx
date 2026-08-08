@@ -116,7 +116,7 @@ export default function FileUpload({
 
       // Upload in parallel
       const results = await Promise.allSettled(
-        batch.map(async (file, i) => {
+        batch.map(async (file) => {
           try {
             const meta = await api.uploadAttachment(file);
             setPending((prev) =>

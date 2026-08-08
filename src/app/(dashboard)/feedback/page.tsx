@@ -11,7 +11,6 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
-  ThumbsUp,
   MessageCircle,
   Send,
   Loader2,

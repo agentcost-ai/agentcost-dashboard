@@ -20,7 +20,7 @@ import {
 import { formatRelativeTime } from "@/lib/utils";
 
 export default function AccountPage() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loading, setLoading] = useState(true);

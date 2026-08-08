@@ -760,7 +760,7 @@ class ApiClient {
     // Resolve the effective auth path for "project" mode:
     //   - apiKey present  -> use the API key (back-compat / SDK / solo users)
     //   - no apiKey + JWT -> JWT path; we'll inject ?project_id= below
-    let effectiveAuth: "api_key" | "jwt" | "none" =
+    const effectiveAuth: "api_key" | "jwt" | "none" =
       authType === "project"
         ? apiKey
           ? "api_key"

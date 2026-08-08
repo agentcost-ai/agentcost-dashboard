@@ -56,6 +56,22 @@ export default function PrivacyPolicyPage() {
               how we collect, use, store, and protect information when you use
               our service.
             </p>
+            <div className="mt-6 rounded-lg border border-gray-800 bg-white/3 p-4">
+              <p className="text-gray-300 text-base leading-relaxed">
+                <strong className="text-white">
+                  Looking for the technical detail?
+                </strong>{" "}
+                Our{" "}
+                <Link
+                  href="/docs/privacy"
+                  className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                >
+                  Data &amp; Privacy Architecture
+                </Link>{" "}
+                page lists the exact fields the SDK transmits, what never leaves
+                your process, and how to verify both in our open source.
+              </p>
+            </div>
           </section>
 
           {/* Section 1 */}
@@ -454,7 +470,7 @@ export default function PrivacyPolicyPage() {
               <p>
                 We may update this Privacy Policy from time to time. When we
                 make significant changes, we will notify you by email and update
-                the "Last updated" date at the top of this page.
+                the &quot;Last updated&quot; date at the top of this page.
               </p>
               <p>
                 We encourage you to review this Privacy Policy periodically.

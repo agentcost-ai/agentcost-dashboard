@@ -125,7 +125,7 @@ function LiveCostFeed() {
 
       {/* Feed rows */}
       <div className="divide-y divide-white/2">
-        {liveFeedData.slice(0, visibleItems).map((item, i) => (
+        {liveFeedData.slice(0, visibleItems).map((item) => (
           <motion.div
             key={item.agent}
             initial={{ opacity: 0, x: -8 }}

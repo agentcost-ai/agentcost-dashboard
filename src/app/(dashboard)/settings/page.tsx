@@ -115,18 +115,24 @@ export default function SettingsPage() {
   const [isSavingProject, setIsSavingProject] = useState(false);
 
   // Open the create-project form automatically when navigated via
-  // /settings?new=1 (e.g. from the project switcher).
-  useEffect(() => {
-    if (searchParams?.get("new") === "1") {
-      setShowCreateProject(true);
-    }
-  }, [searchParams]);
+  // /settings?new=1 (e.g. from the project switcher). Adjusted during render
+  // rather than in an effect so the form is open on the first painted frame.
+  const wantsCreateForm = searchParams?.get("new") === "1";
+  const [sawCreateParam, setSawCreateParam] = useState(false);
+  if (wantsCreateForm && !sawCreateParam) {
+    setSawCreateParam(true);
+    setShowCreateProject(true);
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem("agentcost_config");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // Hydrating from localStorage, which does not exist during the server
+        // render. Seeding this in useState instead would make the first client
+        // render disagree with the server HTML.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setConfig((prev) => ({
           ...prev,
           autoRefresh: parsed.autoRefresh ?? true,
@@ -146,6 +152,9 @@ export default function SettingsPage() {
   useEffect(() => {
     const displayedId = project?.id ?? activeProject?.id ?? "";
     if (displayedId) {
+      // Both branches read the per-project key out of localStorage, so this
+      // cannot be derived during render on the server.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConfig((prev) => ({
         ...prev,
         projectId: displayedId,
@@ -161,14 +170,18 @@ export default function SettingsPage() {
     }
   }, [project?.id, activeProject?.id]);
 
+  // Hoisted out of the dependency arrays below: the React Compiler cannot
+  // preserve a manual memo whose deps are optional-chained member expressions.
+  const activeProjectId = activeProject?.id;
+
   const fetchProject = useCallback(async () => {
     // Prefer the active project from the JWT-backed list (works for members
     // even without the project's raw API key). Fall back to the legacy
     // API-key path (/v1/projects/me) for users who only have an API key
     // configured.
-    if (activeProject?.id) {
+    if (activeProjectId) {
       try {
-        const data = await api.getProjectById(activeProject.id);
+        const data = await api.getProjectById(activeProjectId);
         setProject(data);
         return;
       } catch {
@@ -185,9 +198,14 @@ export default function SettingsPage() {
     } else {
       setProject(null);
     }
-  }, [activeProject?.id, config.apiKey]);
+  }, [activeProjectId, config.apiKey]);
 
   useEffect(() => {
+    // Data fetching, not state synchronisation: fetchProject only setStates
+    // synchronously on the "no project at all" path, and that must still clear
+    // a stale project. Restructuring it to satisfy the rule would mean holding
+    // the previous project on screen after switching away from it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProject();
   }, [fetchProject]);
 
@@ -745,7 +763,7 @@ export default function SettingsPage() {
                                 type: "success",
                                 text: "Project deleted successfully",
                               });
-                            } catch (error) {
+                            } catch {
                               setSaveMessage({
                                 type: "error",
                                 text: "Failed to delete project",
