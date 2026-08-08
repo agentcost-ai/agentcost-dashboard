@@ -2,28 +2,31 @@
 
 import Link from "next/link";
 import { Copy, Check, Code, Server, Database, Shield, Zap } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 
-// Get the API base URL dynamically
+/** Resolved on the client, where window.location is the source of truth. */
+function readApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl) return envUrl.replace(/\/$/, ""); // Remove trailing slash
+  return `${window.location.protocol}//${window.location.hostname}:8000`;
+}
+
+/** The URL never changes after load, so there is nothing to subscribe to. */
+const subscribeToNothing = () => () => {};
+
+/**
+ * Get the API base URL dynamically.
+ *
+ * Server-rendered as "" and filled in on the client. useSyncExternalStore --
+ * rather than an effect that setStates on mount -- is what keeps the two
+ * renders from disagreeing during hydration without a cascading re-render.
+ */
 function useApiBaseUrl() {
-  const [baseUrl, setBaseUrl] = useState<string>("");
-
-  useEffect(() => {
-    // Use the current origin for the API URL, or fall back to environment variable
-    const envUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (envUrl) {
-      setBaseUrl(envUrl.replace(/\/$/, "")); // Remove trailing slash
-    } else {
-      // Default to production API URL
-      setBaseUrl(
-        typeof window !== "undefined"
-          ? `${window.location.protocol}//${window.location.hostname}:8000`
-          : "https://api.agentcost.tech",
-      );
-    }
-  }, []);
-
-  return baseUrl;
+  return useSyncExternalStore(
+    subscribeToNothing,
+    readApiBaseUrl,
+    () => "",
+  );
 }
 
 function CopyButton({ text }: { text: string }) {

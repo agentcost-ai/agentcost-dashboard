@@ -9,6 +9,7 @@ const DOCS_NAV = [
   { href: "/docs/sdk", label: "SDK" },
   { href: "/docs/api", label: "API" },
   { href: "/docs/models", label: "Models" },
+  { href: "/docs/privacy", label: "Privacy" },
 ];
 
 /**

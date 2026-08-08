@@ -171,7 +171,7 @@ function SnapshotStat({
 }
 
 export default function DashboardPage() {
-  const { isConfigured, recheckConfiguration } = useApiConfiguration();
+  const { isConfigured } = useApiConfiguration();
   const [timeRange, setTimeRange] = useState("7d");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

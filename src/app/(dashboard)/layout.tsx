@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Grid2x2Plus } from "lucide-react";
@@ -20,10 +20,14 @@ export default function DashboardLayout({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pathname = usePathname();
 
-  // Close the mobile drawer whenever the route changes.
-  useEffect(() => {
+  // Close the mobile drawer whenever the route changes. Adjusting during
+  // render (React's "storing information from previous renders" pattern)
+  // rather than in an effect avoids a committed open-then-close flash.
+  const [drawerPathname, setDrawerPathname] = useState(pathname);
+  if (drawerPathname !== pathname) {
+    setDrawerPathname(pathname);
     setMobileNavOpen(false);
-  }, [pathname]);
+  }
 
   // Show loading spinner while checking authentication
   if (isLoading) {

@@ -141,9 +141,12 @@ export default function ModelsPage({
       const data = await response.json();
 
       // Transform the pricing dict to array format
-      const pricingDict = data.pricing || {};
+      const pricingDict: Record<
+        string,
+        { input?: number; output?: number; provider?: string }
+      > = data.pricing || {};
       const modelsArray: ModelPricing[] = Object.entries(pricingDict).map(
-        ([model_name, pricing]: [string, any]) => ({
+        ([model_name, pricing]) => ({
           model_name,
           input: pricing.input || 0,
           output: pricing.output || 0,

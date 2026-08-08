@@ -647,7 +647,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem("user", JSON.stringify(userData));
             setUser(userData);
           }
-        } catch (error) {
+        } catch {
           // Network error, do nothing; retry on next interval
         }
       },

@@ -7,7 +7,6 @@ import {
   Shield,
   FileText,
   Lock,
-  Check,
   Loader2,
   AlertCircle,
   ExternalLink,
@@ -72,7 +71,7 @@ function AcceptPoliciesContent() {
         } else if (response.status === 401) {
           router.push("/auth/login");
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load policy status. Please try again.");
       } finally {
         setIsLoading(false);

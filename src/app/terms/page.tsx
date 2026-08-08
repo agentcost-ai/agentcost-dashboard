@@ -58,8 +58,9 @@ export default function TermsOfServicePage() {
             </h2>
             <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
-                By accessing or using AgentCost ("the Service"), you agree to be
-                bound by these Terms of Service ("Terms"). If you do not agree
+                By accessing or using AgentCost (&quot;the Service&quot;), you
+                agree to be bound by these Terms of Service (&quot;Terms&quot;).
+                If you do not agree
                 to these Terms, you may not use the Service.
               </p>
               <p>
@@ -87,7 +88,8 @@ export default function TermsOfServicePage() {
                 expenditures through API integration and dashboard analytics.
               </p>
               <p>
-                The Service is provided "as is" and "as available" without
+                The Service is provided &quot;as is&quot; and &quot;as
+                available&quot; without
                 warranties of any kind, either express or implied, including but
                 not limited to warranties of merchantability, fitness for a
                 particular purpose, or non-infringement.
@@ -235,7 +237,7 @@ export default function TermsOfServicePage() {
                   <span>
                     Inaccurate cost calculations or estimations. Cost data is
                     provided for informational purposes and should be verified
-                    against your LLM provider's billing statements.
+                    against your LLM provider&apos;s billing statements.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -299,7 +301,8 @@ export default function TermsOfServicePage() {
             <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 We reserve the right to modify these Terms at any time. When we
-                make changes, we will update the "Last updated" date at the top
+                make changes, we will update the &quot;Last updated&quot; date
+                at the top
                 of this page and, where appropriate, notify you via email or
                 through the Service.
               </p>

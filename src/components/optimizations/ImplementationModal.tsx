@@ -7,7 +7,6 @@ import {
     Check,
     ArrowRight,
     ExternalLink,
-    Clock,
     TrendingDown,
     Code,
     Database,
@@ -17,7 +16,7 @@ import {
     X,
 } from "lucide-react";
 import { Recommendation } from "@/lib/api";
-import { formatCurrency, formatPercentage } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 interface ImplementationModalProps {
     isOpen: boolean;
