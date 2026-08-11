@@ -87,6 +87,29 @@ const TRANSMITTED_FIELDS: Array<{
   { field: "metadata", type: "object", note: "Only what you explicitly attach — see below" },
 ];
 
+/**
+ * Added by workflow()/step()/tool(). Listed apart from the table above
+ * because these are the only transmitted values a developer writes by hand.
+ */
+const TRACE_FIELDS: Array<{ field: string; type: string; note: string }> = [
+  { field: "trace_id", type: "random hex", note: "Generated per run; means nothing outside your project" },
+  { field: "span_id", type: "random hex", note: "Generated per call" },
+  { field: "parent_span_id", type: "random hex", note: "Which span this call sits under" },
+  { field: "workflow", type: "string", note: "The name you pass to workflow()" },
+  { field: "step_name", type: "string", note: "The name you pass to step() or tool()" },
+  { field: "tool_name", type: "string", note: "The name you pass to tool()" },
+  { field: "step_index", type: "int", note: "Ordinal of the step within the run" },
+  { field: "depth", type: "int", note: "How deeply the call was nested" },
+];
+
+/** Sent once per run, only if the run calls track_costs.outcome(). */
+const OUTCOME_FIELDS: Array<{ field: string; type: string; note: string }> = [
+  { field: "trace_id", type: "random hex", note: "Which run this outcome belongs to" },
+  { field: "workflow", type: "string", note: "The name you passed to workflow()" },
+  { field: "success", type: "bool", note: "Whether you called it a success" },
+  { field: "label", type: "string", note: "Optional label you choose, e.g. \"resolved\"" },
+];
+
 const NOT_COLLECTED = [
   "Prompt and message text",
   "Model completions and responses",
@@ -131,11 +154,12 @@ export default function PrivacyArchitectureContent() {
           </h2>
           <p className="text-neutral-300 leading-relaxed">
             AgentCost is a metadata-only tracker. The SDK sends token counts,
-            model names, cost, latency, and timing. It does not send your
-            prompts, your completions, your system instructions, or your files —
-            not by default, and not behind a setting. There is no configuration
-            in which prompt content is transmitted, because the SDK never puts
-            it on the wire in the first place.
+            model names, cost, latency, timing, and — if you ask for it — the
+            shape of a multi-step run. It does not send your prompts, your
+            completions, your system instructions, or your files — not by
+            default, and not behind a setting. There is no configuration in
+            which prompt content is transmitted, because the SDK never puts it
+            on the wire in the first place.
           </p>
           <p className="text-neutral-300 leading-relaxed mt-3">
             If that is still more than you want to share, two stronger options
@@ -195,11 +219,97 @@ export default function PrivacyArchitectureContent() {
               </table>
             </div>
 
+            <p className="text-neutral-300 leading-relaxed">
+              If you group a multi-step run with{" "}
+              <code className="text-primary-300">workflow()</code>,{" "}
+              <code className="text-primary-300">step()</code> or{" "}
+              <code className="text-primary-300">tool()</code>, each event also
+              carries where it sat in that run. Instrument nothing and none of
+              these fields are sent at all:
+            </p>
+
+            <div className="overflow-x-auto rounded-lg border border-neutral-700/50">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-700/50 bg-neutral-800/50">
+                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                      Field
+                    </th>
+                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                      Type
+                    </th>
+                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                      What it holds
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {TRACE_FIELDS.map((row) => (
+                    <tr
+                      key={row.field}
+                      className="border-b border-neutral-800 last:border-0"
+                    >
+                      <td className="px-4 py-2.5 font-mono text-primary-300 whitespace-nowrap">
+                        {row.field}
+                      </td>
+                      <td className="px-4 py-2.5 text-neutral-500 whitespace-nowrap">
+                        {row.type}
+                      </td>
+                      <td className="px-4 py-2.5 text-neutral-400">
+                        {row.note}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-neutral-300 leading-relaxed">
+              Calling <code className="text-primary-300">outcome()</code> adds
+              one more record per run — not per call — carrying only this:
+            </p>
+
+            <div className="overflow-x-auto rounded-lg border border-neutral-700/50">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-700/50 bg-neutral-800/50">
+                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                      Field
+                    </th>
+                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                      Type
+                    </th>
+                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                      What it holds
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {OUTCOME_FIELDS.map((row) => (
+                    <tr
+                      key={row.field}
+                      className="border-b border-neutral-800 last:border-0"
+                    >
+                      <td className="px-4 py-2.5 font-mono text-primary-300 whitespace-nowrap">
+                        {row.field}
+                      </td>
+                      <td className="px-4 py-2.5 text-neutral-500 whitespace-nowrap">
+                        {row.type}
+                      </td>
+                      <td className="px-4 py-2.5 text-neutral-400">{row.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
             <p className="text-neutral-400 text-sm leading-relaxed">
-              That is the entire payload. There is no free-text field beyond{" "}
-              <code className="text-primary-300">error</code> and the{" "}
-              <code className="text-primary-300">metadata</code> you choose to
-              attach, both documented below.
+              Those three tables are the entire payload. The ids are random and
+              carry no meaning outside your project. The only free text is{" "}
+              <code className="text-primary-300">error</code>, the{" "}
+              <code className="text-primary-300">metadata</code> you attach, and
+              the workflow, step, tool and outcome-label names you write
+              yourself — all documented below.
             </p>
           </Section>
 
@@ -294,12 +404,12 @@ def _hash_input(text: str) -> str:
           {/* 4. Fields you control */}
           <Section
             id="your-fields"
-            title="The two fields carrying content you control"
+            title="The fields carrying content you control"
             icon={Tag}
           >
             <p className="text-neutral-300 leading-relaxed">
-              Two fields can contain free text. Both are worth understanding
-              before you deploy.
+              Three things you write can reach us as free text. All are worth
+              understanding before you deploy.
             </p>
 
             <div className="rounded-lg border border-neutral-700/50 p-4 space-y-2">
@@ -336,6 +446,32 @@ with track_costs.metadata(email="person@example.com"):
                 quote a fragment of the offending input back to you. If that
                 matters for your workload, local mode and self-hosting both keep
                 the string on your infrastructure.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-neutral-700/50 p-4 space-y-2">
+              <h3 className="text-white font-medium text-sm font-mono">
+                workflow, step_name, tool_name, label
+              </h3>
+              <p className="text-neutral-300 text-sm leading-relaxed">
+                These are labels you write, and we would rather point out what
+                they can reveal than let you discover it later. They describe
+                nothing about your data, but they do describe your
+                architecture: a step called{" "}
+                <code className="text-neutral-400">
+                  screen_applicant_credit_risk
+                </code>{" "}
+                tells us more about your product than any token count ever
+                will. That may be entirely fine — most teams name steps after
+                obvious engineering stages — but it is a deliberate choice
+                rather than an accident, so it belongs on this page.
+              </p>
+              <p className="text-neutral-300 text-sm leading-relaxed">
+                Name steps after what the code does rather than what the
+                business is doing, and nothing sensitive travels. Or skip the
+                trace API entirely: none of these fields exist on your events
+                unless you open a{" "}
+                <code className="text-primary-300">workflow()</code>.
               </p>
             </div>
           </Section>
@@ -522,6 +658,18 @@ events = track_costs.get_local_events()   # never left the process`}
                   http_client.py
                 </a>{" "}
                 — the only place the SDK opens a socket.
+              </li>
+              <li className="text-neutral-300">
+                <a
+                  href={`${SDK_REPO}/trace.py`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-primary-400 hover:text-primary-300"
+                >
+                  trace.py
+                </a>{" "}
+                — every trace field, and the fact that none are produced
+                outside a <code className="text-neutral-400">workflow()</code>.
               </li>
               <li className="text-neutral-300">
                 <a

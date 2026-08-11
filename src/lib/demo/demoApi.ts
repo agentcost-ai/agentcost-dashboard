@@ -25,6 +25,13 @@ import {
   demoProfile,
   demoSessions,
   demoNotifications,
+  demoWorkflowStats,
+  demoStepStats,
+  demoToolStats,
+  demoRepeatedWork,
+  demoTraces,
+  demoRunCostDistribution,
+  demoOutcomeStats,
 } from "./demoData";
 
 export const DEMO_SIGNUP_PROMPT_EVENT = "demo-signup-prompt";
@@ -135,6 +142,51 @@ export async function resolveDemoRequest<T>(
     return demoModelStats(
       param(endpoint, "range") ?? "7d",
       Number(param(endpoint, "limit") ?? 10),
+    ) as T;
+  }
+  if (path === "/v1/analytics/workflows") {
+    return demoWorkflowStats(
+      param(endpoint, "range") ?? "7d",
+      Number(param(endpoint, "limit") ?? 20),
+    ) as T;
+  }
+  if (path === "/v1/analytics/workflows/steps") {
+    return demoStepStats(
+      param(endpoint, "range") ?? "7d",
+      param(endpoint, "workflow") ?? undefined,
+      Number(param(endpoint, "limit") ?? 50),
+    ) as T;
+  }
+  if (path === "/v1/analytics/workflows/tools") {
+    return demoToolStats(
+      param(endpoint, "range") ?? "7d",
+      Number(param(endpoint, "limit") ?? 50),
+    ) as T;
+  }
+  if (path === "/v1/analytics/workflows/repeated-work") {
+    return demoRepeatedWork(
+      param(endpoint, "range") ?? "7d",
+      Number(param(endpoint, "limit") ?? 25),
+    ) as T;
+  }
+  if (path === "/v1/analytics/workflows/outcomes") {
+    return demoOutcomeStats(
+      param(endpoint, "range") ?? "7d",
+      Number(param(endpoint, "limit") ?? 20),
+    ) as T;
+  }
+  if (path === "/v1/analytics/workflows/distribution") {
+    return demoRunCostDistribution(
+      param(endpoint, "range") ?? "7d",
+      param(endpoint, "workflow") ?? undefined,
+      Number(param(endpoint, "buckets") ?? 24),
+    ) as T;
+  }
+  if (path === "/v1/analytics/traces") {
+    return demoTraces(
+      param(endpoint, "range") ?? "7d",
+      param(endpoint, "workflow") ?? undefined,
+      Number(param(endpoint, "limit") ?? 50),
     ) as T;
   }
   if (path === "/v1/analytics/timeseries") {

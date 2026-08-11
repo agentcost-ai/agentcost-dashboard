@@ -212,6 +212,12 @@ export default function APIReferencePage() {
               Analytics
             </a>
             <a
+              href="#workflows"
+              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
+            >
+              Workflows &amp; Traces
+            </a>
+            <a
               href="#optimizations"
               className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
             >
@@ -1121,6 +1127,253 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "agents": [ ... ],
   "models": [ ... ],
   "timeseries": [ ... ]
+}`}
+            />
+          </Endpoint>
+        </Section>
+
+        {/* Workflows & traces */}
+        <Section id="workflows" title="Workflows &amp; Traces" icon={Server}>
+          <p className="text-neutral-300 mb-6">
+            Cost attributed to the shape of a run rather than to the model that
+            served it. These endpoints read only events carrying trace
+            structure, which the SDK adds when you use{" "}
+            <code className="text-primary-300">workflow()</code>,{" "}
+            <code className="text-primary-300">step()</code> and{" "}
+            <code className="text-primary-300">tool()</code>. Calls made outside
+            a workflow are absent here by design, and remain visible under
+            Analytics. Every endpoint accepts{" "}
+            <code className="text-primary-300">range</code> (1h, 24h, 7d, 30d,
+            90d).
+          </p>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/workflows"
+            description="Cost per workflow, including the average cost of a single run"
+          >
+            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "workflow": "support-triage",
+    "runs": 9500,
+    "total_cost": 321.47,
+    "avg_cost_per_run": 0.0338,
+    "max_cost_per_run": 0.0879,
+    "total_calls": 41800,
+    "avg_calls_per_run": 4.4,
+    "avg_steps_per_run": 3,
+    "max_depth": 2,
+    "success_rate": 98.7
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/workflows/steps"
+            description="Cost per step. calls_per_run above 1 indicates retries or a loop"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Optional <code className="text-primary-400">workflow</code> query
+              parameter restricts the result to one workflow.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "workflow": "support-triage",
+    "step_name": "search_docs",
+    "calls": 23400,
+    "runs": 9500,
+    "calls_per_run": 2.4,
+    "cost_per_run": 0.0209,
+    "total_cost": 203.18,
+    "avg_latency_ms": 1250,
+    "success_rate": 96.9
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/workflows/tools"
+            description="LLM spend incurred while a named tool was running"
+          >
+            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "tool_name": "search_docs",
+    "calls": 23400,
+    "runs": 9500,
+    "total_cost": 203.18,
+    "total_tokens": 51000000,
+    "avg_latency_ms": 1250
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/workflows/repeated-work"
+            description="Identical calls repeated within a single run, and what they cost"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Distinct from the cross-run duplication the caching analyzer
+              reports: that argues for a cache, this usually means the control
+              flow is looping.{" "}
+              <code className="text-primary-400">wasted_cost</code> covers every
+              occurrence beyond the first.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "trace_id": "9f2c41a0b7d3e5f1",
+    "workflow": "support-triage",
+    "step_name": "search_docs",
+    "model": "gpt-4o",
+    "occurrences": 4,
+    "spend": 0.0435,
+    "wasted_cost": 0.0326,
+    "first_seen": "2026-08-11T09:14:22Z"
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/workflows/outcomes"
+            description="Cost per completed outcome, charging failed runs to the successes"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Populated only for runs that called{" "}
+              <code className="text-primary-400">track_costs.outcome()</code>.
+              Runs that declared nothing are counted as{" "}
+              <code className="text-primary-400">unknown</code> rather than as
+              failures.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "workflow": "support-triage",
+    "runs": 9500,
+    "succeeded": 8645,
+    "failed": 684,
+    "unknown": 171,
+    "cost_on_success": 292.20,
+    "cost_on_failure": 23.12,
+    "cost_per_success": 0.0365,
+    "success_rate": 92.67
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/workflows/distribution"
+            description="Distribution of cost per run, with percentiles and the tail's share of spend"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Computed over every run in the window rather than a top-N slice.
+              Defaults to the highest-spend workflow; pass{" "}
+              <code className="text-primary-400">workflow</code> to choose one,
+              and <code className="text-primary-400">buckets</code> (6-60) to
+              set the resolution. The final histogram bucket is the tail, marked{" "}
+              <code className="text-primary-400">is_tail</code>.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "workflow": "support-triage",
+  "runs": 9500,
+  "truncated": false,
+  "p50": 0.035,
+  "p95": 0.045,
+  "p99": 0.156,
+  "max": 0.182,
+  "tail_runs": 476,
+  "tail_threshold": 0.0461,
+  "tail_share_percent": 14.8,
+  "tail_ratio": 4.5,
+  "histogram": [
+    { "lower": 0.022, "upper": 0.0228, "count": 12, "is_tail": false }
+  ]
+}`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/traces"
+            description="Individual runs, most expensive first"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Optional <code className="text-primary-400">workflow</code>{" "}
+              parameter. Use the returned{" "}
+              <code className="text-primary-400">trace_id</code> with the
+              endpoint below.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "trace_id": "9f2c41a0b7d3e5f1",
+    "workflow": "support-triage",
+    "calls": 11,
+    "total_cost": 0.0879,
+    "max_depth": 2,
+    "failed_calls": 0,
+    "started_at": "2026-08-11T09:14:20Z",
+    "duration_ms": 7420
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/traces/{trace_id}"
+            description="Every span of one run, ordered as it executed"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Spans are returned flat with parent ids rather than pre-nested, so
+              a span whose parent never arrived cannot break the response.
+              Returns 404 if the trace does not belong to your project.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "trace_id": "9f2c41a0b7d3e5f1",
+  "workflow": "support-triage",
+  "total_cost": 0.0879,
+  "total_calls": 11,
+  "max_depth": 2,
+  "duration_ms": 7420,
+  "spans": [
+    {
+      "span_id": "1b40a23d06f0401f",
+      "parent_span_id": null,
+      "step_name": "classify",
+      "tool_name": null,
+      "step_index": 0,
+      "depth": 1,
+      "model": "gpt-4o",
+      "cost": 0.00082,
+      "latency_ms": 340,
+      "success": true
+    }
+  ]
 }`}
             />
           </Endpoint>
