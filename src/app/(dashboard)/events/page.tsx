@@ -19,7 +19,7 @@ import {
   formatLatency,
   formatRelativeTime,
 } from "@/lib/utils";
-import { List, RefreshCw, Filter, X } from "lucide-react";
+import { List, RefreshCw, Filter, X, Wrench } from "lucide-react";
 import {
   useApiConfiguration,
   OnboardingScreen,
@@ -250,6 +250,7 @@ export default function EventsPage() {
                 <TableRow>
                   <TableHead>Timestamp</TableHead>
                   <TableHead>Agent</TableHead>
+                  <TableHead>Workflow / Step</TableHead>
                   <TableHead>Model</TableHead>
                   <TableHead className="text-right">
                     <span title="Input tokens / Output tokens">
@@ -276,6 +277,32 @@ export default function EventsPage() {
                       <span className="font-medium text-white">
                         {event.agent_name}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {event.step_name ? (
+                        <div className="min-w-0 leading-tight">
+                          <span
+                            className="block truncate text-sm text-neutral-300"
+                            title={`${event.workflow ?? ""} / ${event.step_name}`}
+                          >
+                            {event.step_name}
+                            {event.tool_name && (
+                              <Wrench
+                                size={11}
+                                className="ml-1.5 inline text-neutral-500"
+                                aria-label="tool"
+                              />
+                            )}
+                          </span>
+                          {event.workflow && (
+                            <span className="block truncate text-xs text-neutral-500">
+                              {event.workflow}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-neutral-600">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-sm text-neutral-300">

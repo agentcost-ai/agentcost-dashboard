@@ -1,570 +1,256 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useRef, useState, useEffect, useCallback } from "react";
-import { Activity, Code2, Layers, Zap, BarChart3, Shield } from "lucide-react";
+import {
+  Workflow,
+  TerminalSquare,
+  Binary,
+  Code2,
+  Radio,
+  Layers,
+  Bell,
+  Lock,
+} from "lucide-react";
 
 /* ─────────────────────────────────────────────
-   SpotlightCard — cursor-following radial glow
+   Primary capabilities — the three questions
    ───────────────────────────────────────────── */
 
-function SpotlightCard({
-  children,
-  className = "",
-  delay = 0,
+function StepBar({
+  name,
+  cost,
+  pct,
+  flagged,
 }: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
+  name: string;
+  cost: string;
+  pct: number;
+  flagged?: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [hovering, setHovering] = useState(false);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    setPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  }, []);
-
   return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative rounded-2xl border border-white/6 bg-[#0b0b0d] overflow-hidden transition-colors duration-500 hover:border-white/12 ${className}`}
-    >
-      {/* Cursor-following spotlight gradient */}
-      <div
-        className="pointer-events-none absolute -inset-px rounded-2xl transition-opacity duration-500"
-        style={{
-          opacity: hovering ? 1 : 0,
-          background: `radial-gradient(600px circle at ${pos.x}px ${pos.y}px, rgba(14,165,233,0.06), transparent 40%)`,
-        }}
-      />
-
-      {/* Content */}
-      <div className="relative z-10">{children}</div>
-    </motion.div>
+    <div className="flex items-center gap-3">
+      <span className="w-24 shrink-0 truncate text-[12px] text-neutral-400">
+        {name}
+      </span>
+      <div className="h-2 flex-1 overflow-hidden rounded-sm bg-white/6">
+        <div
+          className={`h-full rounded-sm ${flagged ? "bg-amber-400" : "bg-sky-400"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="w-18 shrink-0 text-right font-mono text-[12px] text-neutral-300">
+        {cost}
+      </span>
+    </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   Animated live cost feed
-   ───────────────────────────────────────────── */
+function WorkflowVisual() {
+  return (
+    <div className="rounded-lg border border-white/8 bg-black/40 p-4">
+      <div className="mb-3 flex items-baseline justify-between">
+        <span className="text-[11px] uppercase tracking-wider text-neutral-500">
+          support-triage
+        </span>
+        <span className="font-mono text-[12px] text-neutral-400">
+          $0.0338 / run
+        </span>
+      </div>
+      <div className="space-y-2">
+        <StepBar name="classify" cost="$0.0008" pct={4} />
+        <StepBar name="search_docs" cost="$0.0209" pct={62} flagged />
+        <StepBar name="draft_reply" cost="$0.0121" pct={34} />
+      </div>
+      <p className="mt-3 border-t border-white/6 pt-3 text-[12px] text-amber-400">
+        search_docs ran 2.4&times; per run — a loop, not a caching problem
+      </p>
+    </div>
+  );
+}
 
-const liveFeedData = [
+function ClassifierVisual() {
+  return (
+    <div className="rounded-lg border border-white/8 bg-black/40 p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium text-white">
+            sentiment-classifier
+          </p>
+          <p className="mt-0.5 text-[12px] text-neutral-500">
+            165,000 calls to gpt-4o
+          </p>
+        </div>
+        <span className="shrink-0 rounded-md bg-emerald-400/12 px-2 py-1 font-mono text-[12px] text-emerald-400">
+          -$135/mo
+        </span>
+      </div>
+      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-white/6 pt-3">
+        <div>
+          <dt className="text-[11px] uppercase tracking-wider text-neutral-500">
+            Longest reply
+          </dt>
+          <dd className="mt-0.5 font-mono text-[13px] text-neutral-200">
+            14 tokens
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-wider text-neutral-500">
+            Inputs repeating
+          </dt>
+          <dd className="mt-0.5 font-mono text-[13px] text-neutral-200">63%</dd>
+        </div>
+      </dl>
+      <p className="mt-3 text-[12px] text-neutral-400">
+        Never wrote prose, and the input set is bounded. That is a classifier,
+        not a model.
+      </p>
+    </div>
+  );
+}
+
+function AnalyzerVisual() {
+  return (
+    <div className="rounded-lg border border-white/8 bg-black/40 p-4 font-mono text-[12px] leading-relaxed">
+      <p className="text-neutral-500">
+        <span className="select-none text-neutral-600">$ </span>
+        agentcost analyze ./agent --runs-per-day 2000
+      </p>
+      <p className="mt-3 text-neutral-300">
+        3 runs &middot; 4.0 calls/run &middot;{" "}
+        <span className="text-white">$0.044</span> per run
+      </p>
+      <p className="mt-1 text-neutral-300">
+        Projected: <span className="text-white">$2,640.00</span> / month
+      </p>
+      <p className="mt-3 text-amber-400">
+        [high] step &lsquo;search_docs&rsquo; ran 2.0&times; per run
+      </p>
+      <p className="mt-1 text-amber-400">
+        [high] 3 of 3 runs repeated an identical call
+      </p>
+    </div>
+  );
+}
+
+const PRIMARY = [
   {
-    agent: "research-bot",
-    model: "gpt-4o",
-    cost: "$0.0124",
-    time: "2.1s",
-    dot: "bg-sky-400/60",
+    index: "01",
+    icon: Workflow,
+    question: "What did one run actually cost?",
+    body: "Your bill shows tokens. It cannot tell you whether $0.04 was a three-step pipeline or one step retried twice. Wrap a run and AgentCost reports cost per run, per step and per tool — and flags the same call being made twice inside one run, which is a loop rather than something a cache would fix.",
+    visual: <WorkflowVisual />,
   },
   {
-    agent: "writer",
-    model: "claude-3.5",
-    cost: "$0.0189",
-    time: "1.8s",
-    dot: "bg-violet-400/60",
+    index: "02",
+    icon: Binary,
+    question: "Which of these calls needed a model at all?",
+    body: "An agent whose replies are always a few tokens long, over inputs that keep repeating, is doing classification — work a smaller model or a lookup does for a fraction of the price. AgentCost finds those workloads from token counts alone, without ever reading a prompt.",
+    visual: <ClassifierVisual />,
   },
   {
-    agent: "code-gen",
-    model: "gpt-4o-mini",
-    cost: "$0.0008",
-    time: "0.4s",
-    dot: "bg-emerald-400/60",
-  },
-  {
-    agent: "router",
-    model: "gpt-4o-mini",
-    cost: "$0.0003",
-    time: "0.2s",
-    dot: "bg-amber-400/60",
-  },
-  {
-    agent: "reviewer",
-    model: "gpt-4o",
-    cost: "$0.0098",
-    time: "1.6s",
-    dot: "bg-rose-400/60",
+    index: "03",
+    icon: TerminalSquare,
+    question: "What will the next version cost?",
+    body: "Run one command before you deploy. It prices the prompt and skill files your agent sends on every call, projects a local test run to production volume, and fails your CI on a cost regression. It runs entirely on your machine and transmits nothing.",
+    visual: <AnalyzerVisual />,
   },
 ];
 
-function LiveCostFeed() {
-  const [visibleItems, setVisibleItems] = useState(0);
-
-  useEffect(() => {
-    if (visibleItems >= liveFeedData.length) return;
-    const timer = setTimeout(() => setVisibleItems((v) => v + 1), 400);
-    return () => clearTimeout(timer);
-  }, [visibleItems]);
-
-  return (
-    <div className="rounded-xl bg-black/30 border border-white/4 overflow-hidden">
-      {/* Feed header */}
-      <div className="px-3.5 py-2.5 border-b border-white/3 flex items-center justify-between">
-        <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-wider">
-          Live Feed
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          </span>
-          <span className="text-[10px] text-neutral-700 font-mono">
-            streaming
-          </span>
-        </span>
-      </div>
-
-      {/* Feed rows */}
-      <div className="divide-y divide-white/2">
-        {liveFeedData.slice(0, visibleItems).map((item) => (
-          <motion.div
-            key={item.agent}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="px-3.5 py-2 flex items-center text-[11px] font-mono"
-          >
-            <span
-              className={`w-1 h-1 rounded-full ${item.dot} mr-2 shrink-0`}
-            />
-            <span className="text-neutral-500 flex-1 truncate">
-              {item.agent}
-            </span>
-            <span className="text-neutral-700 w-18 text-right hidden sm:block">
-              {item.model}
-            </span>
-            <span className="text-neutral-700 w-10 text-right ml-3">
-              {item.time}
-            </span>
-            <span className="text-sky-400/60 w-16 text-right ml-2">
-              {item.cost}
-            </span>
-          </motion.div>
-        ))}
-        {visibleItems < liveFeedData.length && (
-          <div className="px-3.5 py-2 flex items-center gap-1.5">
-            <span className="inline-block w-1 h-3 bg-sky-400/40 animate-pulse rounded-sm" />
-            <span className="text-[10px] text-neutral-700 font-mono">
-              awaiting...
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Total ticker */}
-      {visibleItems === liveFeedData.length && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          className="px-3.5 py-2.5 border-t border-white/4 flex items-center justify-between text-[11px] font-mono"
-        >
-          <span className="text-neutral-600">5 events</span>
-          <span className="text-emerald-400/60">$0.0422 total</span>
-        </motion.div>
-      )}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Mini animated area chart for analytics card
-   ───────────────────────────────────────────── */
-
-function MiniChart() {
-  return (
-    <div className="mt-4 rounded-lg bg-black/20 border border-white/3 p-3">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] font-mono text-neutral-700 uppercase tracking-wider">
-          7-day cost
-        </span>
-        <span className="text-[9px] font-mono text-emerald-400/50">-23%</span>
-      </div>
-      <svg
-        viewBox="0 0 200 40"
-        className="w-full h-8"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <linearGradient id="miniChartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(244,63,94,0.12)" />
-            <stop offset="100%" stopColor="rgba(244,63,94,0)" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M 0 30 C 15 28, 25 12, 40 10 C 55 8, 65 18, 80 20 C 95 22, 105 14, 120 16 C 135 18, 145 24, 160 22 C 175 20, 185 28, 200 26 L 200 40 L 0 40 Z"
-          fill="url(#miniChartGrad)"
-        />
-        <path
-          d="M 0 30 C 15 28, 25 12, 40 10 C 55 8, 65 18, 80 20 C 95 22, 105 14, 120 16 C 135 18, 145 24, 160 22 C 175 20, 185 28, 200 26"
-          fill="none"
-          stroke="rgba(244,63,94,0.4)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Features Section — Premium bento with spotlight
-   ───────────────────────────────────────────── */
+const SUPPORTING = [
+  {
+    icon: Code2,
+    title: "Two lines, four SDKs",
+    body: "Intercepts OpenAI, Anthropic, Gemini and LangChain. No wrappers, no decorators, no refactor.",
+  },
+  {
+    icon: Radio,
+    title: "Streaming included",
+    body: "Streamed calls are tracked with the same accuracy as blocking ones, sync and async alike.",
+  },
+  {
+    icon: Layers,
+    title: "Concurrency-safe attribution",
+    body: "Agent, workflow and step context ride contextvars, so parallel pipelines never mix their spend.",
+  },
+  {
+    icon: Bell,
+    title: "Budgets and anomalies",
+    body: "Monthly budgets with threshold alerts, and detection when an agent's spend leaves its own baseline.",
+  },
+  {
+    icon: Binary,
+    title: "3,500+ models priced",
+    body: "Pricing syncs continuously, so a model released this week is costed correctly this week.",
+  },
+  {
+    icon: Lock,
+    title: "Metadata only, MIT licensed",
+    body: "Token counts and timings — never your prompts. Run it locally or self-host the whole stack.",
+  },
+];
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="relative py-20 sm:py-32">
-      {/* Subtle grain */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.008]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          backgroundRepeat: "repeat",
-          backgroundSize: "180px 180px",
-        }}
-      />
-
-      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* ── Section header ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-xl mb-16"
-        >
-          <p className="text-xs font-mono text-sky-400/80 uppercase tracking-[0.2em] mb-5">
+    <section id="features" className="relative py-20 sm:py-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        {/* Section header */}
+        <div className="max-w-3xl">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-sky-400">
             Capabilities
           </p>
-          <h2 className="text-3xl sm:text-[2.75rem] font-bold text-white leading-[1.15] tracking-tight">
-            Everything you need to
+          <h2 className="mt-4 text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-[2.6rem]">
+            Your invoice says what you spent.
             <br />
-            <span className="text-neutral-500">control AI spend.</span>
+            <span className="text-neutral-400">
+              It never says what you spent it on.
+            </span>
           </h2>
-        </motion.div>
-
-        {/* ── Row 1: Two hero cards ── */}
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          {/* Real-time tracking with live feed */}
-          <SpotlightCard>
-            <div className="p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/10">
-                  <Activity className="size-4 text-sky-400/80" />
-                </div>
-                <p className="text-xs font-mono text-sky-400/60 uppercase tracking-widest">
-                  Real-Time Tracking
-                </p>
-              </div>
-              <h3 className="text-2xl font-semibold text-white mb-3 leading-snug">
-                See every dollar
-                <br />
-                as it&apos;s spent.
-              </h3>
-              <p className="text-sm text-neutral-500 leading-relaxed mb-8 max-w-sm">
-                Every LLM call is captured the moment it completes.
-                Token counts, costs, and latency are recorded
-                and available in your dashboard in real time.
-              </p>
-              <LiveCostFeed />
-            </div>
-          </SpotlightCard>
-
-          {/* Zero code changes with highlighted code */}
-          <SpotlightCard delay={0.06}>
-            <div className="p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/10">
-                  <Code2 className="size-4 text-emerald-400/80" />
-                </div>
-                <p className="text-xs font-mono text-emerald-400/60 uppercase tracking-widest">
-                  Integration
-                </p>
-              </div>
-              <h3 className="text-2xl font-semibold text-white mb-3 leading-snug">
-                Two lines of code.
-                <br />
-                Zero refactoring.
-              </h3>
-              <p className="text-sm text-neutral-500 leading-relaxed mb-8 max-w-sm">
-                The SDK intercepts LLM calls transparently. No wrappers,
-                no decorators. Your agents, chains, and prompts stay
-                exactly as they are.
-              </p>
-
-              {/* Code snippet with line numbers */}
-              <div className="rounded-xl bg-black/30 border border-white/4 overflow-hidden">
-                <div className="px-3.5 py-2 border-b border-white/3 flex items-center gap-2">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 rounded-full bg-white/6" />
-                    <span className="w-2 h-2 rounded-full bg-white/6" />
-                    <span className="w-2 h-2 rounded-full bg-white/6" />
-                  </div>
-                  <span className="text-[10px] font-mono text-neutral-700 ml-1">
-                    my_agent.py
-                  </span>
-                </div>
-                <div className="p-4 font-mono text-[12px] leading-7 overflow-x-auto whitespace-nowrap">
-                  <div className="flex items-start gap-3">
-                    <span className="select-none text-neutral-800 w-4 text-right text-[10px] leading-7 shrink-0">
-                      1
-                    </span>
-                    <div>
-                      <span className="text-emerald-400/60">from</span>
-                      <span className="text-neutral-400"> agentcost </span>
-                      <span className="text-emerald-400/60">import</span>
-                      <span className="text-neutral-400"> track_costs</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="select-none text-neutral-800 w-4 text-right text-[10px] leading-7 shrink-0">
-                      2
-                    </span>
-                    <div>
-                      <span className="text-neutral-400">track_costs</span>
-                      <span className="text-neutral-600">.</span>
-                      <span className="text-amber-400/70">init</span>
-                      <span className="text-neutral-600">(</span>
-                      <span className="text-neutral-400">api_key</span>
-                      <span className="text-neutral-600">=</span>
-                      <span className="text-sky-400/60">
-                        &quot;sk_...&quot;
-                      </span>
-                      <span className="text-neutral-600">, </span>
-                      <span className="text-neutral-400">project_id</span>
-                      <span className="text-neutral-600">=</span>
-                      <span className="text-sky-400/60">
-                        &quot;6b3f2e1d-9c4a-4f8e-b2d7-3a5c8e9f0a1b&quot;
-                      </span>
-                      <span className="text-neutral-600">)</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 mt-1">
-                    <span className="select-none text-neutral-800 w-4 text-right text-[10px] leading-7 shrink-0">
-                      3
-                    </span>
-                    <span className="text-neutral-700">
-                      # that&apos;s it — your code stays unchanged
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="select-none text-neutral-800 w-4 text-right text-[10px] leading-7 shrink-0">
-                      4
-                    </span>
-                    <span className="text-neutral-400">&nbsp;</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="select-none text-neutral-800 w-4 text-right text-[10px] leading-7 shrink-0">
-                      5
-                    </span>
-                    <div>
-                      <span className="text-neutral-700">
-                        # your existing LangChain code
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="select-none text-neutral-800 w-4 text-right text-[10px] leading-7 shrink-0">
-                      6
-                    </span>
-                    <div>
-                      <span className="text-emerald-400/60">from</span>
-                      <span className="text-neutral-400">
-                        {" "}
-                        langchain_openai{" "}
-                      </span>
-                      <span className="text-emerald-400/60">import</span>
-                      <span className="text-neutral-400"> ChatOpenAI</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="select-none text-neutral-800 w-4 text-right text-[10px] leading-7 shrink-0">
-                      7
-                    </span>
-                    <div>
-                      <span className="text-neutral-400">llm </span>
-                      <span className="text-neutral-600">= </span>
-                      <span className="text-neutral-400">ChatOpenAI</span>
-                      <span className="text-neutral-600">(</span>
-                      <span className="text-neutral-400">model</span>
-                      <span className="text-neutral-600">=</span>
-                      <span className="text-sky-400/60">
-                        &quot;gpt-4o&quot;
-                      </span>
-                      <span className="text-neutral-600">)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </SpotlightCard>
+          <p className="mt-5 text-[15px] leading-relaxed text-neutral-400">
+            AgentCost answers the three questions a token total cannot — for
+            what already ran, and for what you are about to ship.
+          </p>
         </div>
 
-        {/* ── Row 2: Four compact cards ── */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            {
-              icon: Layers,
-              iconBg: "bg-violet-500/10",
-              iconBorder: "border-violet-500/10",
-              iconColor: "text-violet-400/80",
-              label: "Multi-Agent",
-              labelColor: "text-violet-400/60",
-              title: "Per-agent cost isolation",
-              desc: "Attribute spend to individual agents via async-safe context variables. Concurrent pipelines stay fully isolated.",
-              visual: (
-                <div className="mt-5 space-y-2">
-                  {[
-                    {
-                      name: "planner",
-                      cost: "$4.21",
-                      pct: 38,
-                      color: "bg-violet-400/50",
-                    },
-                    {
-                      name: "executor",
-                      cost: "$5.82",
-                      pct: 53,
-                      color: "bg-violet-400/30",
-                    },
-                    {
-                      name: "reviewer",
-                      cost: "$1.03",
-                      pct: 9,
-                      color: "bg-violet-400/15",
-                    },
-                  ].map((a) => (
-                    <div
-                      key={a.name}
-                      className="flex items-center gap-2.5 text-[10px] font-mono"
-                    >
-                      <span className="text-neutral-500 w-14 truncate">
-                        {a.name}
-                      </span>
-                      <div className="flex-1 h-1 bg-white/3 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${a.color} rounded-full`}
-                          style={{ width: `${a.pct}%` }}
-                        />
-                      </div>
-                      <span className="text-neutral-600 w-10 text-right">
-                        {a.cost}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ),
-            },
-            {
-              icon: Zap,
-              iconBg: "bg-amber-500/10",
-              iconBorder: "border-amber-500/10",
-              iconColor: "text-amber-400/80",
-              label: "Anomaly Detection",
-              labelColor: "text-amber-400/60",
-              title: "Statistical cost baselines",
-              desc: "Z-score analysis flags spend deviations across cost, latency, and error rate with configurable severity thresholds.",
-              visual: (
-                <div className="mt-5 rounded-lg bg-black/20 border border-white/3 p-3">
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400/70" />
-                    <span className="text-[10px] font-mono text-amber-400/60 uppercase tracking-wider">
-                      Alert triggered
+        {/* Primary capabilities */}
+        <div className="mt-14 space-y-4">
+          {PRIMARY.map(({ index, icon: Icon, question, body, visual }) => (
+            <div
+              key={index}
+              className="rounded-xl border border-white/8 bg-[#0b0b0d] p-6 transition-colors hover:border-white/14 sm:p-8"
+            >
+              <div className="grid gap-8 lg:grid-cols-[1fr_minmax(0,26rem)] lg:items-center lg:gap-12">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-[13px] text-neutral-600">
+                      {index}
                     </span>
+                    <span className="h-px w-6 bg-white/12" aria-hidden />
+                    <Icon size={16} className="text-sky-400" aria-hidden />
                   </div>
-                  <div className="space-y-1.5 text-[10px] font-mono">
-                    <div className="flex justify-between">
-                      <span className="text-neutral-600">Baseline</span>
-                      <span className="text-neutral-500">$0.012/call</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-neutral-600">Observed</span>
-                      <span className="text-amber-400/70">$0.087/call</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-neutral-600">Z-score</span>
-                      <span className="text-red-400/60">+3.2σ</span>
-                    </div>
-                  </div>
-                </div>
-              ),
-            },
-            {
-              icon: BarChart3,
-              iconBg: "bg-rose-500/10",
-              iconBorder: "border-rose-500/10",
-              iconColor: "text-rose-400/80",
-              label: "Streaming",
-              labelColor: "text-rose-400/60",
-              title: "Native stream() support",
-              desc: "Chunks are accumulated transparently. Token counts and costs are recorded atomically after stream completion.",
-              visual: <MiniChart />,
-            },
-            {
-              icon: Shield,
-              iconBg: "bg-cyan-500/10",
-              iconBorder: "border-cyan-500/10",
-              iconColor: "text-cyan-400/80",
-              label: "Optimization",
-              labelColor: "text-cyan-400/60",
-              title: "Actionable cost reduction",
-              desc: "SHA-256 prompt hashing surfaces duplicate queries. Model-swap analysis quantifies potential savings.",
-              visual: (
-                <div className="mt-5 rounded-lg bg-black/20 border border-white/3 p-3 space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-neutral-600">Duplicate queries</span>
-                    <span className="text-cyan-400/60 font-medium">34%</span>
-                  </div>
-                  <div className="h-px bg-white/4" />
-                  <div className="flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-neutral-600">Projected savings</span>
-                    <span className="text-emerald-400/60 font-medium">
-                      $214/mo
-                    </span>
-                  </div>
-                  <div className="h-px bg-white/4" />
-                  <div className="flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-neutral-600">Model swaps</span>
-                    <span className="text-sky-400/60 font-medium">
-                      3 suggested
-                    </span>
-                  </div>
-                </div>
-              ),
-            },
-          ].map((card, i) => (
-            <SpotlightCard key={card.label} delay={i * 0.05}>
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className={`p-1.5 rounded-md ${card.iconBg} border ${card.iconBorder}`}
-                  >
-                    <card.icon className={`size-3.5 ${card.iconColor}`} />
-                  </div>
-                  <p
-                    className={`text-xs font-mono ${card.labelColor} uppercase tracking-widest`}
-                  >
-                    {card.label}
+                  <h3 className="mt-4 text-xl font-semibold leading-snug tracking-tight text-white sm:text-2xl">
+                    {question}
+                  </h3>
+                  <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-neutral-400">
+                    {body}
                   </p>
                 </div>
-                <h3 className="text-[15px] font-semibold text-white mb-2 leading-snug">
-                  {card.title}
-                </h3>
-                <p className="text-[13px] text-neutral-600 leading-relaxed">
-                  {card.desc}
-                </p>
-                {card.visual}
+                <div className="min-w-0">{visual}</div>
               </div>
-            </SpotlightCard>
+            </div>
+          ))}
+        </div>
+
+        {/* Supporting capabilities */}
+        <div className="mt-4 grid gap-px overflow-hidden rounded-xl border border-white/8 bg-white/8 sm:grid-cols-2 lg:grid-cols-3">
+          {SUPPORTING.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="bg-[#0b0b0d] p-6">
+              <Icon size={16} className="text-neutral-400" aria-hidden />
+              <h4 className="mt-3 text-[15px] font-semibold text-white">
+                {title}
+              </h4>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-400">
+                {body}
+              </p>
+            </div>
           ))}
         </div>
       </div>

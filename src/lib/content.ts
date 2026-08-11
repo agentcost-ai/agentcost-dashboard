@@ -66,6 +66,22 @@ export const blogPosts: BlogPost[] = [
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "v1.11.0",
+    date: "2026-08-11",
+    summary:
+      "Workflow tracing, cost per completed outcome, a pre-deployment analyser, and classification-workload detection",
+    changes: [
+      "Added workflow tracing to the SDK: wrap a multi-step run in track_costs.workflow() and its calls in step() or tool(), and every event records where it sat in that run. Works across OpenAI, Anthropic, Gemini and LangChain, including streamed calls.",
+      "New Workflows page showing cost per run rather than per call, cost per step and per tool, and a distribution chart of what a single run actually costs — with the most expensive 5% of runs and their share of spend called out, because an average hides the runs worth finding.",
+      "Repeated-work detection: identical calls made more than once inside a single run. This is distinct from the duplicate calls a cache fixes — within one run it usually means the control flow is looping.",
+      "Added cost per completed outcome. Call track_costs.outcome(success, label=...) and the dashboard reports what a result costs, charging failed runs to the successes they were paid for. Runs that report nothing are counted as unreported, never as failures.",
+      "New agentcost analyze command estimates what an agent will cost before it has spent anything: it token-counts your prompt and skill files, projects a recorded local-mode test run to production volume, and flags looping steps, repeated calls, oversized prompts and duplicated context. It runs entirely on your machine and transmits nothing — use --fail-on high to block a deploy in CI.",
+      "Optimizations now detect classification-shaped workloads: agents whose responses are always short and whose inputs repeat are doing work a smaller model, a trained classifier, or a lookup would do far more cheaply. Detected from token counts alone, without reading any prompt.",
+      "Documented the full trace and outcome payloads on the Data & Privacy Architecture page, including that workflow, step, tool and label names are strings you write and are transmitted as written.",
+      "Every workflow endpoint is documented in the API Reference, and none of this changes existing events: without a workflow() the SDK emits exactly what it did before.",
+    ],
+  },
+  {
     version: "v1.10.0",
     date: "2026-08-04",
     summary:

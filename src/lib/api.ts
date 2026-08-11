@@ -29,6 +29,114 @@ export interface AgentStats {
   success_rate: number;
 }
 
+export interface WorkflowStats {
+  workflow: string;
+  runs: number;
+  total_cost: number;
+  avg_cost_per_run: number;
+  max_cost_per_run: number;
+  total_tokens: number;
+  total_calls: number;
+  avg_calls_per_run: number;
+  avg_steps_per_run: number;
+  max_depth: number;
+  success_rate: number;
+}
+
+export interface StepStats {
+  workflow: string | null;
+  step_name: string;
+  calls: number;
+  runs: number;
+  /** Above 1 means the step ran more than once inside a single run. */
+  calls_per_run: number;
+  total_cost: number;
+  cost_per_run: number;
+  total_tokens: number;
+  avg_latency_ms: number;
+  success_rate: number;
+}
+
+export interface ToolStats {
+  tool_name: string;
+  calls: number;
+  runs: number;
+  total_cost: number;
+  total_tokens: number;
+  avg_latency_ms: number;
+}
+
+export interface RepeatedWorkFinding {
+  trace_id: string;
+  workflow: string | null;
+  step_name: string | null;
+  model: string;
+  input_hash: string;
+  occurrences: number;
+  spend: number;
+  /** Cost of the repeats beyond the first — what a correct run would save. */
+  wasted_cost: number;
+  first_seen: string | null;
+}
+
+export interface OutcomeStats {
+  workflow: string | null;
+  runs: number;
+  succeeded: number;
+  failed: number;
+  /** Runs that never called track_costs.outcome(). */
+  unknown: number;
+  total_cost: number;
+  cost_on_success: number;
+  cost_on_failure: number;
+  /** Total spend divided by successes — failures are charged to the wins. */
+  cost_per_success: number | null;
+  success_rate: number | null;
+}
+
+export interface CostBucket {
+  lower: number;
+  upper: number;
+  count: number;
+  /** Server-marked so every client draws the same tail. */
+  is_tail: boolean;
+}
+
+export interface RunCostDistribution {
+  workflow: string | null;
+  runs: number;
+  /** True when the window exceeded the server's row cap. */
+  truncated: boolean;
+  total_cost: number;
+  min: number;
+  max: number;
+  mean: number;
+  p50: number;
+  p90: number;
+  p95: number;
+  p99: number;
+  tail_runs: number;
+  /** Lowest cost among the top 5% of runs, by rank. */
+  tail_threshold: number;
+  /** Share of the workflow's spend held by those runs. */
+  tail_share_percent: number;
+  /** p99 / p50 — how much worse the bad runs are than the typical one. */
+  tail_ratio: number | null;
+  histogram: CostBucket[];
+}
+
+export interface TraceSummary {
+  trace_id: string;
+  workflow: string | null;
+  calls: number;
+  total_cost: number;
+  total_tokens: number;
+  max_depth: number;
+  failed_calls: number;
+  started_at: string | null;
+  duration_ms: number | null;
+}
+
 export interface ModelStats {
   model: string;
   total_calls: number;
@@ -186,6 +294,11 @@ export interface Event {
   timestamp: string;
   success: boolean;
   error: string | null;
+  /** Null for calls made outside a workflow(). */
+  trace_id?: string | null;
+  workflow?: string | null;
+  step_name?: string | null;
+  tool_name?: string | null;
 }
 
 export interface OptimizationSuggestion {
@@ -209,6 +322,14 @@ export interface OptimizationSuggestion {
     duplicate_rate?: number;
     error_rate?: number;
     z_score?: number;
+    // non_llm_candidate
+    calls?: number;
+    distinct_inputs?: number;
+    repeat_rate?: number;
+    max_output_tokens?: number;
+    window_cost?: number;
+    /** True when the saving is this line's whole cost, not a modelled delta. */
+    savings_is_ceiling?: boolean;
     savings_estimated?: boolean;
     coverage_days?: number | null;
     capability_requirements?: {
@@ -847,6 +968,88 @@ class ApiClient {
     limit: number = 10,
   ): Promise<AgentStats[]> {
     return this.request(`/v1/analytics/agents?range=${range}&limit=${limit}`);
+  }
+
+  // ── Trace analytics ──────────────────────────────────────────────────
+  // Demo mode answers unmapped endpoints with {}, so every list here is
+  // coerced: an object would otherwise reach .map() in the page and throw.
+
+  async getWorkflowStats(
+    range: string = "7d",
+    limit: number = 20,
+  ): Promise<WorkflowStats[]> {
+    const data = await this.request<WorkflowStats[]>(
+      `/v1/analytics/workflows?range=${range}&limit=${limit}`,
+    );
+    return Array.isArray(data) ? data : [];
+  }
+
+  async getStepStats(
+    range: string = "7d",
+    workflow?: string,
+    limit: number = 50,
+  ): Promise<StepStats[]> {
+    const scope = workflow ? `&workflow=${encodeURIComponent(workflow)}` : "";
+    const data = await this.request<StepStats[]>(
+      `/v1/analytics/workflows/steps?range=${range}&limit=${limit}${scope}`,
+    );
+    return Array.isArray(data) ? data : [];
+  }
+
+  async getToolStats(
+    range: string = "7d",
+    limit: number = 50,
+  ): Promise<ToolStats[]> {
+    const data = await this.request<ToolStats[]>(
+      `/v1/analytics/workflows/tools?range=${range}&limit=${limit}`,
+    );
+    return Array.isArray(data) ? data : [];
+  }
+
+  async getRepeatedWork(
+    range: string = "7d",
+    limit: number = 25,
+  ): Promise<RepeatedWorkFinding[]> {
+    const data = await this.request<RepeatedWorkFinding[]>(
+      `/v1/analytics/workflows/repeated-work?range=${range}&limit=${limit}`,
+    );
+    return Array.isArray(data) ? data : [];
+  }
+
+  async getOutcomeStats(
+    range: string = "7d",
+    limit: number = 20,
+  ): Promise<OutcomeStats[]> {
+    const data = await this.request<OutcomeStats[]>(
+      `/v1/analytics/workflows/outcomes?range=${range}&limit=${limit}`,
+    );
+    return Array.isArray(data) ? data : [];
+  }
+
+  async getRunCostDistribution(
+    range: string = "7d",
+    workflow?: string,
+    buckets: number = 24,
+  ): Promise<RunCostDistribution | null> {
+    const scope = workflow ? `&workflow=${encodeURIComponent(workflow)}` : "";
+    const data = await this.request<RunCostDistribution | null>(
+      `/v1/analytics/workflows/distribution?range=${range}&buckets=${buckets}${scope}`,
+    );
+    // Demo mode answers unmapped endpoints with {}, and the chart reads
+    // .histogram — treat anything without one as "no distribution".
+    return data && Array.isArray(data.histogram) ? data : null;
+  }
+
+  async getTraces(
+    range: string = "7d",
+    workflow?: string,
+    limit: number = 50,
+  ): Promise<TraceSummary[]> {
+    const scope = workflow ? `&workflow=${encodeURIComponent(workflow)}` : "";
+    const data = await this.request<TraceSummary[]>(
+      `/v1/analytics/traces?range=${range}&limit=${limit}${scope}`,
+    );
+    return Array.isArray(data) ? data : [];
   }
 
   async getModelStats(

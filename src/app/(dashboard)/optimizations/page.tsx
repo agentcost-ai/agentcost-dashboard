@@ -34,6 +34,7 @@ import {
   X,
   AlertCircle,
   Timer,
+  Binary,
 } from "lucide-react";
 import {
   useApiConfiguration,
@@ -128,6 +129,7 @@ function OptimizationTypeIcon({ type }: { type: string }) {
     error_reduction: <XCircle size={20} className="text-red-400" />,
     anomaly_alert: <AlertCircle size={20} className="text-amber-400" />,
     latency: <Timer size={20} className="text-cyan-400" />,
+    non_llm_candidate: <Binary size={20} className="text-teal-400" />,
   };
   return icons[type] || <Zap size={20} className="text-gray-400" />;
 }
@@ -149,9 +151,12 @@ function OptimizationCard({
   const [expanded, setExpanded] = useState(false);
   const estimatedMonthlySavings = suggestion.estimated_savings_monthly;
   const showMonetary =
-    ["model_downgrade", "caching", "error_reduction"].includes(
-      suggestion.type,
-    ) && estimatedMonthlySavings !== null;
+    [
+      "model_downgrade",
+      "caching",
+      "error_reduction",
+      "non_llm_candidate",
+    ].includes(suggestion.type) && estimatedMonthlySavings !== null;
 
   const secondaryMetric = (() => {
     switch (suggestion.type) {
@@ -176,6 +181,13 @@ function OptimizationCard({
               suggestion.estimated_savings_percent,
           ),
         };
+      case "non_llm_candidate":
+        return suggestion.metrics?.max_output_tokens != null
+          ? {
+              label: "Max output",
+              value: `${suggestion.metrics.max_output_tokens} tok`,
+            }
+          : null;
       case "anomaly_alert":
       case "prompt_optimization":
         return suggestion.metrics?.z_score != null
@@ -627,7 +639,8 @@ export default function OptimizationsPage() {
             Cost Optimizations
           </h1>
           <p className="mt-1 text-sm text-neutral-400">
-            AI-powered recommendations to reduce your LLM costs
+            Recommendations derived from your own usage — no model calls, no
+            prompt content
           </p>
         </div>
         <button

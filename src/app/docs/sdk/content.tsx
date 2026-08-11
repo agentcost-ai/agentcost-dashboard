@@ -11,6 +11,8 @@ import {
   Terminal,
   Layers,
   BookOpen,
+  Workflow,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -132,6 +134,18 @@ export default function SDKDocsPage() {
               className="block text-primary-400 hover:text-primary-300 transition-colors"
             >
               Agent Tagging
+            </a>
+            <a
+              href="#workflows"
+              className="block text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              Workflows &amp; Steps
+            </a>
+            <a
+              href="#pre-deployment"
+              className="block text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              Pre-deployment Analysis
             </a>
             <a
               href="#metadata"
@@ -409,6 +423,134 @@ with track_costs.agent("billing-agent"):
               per agent and identify which parts of your system are most
               expensive.
             </p>
+          </Section>
+
+          <Section id="workflows" title="Workflows & Steps" icon={Workflow}>
+            <p className="text-neutral-300">
+              Agent tagging answers <em>which agent</em> spent the money.
+              Wrapping a multi-step run answers <em>what one run costs</em>,
+              which step inside it is expensive, and whether the agent is
+              looping:
+            </p>
+            <CodeBlock
+              code={`with track_costs.workflow("support-triage"):
+
+    with track_costs.step("classify"):
+        llm.invoke("Which queue does this belong in?")
+
+    with track_costs.tool("search_docs"):
+        llm.invoke("Summarise these results")
+
+    with track_costs.step("draft_reply"):
+        llm.invoke("Write the response")`}
+            />
+            <p className="text-neutral-300 mt-4">
+              Every call inside shares one trace id and records the step it
+              belongs to, its parent, and how deeply it was nested. Steps nest
+              freely, and a sub-agent that opens its own{" "}
+              <code className="text-primary-300">workflow()</code> stays part of
+              the caller&apos;s run rather than starting a second one.
+            </p>
+            <p className="text-neutral-300 mt-4">
+              This unlocks the Workflows page in your dashboard: cost per run
+              rather than per call, cost per step and per tool, and detection of
+              the same call being made twice inside a single run — which is
+              usually a loop rather than something a cache would fix.
+            </p>
+            <p className="text-neutral-300 mt-4">
+              Mark how a run ended and you also get cost per completed outcome,
+              which charges failed runs to the successes they were paid for:
+            </p>
+            <CodeBlock
+              code={`with track_costs.workflow("support-triage"):
+    ticket = handle(request)
+    track_costs.outcome(ticket.resolved, label=ticket.status)`}
+            />
+            <div className="rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-4 mt-4">
+              <p className="text-neutral-400 text-sm leading-relaxed">
+                Entirely optional and entirely additive. Without a{" "}
+                <code className="text-primary-300">workflow()</code> your events
+                are exactly what they were before, and{" "}
+                <code className="text-primary-300">step()</code> outside a
+                workflow is a no-op — so instrumenting a shared helper never
+                depends on how it gets called. Workflow, step and tool names are
+                strings you write and they are transmitted as written; see the{" "}
+                <Link
+                  href="/docs/privacy"
+                  className="text-primary-400 hover:text-primary-300 underline underline-offset-2"
+                >
+                  privacy architecture
+                </Link>{" "}
+                page.
+              </p>
+            </div>
+          </Section>
+
+          <Section
+            id="pre-deployment"
+            title="Pre-deployment Analysis"
+            icon={ShieldCheck}
+          >
+            <p className="text-neutral-300">
+              Estimate what an agent will cost, and find its loops, before it
+              has spent anything. The analyser runs entirely on your machine:
+            </p>
+            <CodeBlock
+              language="bash"
+              code={`# What do the prompt and skill files cost on every call?
+agentcost analyze ./agent --model gpt-4o
+
+# Record a test run with local mode, then project it to production
+agentcost analyze ./agent --events run.json --runs-per-day 2000`}
+            />
+            <p className="text-neutral-300 mt-4">
+              Save a test run with local mode, where nothing leaves the process
+              at all:
+            </p>
+            <CodeBlock
+              code={`import json
+from agentcost import track_costs
+
+track_costs.init(local_mode=True)
+
+with track_costs.workflow("support-triage"):
+    ...   # run your agent once
+
+track_costs.flush()
+json.dump(track_costs.get_local_events(), open("run.json", "w"))`}
+            />
+            <p className="text-neutral-300 mt-4">
+              The report gives cost per run, the share each step contributes, a
+              projected monthly bill at your expected volume, and findings:
+              steps that loop, identical calls repeated inside one run, prompt
+              files eating the context window, and duplicated content across
+              files.
+            </p>
+            <p className="text-neutral-300 mt-4">
+              Every flag, every finding it can raise, and the CI exit codes are
+              in the{" "}
+              <Link
+                href="/docs/cli"
+                className="text-primary-400 hover:text-primary-300 underline underline-offset-2"
+              >
+                CLI reference
+              </Link>
+              .
+            </p>
+            <div className="rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-4 mt-4">
+              <p className="text-neutral-400 text-sm leading-relaxed">
+                This command reads your prompts and skill files, and it never
+                transmits them. No network call is made, and no file content
+                outlives the token count taken from it — see the{" "}
+                <Link
+                  href="/docs/privacy"
+                  className="text-primary-400 hover:text-primary-300 underline underline-offset-2"
+                >
+                  privacy architecture
+                </Link>{" "}
+                page.
+              </p>
+            </div>
           </Section>
 
           <Section id="metadata" title="Metadata" icon={Box}>

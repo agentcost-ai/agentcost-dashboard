@@ -21,6 +21,7 @@ import {
   MessageSquare,
   FileText,
   Grid2x2Plus,
+  Workflow,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
@@ -28,6 +29,7 @@ import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 const navigation = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { name: "Agents", href: "/agents", icon: Users },
+  { name: "Workflows", href: "/workflows", icon: Workflow },
   { name: "Models", href: "/models", icon: Cpu },
   { name: "Reports", href: "/reports", icon: FileText },
   { name: "Events", href: "/events", icon: List },

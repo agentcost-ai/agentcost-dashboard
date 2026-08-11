@@ -28,6 +28,13 @@ import type {
   SessionInfo,
   ExecutiveReport,
   MetricDelta,
+  WorkflowStats,
+  StepStats,
+  ToolStats,
+  RepeatedWorkFinding,
+  TraceSummary,
+  RunCostDistribution,
+  OutcomeStats,
 } from "@/lib/api";
 
 export const DEMO_PROJECT_ID = "demo-project";
@@ -241,6 +248,32 @@ const SAMPLE_ERRORS = [
 let eventCache: Event[] | null = null;
 
 /** ~480 events over the last 48h, interleaved across agents, newest first. */
+/**
+ * Trace fields for a demo event. Only the two agents that map onto the demo
+ * workflows carry them, so the Events page shows both traced and untraced
+ * rows the way a partially-instrumented project does.
+ */
+function traceFieldsFor(
+  agentName: string,
+  index: number,
+  rand: () => number,
+): Partial<Event> {
+  const profile = WORKFLOWS.find((w) =>
+    agentName === "support-triage-agent"
+      ? w.name === "support-triage"
+      : agentName === "research-agent" && w.name === "research-brief",
+  );
+  if (!profile) return {};
+
+  const step = profile.steps[Math.floor(rand() * profile.steps.length)];
+  return {
+    trace_id: `${profile.name.slice(0, 4)}-${(0x2a00 + index).toString(16)}`,
+    workflow: profile.name,
+    step_name: step.name,
+    tool_name: step.tool ? step.name : null,
+  };
+}
+
 export function demoEvents(): Event[] {
   if (eventCache) return eventCache;
   const rand = mulberry32(424242);
@@ -277,6 +310,7 @@ export function demoEvents(): Event[] {
       timestamp: new Date(now - ageMs).toISOString(),
       success: !failed,
       error: failed ? SAMPLE_ERRORS[Math.floor(rand() * SAMPLE_ERRORS.length)] : null,
+      ...traceFieldsFor(profile.name, i, rand),
     });
   }
   events.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
@@ -299,6 +333,34 @@ export function demoOptimizationSuggestions(): OptimizationSuggestion[] {
   const triage = AGENTS.find((a) => a.name === "support-triage-agent")!;
 
   return [
+    {
+      type: "non_llm_candidate",
+      title: "sentiment-classifier looks like classification, not generation",
+      description:
+        "sentiment-classifier made 165,000 calls to gpt-4o and never returned more than 14 output tokens (averaging 12). Inputs repeat 63% of the time, so the label set is bounded. A smaller model, a trained classifier, or a lookup table would likely do the same job.",
+      estimated_savings_monthly: round2(monthly(sentiment)),
+      estimated_savings_percent: 100,
+      priority: "high",
+      action_items: [
+        "Log sentiment-classifier's inputs and outputs for a day to recover the label set",
+        "Cache first: 63% of inputs repeat, which is a same-day win needing no model change",
+        "Train a classifier on that log, or replace gpt-4o with the cheapest model that holds accuracy",
+        "Shadow the replacement against the current model before cutting over",
+        "Keep gpt-4o as the fallback for inputs the classifier scores with low confidence",
+      ],
+      agent_name: "sentiment-classifier",
+      model: "gpt-4o",
+      metrics: {
+        calls: sentiment.callsPerDay * 30,
+        distinct_inputs: Math.round(sentiment.callsPerDay * 30 * 0.37),
+        repeat_rate: 63,
+        max_output_tokens: 14,
+        avg_output_tokens: sentiment.outTokens,
+        window_cost: round2(monthly(sentiment)),
+        savings_is_ceiling: true,
+        coverage_days: 30,
+      },
+    },
     {
       type: "model_downgrade",
       title: "Switch code-review-agent to Claude Sonnet 4.5",
@@ -926,4 +988,347 @@ export function demoExecutiveReport(opts: {
     budget,
     savings,
   };
+}
+
+// ── Workflows ─────────────────────────────────────────────────────────────
+// NovaDesk runs two instrumented multi-step agents. The numbers are derived
+// from the same per-call costs as everything else, so a visitor comparing the
+// Workflows page against Agents finds them consistent rather than invented.
+
+interface WorkflowProfile {
+  name: string;
+  runsPerDay: number;
+  steps: Array<{
+    name: string;
+    model: string;
+    inTokens: number;
+    outTokens: number;
+    latencyMs: number;
+    /** Above 1 = the step repeats inside a single run. */
+    callsPerRun: number;
+    tool?: boolean;
+  }>;
+}
+
+const WORKFLOWS: WorkflowProfile[] = [
+  {
+    name: "support-triage",
+    runsPerDay: 1600,
+    steps: [
+      { name: "classify", model: "gpt-4o", inTokens: 280, outTokens: 12, latencyMs: 340, callsPerRun: 1 },
+      { name: "search_docs", model: "gpt-4o", inTokens: 1800, outTokens: 420, latencyMs: 1250, callsPerRun: 2.4, tool: true },
+      { name: "draft_reply", model: "gpt-4o", inTokens: 2400, outTokens: 610, latencyMs: 1900, callsPerRun: 1 },
+    ],
+  },
+  {
+    name: "research-brief",
+    runsPerDay: 140,
+    steps: [
+      { name: "plan", model: "claude-sonnet-4-5", inTokens: 900, outTokens: 380, latencyMs: 1400, callsPerRun: 1 },
+      { name: "web_search", model: "claude-sonnet-4-5", inTokens: 3200, outTokens: 700, latencyMs: 3100, callsPerRun: 3.1, tool: true },
+      { name: "synthesise", model: "claude-sonnet-4-5", inTokens: 9000, outTokens: 1800, latencyMs: 4200, callsPerRun: 1 },
+    ],
+  },
+];
+
+function stepCost(step: WorkflowProfile["steps"][number]): number {
+  const [inP, outP] = PRICING[step.model];
+  return (step.inTokens * inP + step.outTokens * outP) / 1_000_000;
+}
+
+function runMultiplier(range: string): number {
+  const days = rangeToDays(range);
+  let mult = 0;
+  for (let d = 0; d < days; d++) mult += dayMultiplier(d);
+  return mult;
+}
+
+export function demoWorkflowStats(range: string, limit: number): WorkflowStats[] {
+  const mult = runMultiplier(range);
+
+  return WORKFLOWS.map((w) => {
+    const runs = Math.round(w.runsPerDay * mult);
+    const costPerRun = w.steps.reduce(
+      (sum, s) => sum + stepCost(s) * s.callsPerRun,
+      0,
+    );
+    const callsPerRun = w.steps.reduce((sum, s) => sum + s.callsPerRun, 0);
+    const tokensPerRun = w.steps.reduce(
+      (sum, s) => sum + (s.inTokens + s.outTokens) * s.callsPerRun,
+      0,
+    );
+    return {
+      workflow: w.name,
+      runs,
+      total_cost: round2(runs * costPerRun),
+      avg_cost_per_run: Number(costPerRun.toFixed(6)),
+      // The tail: a run that looped more than usual.
+      max_cost_per_run: Number((costPerRun * 2.6).toFixed(6)),
+      total_tokens: Math.round(runs * tokensPerRun),
+      total_calls: Math.round(runs * callsPerRun),
+      avg_calls_per_run: Number(callsPerRun.toFixed(2)),
+      avg_steps_per_run: w.steps.length,
+      max_depth: 2,
+      success_rate: w.name === "support-triage" ? 98.7 : 96.2,
+    };
+  })
+    .sort((a, b) => b.total_cost - a.total_cost)
+    .slice(0, limit);
+}
+
+export function demoStepStats(
+  range: string,
+  workflow: string | undefined,
+  limit: number,
+): StepStats[] {
+  const mult = runMultiplier(range);
+  const rows: StepStats[] = [];
+
+  for (const w of WORKFLOWS) {
+    if (workflow && w.name !== workflow) continue;
+    const runs = Math.round(w.runsPerDay * mult);
+
+    for (const s of w.steps) {
+      const calls = Math.round(runs * s.callsPerRun);
+      const costPerRun = stepCost(s) * s.callsPerRun;
+      rows.push({
+        workflow: w.name,
+        step_name: s.name,
+        calls,
+        runs,
+        calls_per_run: Number(s.callsPerRun.toFixed(2)),
+        total_cost: round2(runs * costPerRun),
+        cost_per_run: Number(costPerRun.toFixed(6)),
+        total_tokens: Math.round(calls * (s.inTokens + s.outTokens)),
+        avg_latency_ms: s.latencyMs,
+        success_rate: round2(100 - (s.tool ? 3.1 : 0.9)),
+      });
+    }
+  }
+
+  return rows.sort((a, b) => b.total_cost - a.total_cost).slice(0, limit);
+}
+
+export function demoToolStats(range: string, limit: number): ToolStats[] {
+  const mult = runMultiplier(range);
+  const rows: ToolStats[] = [];
+
+  for (const w of WORKFLOWS) {
+    const runs = Math.round(w.runsPerDay * mult);
+    for (const s of w.steps) {
+      if (!s.tool) continue;
+      const calls = Math.round(runs * s.callsPerRun);
+      rows.push({
+        tool_name: s.name,
+        calls,
+        runs,
+        total_cost: round2(calls * stepCost(s)),
+        total_tokens: Math.round(calls * (s.inTokens + s.outTokens)),
+        avg_latency_ms: s.latencyMs,
+      });
+    }
+  }
+
+  return rows.sort((a, b) => b.total_cost - a.total_cost).slice(0, limit);
+}
+
+export function demoRepeatedWork(
+  range: string,
+  limit: number,
+): RepeatedWorkFinding[] {
+  const mult = runMultiplier(range);
+  const rand = mulberry32(4242);
+  const findings: RepeatedWorkFinding[] = [];
+
+  // The looping tool steps are where identical calls repeat inside one run.
+  for (const w of WORKFLOWS) {
+    const looping = w.steps.filter((s) => s.callsPerRun > 1);
+    for (const s of looping) {
+      // A handful of the worst individual runs, not every run.
+      const worstRuns = Math.max(2, Math.round(w.runsPerDay * mult * 0.0015));
+      for (let i = 0; i < Math.min(worstRuns, 4); i++) {
+        const occurrences = 3 + Math.floor(rand() * 3);
+        const spend = stepCost(s) * occurrences;
+        findings.push({
+          trace_id: `${w.name.slice(0, 4)}${(1000 + i * 137).toString(16)}`,
+          workflow: w.name,
+          step_name: s.name,
+          model: s.model,
+          input_hash: `${(rand() * 1e16).toString(16).slice(0, 16)}`,
+          occurrences,
+          spend: Number(spend.toFixed(6)),
+          wasted_cost: Number(
+            (spend * ((occurrences - 1) / occurrences)).toFixed(6),
+          ),
+          first_seen: new Date(Date.now() - i * 5_400_000).toISOString(),
+        });
+      }
+    }
+  }
+
+  return findings.sort((a, b) => b.wasted_cost - a.wasted_cost).slice(0, limit);
+}
+
+export function demoTraces(
+  range: string,
+  workflow: string | undefined,
+  limit: number,
+): TraceSummary[] {
+  const rand = mulberry32(90210);
+  const rows: TraceSummary[] = [];
+
+  for (const w of WORKFLOWS) {
+    if (workflow && w.name !== workflow) continue;
+    const costPerRun = w.steps.reduce(
+      (sum, s) => sum + stepCost(s) * s.callsPerRun,
+      0,
+    );
+    const callsPerRun = w.steps.reduce((sum, s) => sum + s.callsPerRun, 0);
+    const durationPerRun = w.steps.reduce(
+      (sum, s) => sum + s.latencyMs * s.callsPerRun,
+      0,
+    );
+
+    for (let i = 0; i < 12; i++) {
+      // Spread runs either side of typical; the expensive tail is the point.
+      const factor = 0.7 + rand() * 1.9;
+      rows.push({
+        trace_id: `${w.name.slice(0, 4)}-${(0x1f00 + i * 913).toString(16)}`,
+        workflow: w.name,
+        calls: Math.round(callsPerRun * factor),
+        total_cost: Number((costPerRun * factor).toFixed(6)),
+        total_tokens: Math.round(callsPerRun * factor * 1400),
+        max_depth: 2,
+        failed_calls: factor > 2.2 ? 1 : 0,
+        started_at: new Date(Date.now() - i * 1_800_000).toISOString(),
+        duration_ms: Math.round(durationPerRun * factor),
+      });
+    }
+  }
+
+  return rows.sort((a, b) => b.total_cost - a.total_cost).slice(0, limit);
+}
+
+export function demoRunCostDistribution(
+  range: string,
+  workflow: string | undefined,
+  buckets: number,
+): RunCostDistribution | null {
+  const profile =
+    WORKFLOWS.find((w) => w.name === workflow) ??
+    // Default to the highest-spend workflow, matching the server.
+    [...WORKFLOWS].sort(
+      (a, b) =>
+        b.runsPerDay * b.steps.reduce((s, x) => s + stepCost(x) * x.callsPerRun, 0) -
+        a.runsPerDay * a.steps.reduce((s, x) => s + stepCost(x) * x.callsPerRun, 0),
+    )[0];
+  if (!profile) return null;
+
+  const runs = Math.round(profile.runsPerDay * runMultiplier(range));
+  const typical = profile.steps.reduce(
+    (sum, s) => sum + stepCost(s) * s.callsPerRun,
+    0,
+  );
+
+  // Log-normal-ish: most runs cluster near typical, a thin tail loops and
+  // costs multiples of it. Seeded so the demo never contradicts itself.
+  const rand = mulberry32(1337);
+  const costs: number[] = [];
+  for (let i = 0; i < runs; i++) {
+    const u = rand();
+    // 4% of runs loop and cost multiples of typical. The rest sum three
+    // uniforms so the body lands in a bell rather than a flat slab -- a
+    // uniform body would draw 24 equal bars, which is not what real spend
+    // looks like and would undersell the chart.
+    const bell = (rand() + rand() + rand()) / 3;
+    const factor = u > 0.96 ? 2.2 + rand() * 3.2 : 0.62 + bell * 0.82;
+    costs.push(typical * factor);
+  }
+  costs.sort((a, b) => a - b);
+
+  const n = costs.length;
+  const total = costs.reduce((sum, c) => sum + c, 0);
+  const at = (f: number) => costs[Math.min(n - 1, Math.round(f * (n - 1)))];
+
+  const tailCount = Math.max(1, Math.round(n * 0.05));
+  const tailCosts = costs.slice(n - tailCount);
+  const tailThreshold = tailCosts[0];
+  const tailShare = (tailCosts.reduce((s, c) => s + c, 0) / total) * 100;
+
+  const lo = costs[0];
+  const hi = costs[n - 1];
+
+  // Mirrors the server: bucket the body over its own range and collapse the
+  // tail into one overflow bar, so the demo shows the same shape production
+  // does rather than three bars and a flat line.
+  const body = costs.slice(0, n - tailCount);
+  const bodyHi = body.length ? body[body.length - 1] : lo;
+  const width = (bodyHi - lo) / buckets;
+  const counts = new Array(buckets).fill(0);
+  for (const c of body) {
+    counts[Math.min(buckets - 1, Math.floor((c - lo) / width))]++;
+  }
+
+  const p50 = at(0.5);
+  return {
+    workflow: profile.name,
+    runs: n,
+    truncated: false,
+    total_cost: round2(total),
+    min: lo,
+    max: hi,
+    mean: total / n,
+    p50,
+    p90: at(0.9),
+    p95: at(0.95),
+    p99: at(0.99),
+    tail_runs: tailCount,
+    tail_threshold: tailThreshold,
+    tail_share_percent: Number(tailShare.toFixed(1)),
+    tail_ratio: p50 > 0 ? Number((at(0.99) / p50).toFixed(1)) : null,
+    histogram: [
+      ...counts.map((count, i) => ({
+        lower: lo + i * width,
+        upper: lo + (i + 1) * width,
+        count,
+        is_tail: false,
+      })),
+      { lower: tailThreshold, upper: hi, count: tailCount, is_tail: true },
+    ],
+  };
+}
+
+export function demoOutcomeStats(range: string, limit: number): OutcomeStats[] {
+  const mult = runMultiplier(range);
+
+  return WORKFLOWS.map((w) => {
+    const runs = Math.round(w.runsPerDay * mult);
+    const costPerRun = w.steps.reduce(
+      (sum, s) => sum + stepCost(s) * s.callsPerRun,
+      0,
+    );
+    // research-brief escalates to a human more often than triage does.
+    const successRate = w.name === "support-triage" ? 0.91 : 0.74;
+    const succeeded = Math.round(runs * successRate);
+    const failed = Math.round(runs * (1 - successRate) * 0.8);
+    const unknown = runs - succeeded - failed;
+    const total = runs * costPerRun;
+
+    return {
+      workflow: w.name,
+      runs,
+      succeeded,
+      failed,
+      unknown,
+      total_cost: round2(total),
+      cost_on_success: round2(succeeded * costPerRun),
+      cost_on_failure: round2(failed * costPerRun),
+      cost_per_success: succeeded
+        ? Number(((succeeded + failed) * costPerRun / succeeded).toFixed(6))
+        : null,
+      success_rate: Number((successRate * 100).toFixed(2)),
+    };
+  })
+    .sort((a, b) => b.total_cost - a.total_cost)
+    .slice(0, limit);
 }
