@@ -142,6 +142,12 @@ export default function SDKDocsPage() {
               Workflows &amp; Steps
             </a>
             <a
+              href="#external-correlation"
+              className="block text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              External Correlation
+            </a>
+            <a
               href="#pre-deployment"
               className="block text-primary-400 hover:text-primary-300 transition-colors"
             >
@@ -487,6 +493,40 @@ with track_costs.agent("billing-agent"):
           </Section>
 
           <Section
+            id="external-correlation"
+            title="External Correlation"
+            icon={Workflow}
+          >
+            <p className="text-neutral-300">
+              A process that wraps your agent — a policy layer, an
+              orchestrator, a CI job — can join its own records to AgentCost
+              cost data by exporting one variable. No code change in the agent:
+              the SDK it already runs picks the id up from the environment and
+              stamps it on every event.
+            </p>
+            <CodeBlock
+              language="bash"
+              code={`export AGENTCOST_TRACE_ID=0532f9c4-a022-4e98-a543-d8e17c5b90a6
+export AGENTCOST_WORKFLOW=refactor-run   # optional, names the run`}
+            />
+            <p className="text-neutral-300 mt-4">
+              Precedence is always: an explicit{" "}
+              <code className="text-primary-300">
+                workflow(&quot;name&quot;, trace_id=...)
+              </code>{" "}
+              argument, then an active <code className="text-primary-300">workflow()</code>,
+              then the environment. Trace ids accept up to 64 characters, so
+              UUIDs and ULIDs fit. Read the joined run back with{" "}
+              <code className="text-primary-300">
+                GET /v1/analytics/traces/{"{trace_id}"}
+              </code>
+              , and report how it ended — even with no events attached — via{" "}
+              <code className="text-primary-300">outcomes</code> on the batch
+              endpoint.
+            </p>
+          </Section>
+
+          <Section
             id="pre-deployment"
             title="Pre-deployment Analysis"
             icon={ShieldCheck}
@@ -740,19 +780,34 @@ async for chunk in llm.astream("Tell me a story"):
               language="json"
               code={`{
   "agent_name": "my-agent",
-  "model": "gpt-4",
-  "input_tokens": 150,
+  "model": "gpt-4o",
+  "input_tokens": 1500,
   "output_tokens": 80,
-  "total_tokens": 230,
-  "cost": 0.0093,
+  "total_tokens": 1580,
+  "cached_tokens": 1200,
+  "cost": 0.0031,
   "latency_ms": 1234,
-  "timestamp": "2024-01-23T10:30:45.123Z",
+  "timestamp": "2026-08-15T10:30:45.123Z",
   "success": true,
   "error": null,
   "streaming": false,
   "metadata": {"conversation_id": "conv_456"}
 }`}
             />
+            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-4 mt-4">
+              <p className="text-blue-300 text-sm">
+                <strong>Prompt-cache accounting:</strong>{" "}
+                <code className="bg-blue-900/30 px-1 rounded">cached_tokens</code>{" "}
+                is the part of the prompt served from the provider&apos;s cache,
+                read automatically off OpenAI, Anthropic and Gemini responses
+                (Anthropic cache <em>writes</em> are reported separately as{" "}
+                <code className="bg-blue-900/30 px-1 rounded">cache_write_tokens</code>,
+                since they bill at a premium). Cached tokens are priced at the
+                provider&apos;s real cache-read rate — on cache-heavy agent
+                workloads this is the difference between the right bill and one
+                overstated several times over.
+              </p>
+            </div>
           </Section>
 
           {/* Graceful Shutdown */}

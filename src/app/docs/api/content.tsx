@@ -248,6 +248,12 @@ export default function APIReferencePage() {
               Webhooks
             </a>
             <a
+              href="#egress"
+              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
+            >
+              Budget State &amp; Metrics
+            </a>
+            <a
               href="#versioning"
               className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
             >
@@ -893,7 +899,11 @@ curl -H "Authorization: Bearer your_jwt_token" \\
                 are optional; the server derives and prices them for you.
               </p>
             </div>
-            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <p className="text-sm text-neutral-400 mb-2">
+              Full request body — every field beyond the required four
+              (agent_name, model, input_tokens, output_tokens, plus timestamp)
+              is optional:
+            </p>
             <CodeBlock
               language="json"
               code={`{
@@ -901,25 +911,66 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "events": [
     {
       "agent_name": "router-agent",
-      "model": "gpt-4",
-      "input_tokens": 150,
+      "model": "gpt-4o",
+      "input_tokens": 1500,
       "output_tokens": 80,
-      "total_tokens": 230,
-      "cost": 0.0093,
+      "cached_tokens": 1200,
+      "cache_write_tokens": 0,
       "latency_ms": 1234,
-      "timestamp": "2024-01-23T10:30:45.123Z",
+      "timestamp": "2026-08-15T10:30:45.123Z",
       "success": true,
-      "metadata": {"user_id": "user_123"}
+      "event_id": "delivery-42",
+      "trace_id": "0532f9c4-a022-4e98-a543-d8e17c5b90a6",
+      "metadata": {"user_id": "alice@example.com", "session_id": "run-7f3a"}
     }
+  ],
+  "outcomes": [
+    {"trace_id": "0532f9c4-a022-4e98-a543-d8e17c5b90a6", "success": true}
   ]
 }`}
             />
+            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3">
+              <ul className="text-blue-300 text-sm space-y-1.5">
+                <li>
+                  <code className="bg-blue-900/30 px-1 rounded">cached_tokens</code>{" "}
+                  is the part of <code className="bg-blue-900/30 px-1 rounded">input_tokens</code>{" "}
+                  served from the provider&apos;s prompt cache — it changes cost
+                  materially on cache-heavy workloads and is priced at real
+                  cache rates.
+                </li>
+                <li>
+                  <code className="bg-blue-900/30 px-1 rounded">event_id</code>{" "}
+                  makes delivery idempotent: a replay returns 200 with{" "}
+                  <code className="bg-blue-900/30 px-1 rounded">events_duplicate</code>{" "}
+                  incremented and stores nothing, even under concurrent retries.
+                </li>
+                <li>
+                  <code className="bg-blue-900/30 px-1 rounded">trace_id</code>{" "}
+                  accepts up to 64 characters, so UUIDs minted by an external
+                  orchestrator fit. <code className="bg-blue-900/30 px-1 rounded">outcomes</code>{" "}
+                  may be sent with an empty <code className="bg-blue-900/30 px-1 rounded">events</code>{" "}
+                  list — a run denied by a policy layer still gets its ending recorded.
+                </li>
+                <li>
+                  <code className="bg-blue-900/30 px-1 rounded">metadata.user_id</code>{" "}
+                  and <code className="bg-blue-900/30 px-1 rounded">metadata.session_id</code>{" "}
+                  become indexed analytics dimensions — see{" "}
+                  <a href="#analytics" className="underline">Analytics</a>.
+                </li>
+              </ul>
+            </div>
             <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
             <CodeBlock
               language="json"
               code={`{
   "status": "ok",
-  "inserted": 1
+  "events_stored": 1,
+  "events_received": 1,
+  "events_rejected": 0,
+  "events_duplicate": 0,
+  "outcomes_recorded": 1,
+  "rejected": [],
+  "timestamp": "2026-08-15T10:30:46.001Z"
 }`}
             />
           </Endpoint>
@@ -1127,6 +1178,65 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "agents": [ ... ],
   "models": [ ... ],
   "timeseries": [ ... ]
+}`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/by/{dimension}"
+            description="Cost and volume grouped by user, session, workflow, tool, model or agent"
+          >
+            <p className="text-sm text-neutral-400 mb-3">
+              <code className="text-primary-400">user</code> and{" "}
+              <code className="text-primary-400">session</code> read the{" "}
+              <code className="text-primary-400">user_id</code> /{" "}
+              <code className="text-primary-400">session_id</code> keys from
+              event metadata — this is what answers{" "}
+              <em>what is each developer costing us</em>. Events with no value
+              for the dimension are excluded, not bucketed under a placeholder.
+            </p>
+            <CodeBlock
+              code={`curl -H "Authorization: Bearer sk_your_project_api_key" \\
+  "${apiBaseUrl || "https://api.agentcost.tech"}/v1/analytics/by/user?range=30d"`}
+            />
+            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "key": "alice@example.com",
+    "total_calls": 4210,
+    "total_tokens": 9812004,
+    "total_cost": 412.86,
+    "avg_latency_ms": 1180.4,
+    "success_rate": 99.2
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/cache"
+            description="Prompt-cache hit rate and savings for a window, in USD"
+          >
+            <p className="text-sm text-neutral-400 mb-3">
+              Savings are measured against billing every cached token at the
+              model&apos;s full input rate; a model with no published cache
+              rate contributes zero, exactly as ingest prices it.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "total_input_tokens": 48120044,
+  "cached_tokens": 34350211,
+  "cache_write_tokens": 1204110,
+  "cache_hit_rate": 71.4,
+  "events_with_cache": 18744,
+  "read_savings": 212.4,
+  "write_premium": 18.05,
+  "net_savings": 194.35
 }`}
             />
           </Endpoint>
@@ -1571,40 +1681,154 @@ X-RateLimit-Reset: 45`}
         {/* Webhooks (Coming Soon) */}
         <Section id="webhooks" title="Webhooks" icon={Zap}>
           <p className="text-neutral-300 mb-4">
-            Receive real-time notifications when events occur in your project.
+            Budget threshold crossings are pushed to your endpoint as they
+            happen, signed so the receiver can verify origin and freshness.
+            Delivery is best-effort and never delays event ingestion — poll{" "}
+            <a href="#egress" className="text-primary-400 underline">
+              budget-state
+            </a>{" "}
+            as the reliable channel.
           </p>
+
+          <Endpoint
+            method="PUT"
+            path="/v1/projects/{project_id}/webhook"
+            description="Configure the webhook (requires project-edit permission)"
+          >
+            <CodeBlock
+              language="json"
+              code={`{"url": "https://your-endpoint.example/agentcost", "secret": "whsec_..."}`}
+            />
+            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3">
+              <p className="text-blue-300 text-sm">
+                HTTPS required. <code className="bg-blue-900/30 px-1 rounded">{`{"url": null}`}</code>{" "}
+                disables the hook and clears the secret. When rotating a
+                secret, restate the URL — a secret without a URL is rejected.
+                The secret is write-only: GET on the same path returns the URL
+                and whether a secret is set, never the secret itself.
+              </p>
+            </div>
+          </Endpoint>
+
+          <Endpoint
+            method="POST"
+            path="/v1/projects/{project_id}/webhook/test"
+            description="Send a signed sample delivery to verify the wiring"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Same payload shape and signature scheme as a live delivery; the
+              event type is <code className="text-primary-400">webhook.test</code>.
+              Returns whether the endpoint accepted it and the status code.
+            </p>
+          </Endpoint>
+
           <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-4">
-            <h4 className="font-medium text-white mb-2">
-              Planned Webhook Events
-            </h4>
-            <ul className="list-disc list-inside text-neutral-400 text-sm space-y-1">
-              <li>
-                <code className="text-primary-400">
-                  cost.threshold.exceeded
-                </code>{" "}
-                - Daily cost limit exceeded
-              </li>
-              <li>
-                <code className="text-primary-400">error.rate.high</code> -
-                Error rate above threshold
-              </li>
-              <li>
-                <code className="text-primary-400">latency.high</code> - Average
-                latency above threshold
-              </li>
-              <li>
-                <code className="text-primary-400">project.created</code> - New
-                project created
-              </li>
-            </ul>
-          </div>
-          <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-4 mt-4">
-            <p className="text-blue-300 text-sm">
-              <strong>Coming Soon:</strong> Webhooks are currently in
-              development. Contact us if you need this feature for your use
-              case.
+            <h4 className="font-medium text-white mb-2">Verifying a delivery</h4>
+            <p className="text-neutral-400 text-sm mb-3">
+              Each POST carries <code className="text-primary-400">X-AgentCost-Signature</code>{" "}
+              = HMAC-SHA256 over{" "}
+              <code className="text-primary-400">{"{timestamp}.{body}"}</code>{" "}
+              with your secret, and{" "}
+              <code className="text-primary-400">X-AgentCost-Timestamp</code>.
+              Reject stale timestamps before comparing digests — the timestamp
+              is inside the signed string, so a captured delivery cannot be
+              replayed with a fresh header.
+            </p>
+            <CodeBlock
+              language="python"
+              code={`import hashlib, hmac
+
+def verify(secret: str, timestamp: str, body: str, signature: str) -> bool:
+    expected = hmac.new(
+        secret.encode(), f"{timestamp}.{body}".encode(), hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)`}
+            />
+            <p className="text-neutral-500 text-sm mt-3">
+              Delivery rules: only a 2xx counts as delivered; redirects are not
+              followed; non-public destination addresses are refused
+              (self-hosted installs posting to internal listeners set{" "}
+              <code className="text-primary-400">WEBHOOK_ALLOW_PRIVATE_URLS=true</code>).
             </p>
           </div>
+        </Section>
+
+        {/* Budget state & Prometheus */}
+        <Section id="egress" title="Budget State &amp; Metrics" icon={Server}>
+          <Endpoint
+            method="GET"
+            path="/v1/projects/{project_id}/budget-state"
+            description="Compact budget position for machine consumers (project API key auth)"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Side-effect-free and shaped for polling: an enforcement point
+              reads it every 15–60s and holds the answer as cached state.{" "}
+              <code className="text-primary-400">as_of</code> and{" "}
+              <code className="text-primary-400">period_ends_at</code> let a
+              consumer reason about staleness and time remaining.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "project_id": "proj_abc123",
+  "enabled": true,
+  "mode": "warn",
+  "currency": "USD",
+  "budget": 500.0,
+  "spend_mtd": 390.0,
+  "remaining": 110.0,
+  "utilization_percent": 78.0,
+  "thresholds_crossed": [50, 75],
+  "exhausted": false,
+  "period_ends_at": "2026-09-01T00:00:00+00:00",
+  "as_of": "2026-08-15T10:30:45+00:00"
+}`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/metrics"
+            description="Prometheus exposition of the project's cost metrics"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              Windowed gauges (not monotonic counters — use{" "}
+              <code className="text-primary-400">max_over_time</code>, not{" "}
+              <code className="text-primary-400">rate()</code>):{" "}
+              <code className="text-primary-400">agentcost_calls</code>,{" "}
+              <code className="text-primary-400">agentcost_cost_usd</code>,{" "}
+              <code className="text-primary-400">agentcost_tokens</code>,{" "}
+              <code className="text-primary-400">agentcost_cached_tokens</code>,{" "}
+              <code className="text-primary-400">agentcost_errors</code>, per-model
+              and per-agent cost, plus budget utilization and remaining when a
+              budget is set.
+            </p>
+            <CodeBlock
+              language="yaml"
+              code={`scrape_configs:
+  - job_name: agentcost
+    metrics_path: /v1/metrics
+    authorization:
+      credentials: <project_api_key>
+    static_configs:
+      - targets: ['api.agentcost.tech']`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="POST"
+            path="/v1/pricing/import"
+            description="Load the pricing catalogue from an uploaded LiteLLM bundle (admin only)"
+          >
+            <p className="text-sm text-neutral-400 mb-2">
+              For air-gapped and egress-restricted deployments: fetch{" "}
+              <code className="text-primary-400">
+                model_prices_and_context_window.json
+              </code>{" "}
+              on a connected machine, review it, and upload it verbatim. Same
+              parsing and sanity bounds as the network sync.
+            </p>
+          </Endpoint>
         </Section>
 
         {/* Versioning */}

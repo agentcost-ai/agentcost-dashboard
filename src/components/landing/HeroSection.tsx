@@ -1,13 +1,74 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Play } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { CommandCenterDemo } from "./CommandCenterDemo";
 import { FeatureAnnouncement } from "./FeatureAnnouncement";
 import { AnnotatedArrow } from "./AnnotatedArrow";
+
+type LedgerRow = {
+  who: string;
+  figure: ReactNode;
+  line: string;
+  source: string;
+  href: string;
+  external?: boolean;
+  ours?: boolean;
+};
+
+/* Every figure and claim here is sourced — the link on each row is the
+   receipt. Do not add a row without one. */
+const LEDGER: LedgerRow[] = [
+  {
+    ours: true,
+    who: "Us — one retry loop",
+    figure: (
+      <>
+        <span className="text-white">$800</span>
+        <span className="text-neutral-600"> → </span>
+        <span className="text-emerald-400">−44%</span>
+      </>
+    ),
+    line: "The overnight bill that became AgentCost — spend down 44% two weeks after we could see per-agent cost.",
+    source: "Read the story",
+    href: "https://dev.to/kushagra125/launching-agentcost-14lf",
+  },
+  {
+    who: "Microsoft — Copilot",
+    figure: <span className="text-white">−$20/user/mo</span>,
+    line: "Reported losses under flat pricing — some users cost $80/mo — until the WSJ ran the numbers.",
+    source: "The Register",
+    href: "https://www.theregister.com/2023/10/11/github_ai_copilot_microsoft/",
+    external: true,
+  },
+  {
+    who: "Uber — engineering",
+    figure: <span className="text-white">built a gateway</span>,
+    line: "LLM cost attribution took a dedicated internal service between every team and every model.",
+    source: "Uber Engineering",
+    href: "https://www.uber.com/blog/genai-gateway/",
+    external: true,
+  },
+  {
+    who: "Gartner — forecasts",
+    figure: <span className="text-white">500–1,000%</span>,
+    line: "The error range on GenAI cost estimates made without usage visibility.",
+    source: "Gartner",
+    href: "https://www.gartner.com/en/articles/ai-value",
+    external: true,
+  },
+  {
+    who: "Claude Code — developers",
+    figure: <span className="text-white">90% under $30/day</span>,
+    line: "The average looks safe — the overruns live in the tail an average never shows.",
+    source: "Weilliptic",
+    href: "https://weilliptic.ai/blog/ai-coding-spend-governance-a-framework-for-engineering-and-finance-leaders/",
+    external: true,
+  },
+];
 
 
 
@@ -92,10 +153,12 @@ export function HeroSection() {
         >
           Your AI bill spiked.{" "}
           <span className="relative inline-block">
-            <span className="relative z-10 bg-linear-to-r from-sky-300 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+            {/* Single-family gradient only (sky→sky): cross-color fades are
+                banned as an AI-slop fingerprint in this codebase. */}
+            <span className="relative z-10 bg-linear-to-r from-sky-300 to-sky-500 bg-clip-text text-transparent">
               Which&nbsp;agent
             </span>
-            <span className="absolute -bottom-1 left-0 right-0 h-px bg-linear-to-r from-sky-400/50 via-cyan-400/20 to-transparent" />
+            <span className="absolute -bottom-1 left-0 right-0 h-px bg-linear-to-r from-sky-400/50 via-sky-400/20 to-transparent" />
           </span>{" "}
           did it?
         </motion.h1>
@@ -167,8 +230,11 @@ export function HeroSection() {
           </Link>
         </motion.div>
 
-        {/* Proof — the founder story is real and verifiable; no invented metrics */}
-        <motion.p
+        {/* Evidence ledger — the product's own idiom used as proof. Five
+            costed line items: our incident first, then the industry record
+            that says it isn't just us. Every row carries a name, a number
+            and a source; none of it is invented. */}
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -176,20 +242,48 @@ export function HeroSection() {
             delay: 0.4,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="text-sm text-neutral-500 text-center max-w-xl leading-relaxed mb-16"
+          className="mb-16 w-full max-w-4xl"
         >
-          Born from our own{" "}
-          <span className="text-neutral-300">$800 OpenAI bill</span> — AgentCost
-          found the runaway agent and cut our spend{" "}
-          <span className="text-neutral-300">44% in two weeks</span>.{" "}
-          <a
-            href="https://dev.to/kushagra125/launching-agentcost-14lf"
-            rel="noopener"
-            className="text-neutral-500 hover:text-neutral-300 underline underline-offset-2 decoration-neutral-600"
-          >
-            Read the story
-          </a>
-        </motion.p>
+          <div className="overflow-hidden rounded-xl border border-white/8 bg-white/2">
+            <div className="flex items-baseline justify-between border-b border-white/8 px-5 py-2.5">
+              <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
+                The blind spot, on the record
+              </span>
+              <span className="hidden font-mono text-[11px] text-neutral-600 sm:block">
+                5 line items · sourced
+              </span>
+            </div>
+            <div className="divide-y divide-white/6">
+              {LEDGER.map((row) => (
+                <div
+                  key={row.who}
+                  className={`gap-x-4 gap-y-1 px-5 py-3 sm:grid sm:grid-cols-[minmax(0,10rem)_minmax(0,9rem)_1fr_auto] sm:items-baseline ${
+                    row.ours ? "border-l-2 border-l-sky-400 bg-sky-400/4" : ""
+                  }`}
+                >
+                  <span className={`block text-[13px] ${row.ours ? "text-neutral-200" : "text-neutral-400"}`}>
+                    {row.who}
+                  </span>
+                  <span className="block whitespace-nowrap font-mono text-[13px] font-medium">
+                    {row.figure}
+                  </span>
+                  <span className="block text-[13px] leading-snug text-neutral-500">
+                    {row.line}
+                  </span>
+                  <a
+                    href={row.href}
+                    rel={row.external ? "noopener nofollow" : "noopener"}
+                    target={row.external ? "_blank" : undefined}
+                    className="group mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[12px] text-neutral-600 transition-colors hover:text-white sm:mt-0"
+                  >
+                    {row.source}
+                    <ArrowUpRight className="size-3 transition-transform duration-200 group-hover:translate-x-px group-hover:-translate-y-px" aria-hidden />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
 
         {/* ── Command Center Demo ── */}
         <motion.div
