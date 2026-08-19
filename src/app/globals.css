@@ -225,3 +225,34 @@ html {
     page-break-inside: avoid;
   }
 }
+
+/* Landing footer — drifting cost-skyline layers. Each layer is a 200%-wide
+   tile pair; translating -50% loops seamlessly. */
+@keyframes footer-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.footer-drift-slow {
+  animation: footer-drift 150s linear infinite;
+}
+
+.footer-drift-mid {
+  animation: footer-drift 95s linear infinite;
+}
+
+.footer-drift-fast {
+  animation: footer-drift 60s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-drift-slow,
+  .footer-drift-mid,
+  .footer-drift-fast {
+    animation: none;
+  }
+}

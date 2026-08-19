@@ -9,6 +9,7 @@ import {
   Database,
   Zap,
   Calendar,
+  CalendarClock,
   Cpu,
   Copy,
   Check,
@@ -20,6 +21,12 @@ interface ModelPricing {
   input: number;
   output: number;
   provider: string;
+  /** Per-1k cached-input rate; null when the provider publishes none. */
+  cached_input: number | null;
+  /** chat / embedding / image_generation / ... ; null = unknown. */
+  mode: string | null;
+  /** Upstream-announced retirement date (YYYY-MM-DD); null = none. */
+  deprecation_date: string | null;
 }
 
 interface SyncStatus {
@@ -28,7 +35,12 @@ interface SyncStatus {
   models_by_provider: Record<string, number>;
 }
 
-type SortField = "model_name" | "provider" | "input" | "output";
+type SortField =
+  | "model_name"
+  | "provider"
+  | "input"
+  | "output"
+  | "cached_input";
 type SortDirection = "asc" | "desc";
 
 function formatPrice(price: number): string {
@@ -105,6 +117,7 @@ export default function ModelsPage({
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProvider, setSelectedProvider] = useState("All Providers");
+  const [selectedMode, setSelectedMode] = useState("All Types");
 
   // Sorting
   const [sortField, setSortField] = useState<SortField>("model_name");
@@ -143,7 +156,14 @@ export default function ModelsPage({
       // Transform the pricing dict to array format
       const pricingDict: Record<
         string,
-        { input?: number; output?: number; provider?: string }
+        {
+          input?: number;
+          output?: number;
+          provider?: string;
+          cached_input?: number | null;
+          mode?: string | null;
+          deprecation_date?: string | null;
+        }
       > = data.pricing || {};
       const modelsArray: ModelPricing[] = Object.entries(pricingDict).map(
         ([model_name, pricing]) => ({
@@ -151,6 +171,9 @@ export default function ModelsPage({
           input: pricing.input || 0,
           output: pricing.output || 0,
           provider: pricing.provider || "unknown",
+          cached_input: pricing.cached_input ?? null,
+          mode: pricing.mode ?? null,
+          deprecation_date: pricing.deprecation_date ?? null,
         }),
       );
 
@@ -207,10 +230,17 @@ export default function ModelsPage({
       );
     }
 
-    // Sorting
+    // Mode filter ("unknown" groups rows the catalogue has no mode for)
+    if (selectedMode !== "All Types") {
+      result = result.filter(
+        (m) => (m.mode ?? "unknown") === selectedMode.toLowerCase(),
+      );
+    }
+
+    // Sorting (null cached rates sort below any published rate)
     result.sort((a, b) => {
-      let aVal: string | number = a[sortField];
-      let bVal: string | number = b[sortField];
+      let aVal: string | number = a[sortField] ?? -1;
+      let bVal: string | number = b[sortField] ?? -1;
 
       if (typeof aVal === "string") aVal = aVal.toLowerCase();
       if (typeof bVal === "string") bVal = bVal.toLowerCase();
@@ -221,7 +251,14 @@ export default function ModelsPage({
     });
 
     return result;
-  }, [models, searchQuery, selectedProvider, sortField, sortDirection]);
+  }, [
+    models,
+    searchQuery,
+    selectedProvider,
+    selectedMode,
+    sortField,
+    sortDirection,
+  ]);
 
   // Pagination
   const totalPages = Math.ceil(filteredModels.length / itemsPerPage);
@@ -233,7 +270,7 @@ export default function ModelsPage({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedProvider]);
+  }, [searchQuery, selectedProvider, selectedMode]);
 
   function handleSort(field: SortField) {
     if (sortField === field) {
@@ -259,6 +296,37 @@ export default function ModelsPage({
     return set.size;
   }, [models]);
 
+  // Model types present in the catalogue (chat, embedding, ...). Empty until
+  // the backend ships `mode` — the filter hides itself rather than offering a
+  // dropdown whose only entry is "Unknown". "unknown" appears as an option
+  // only alongside real types, for rows the catalogue has no mode for.
+  const modes = useMemo(() => {
+    const known = new Set<string>();
+    let hasUnknown = false;
+    for (const m of models) {
+      if (m.mode) known.add(m.mode);
+      else hasUnknown = true;
+    }
+    if (known.size === 0) return [];
+    const list = [...known].sort();
+    if (hasUnknown) list.push("unknown");
+    return ["All Types", ...list];
+  }, [models]);
+
+  // Models with an upstream-announced retirement date, soonest first.
+  // Also served raw at /v1/pricing/deprecations for API consumers.
+  const upcomingRetirements = useMemo(
+    () =>
+      models
+        .filter((m) => m.deprecation_date)
+        .sort((a, b) =>
+          (a.deprecation_date as string) < (b.deprecation_date as string)
+            ? -1
+            : 1,
+        ),
+    [models],
+  );
+
   return (
     <div className="min-h-screen bg-neutral-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pt-4">
@@ -274,7 +342,7 @@ export default function ModelsPage({
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="rounded-lg bg-neutral-800/50 border border-neutral-700/50 p-4">
             <div className="flex items-center gap-2 text-neutral-400 text-sm mb-1">
               <Cpu size={14} />
@@ -293,6 +361,15 @@ export default function ModelsPage({
           </div>
           <div className="rounded-lg bg-neutral-800/50 border border-neutral-700/50 p-4">
             <div className="flex items-center gap-2 text-neutral-400 text-sm mb-1">
+              <CalendarClock size={14} />
+              Announced Retirements
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {upcomingRetirements.length.toLocaleString()}
+            </div>
+          </div>
+          <div className="rounded-lg bg-neutral-800/50 border border-neutral-700/50 p-4">
+            <div className="flex items-center gap-2 text-neutral-400 text-sm mb-1">
               <Calendar size={14} />
               Last Updated
             </div>
@@ -301,6 +378,39 @@ export default function ModelsPage({
             </div>
           </div>
         </div>
+
+        {/* Upcoming retirements — deprecation dates synced from LiteLLM */}
+        {upcomingRetirements.length > 0 && (
+          <div className="rounded-lg bg-amber-950/20 border border-amber-800/30 p-4 mb-8">
+            <div className="flex items-center gap-2 text-amber-400 text-sm font-medium mb-3">
+              <CalendarClock size={14} />
+              Upcoming model retirements
+              <span className="text-amber-500/60 font-normal">
+                — dates announced by providers
+              </span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {upcomingRetirements.slice(0, 8).map((m) => (
+                <button
+                  key={m.model_name}
+                  onClick={() => setSearchQuery(m.model_name)}
+                  title="Show in table"
+                  className="shrink-0 rounded-full border border-amber-700/40 bg-amber-900/20 px-3 py-1.5 text-xs text-amber-200/90 hover:border-amber-500/60 hover:text-amber-100 transition-colors"
+                >
+                  <code className="font-mono">{m.model_name}</code>
+                  <span className="ml-2 text-amber-500/80">
+                    {formatDate(m.deprecation_date)}
+                  </span>
+                </button>
+              ))}
+              {upcomingRetirements.length > 8 && (
+                <span className="shrink-0 self-center px-2 text-xs text-amber-500/70">
+                  +{upcomingRetirements.length - 8} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-4 mb-6">
@@ -350,17 +460,46 @@ export default function ModelsPage({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none"
               />
             </div>
+
+            {/* Type (mode) dropdown — from LiteLLM's `mode` field; hidden
+                until the catalogue carries mode data */}
+            {modes.length > 0 && (
+              <div className="relative">
+                <select
+                  value={selectedMode}
+                  onChange={(e) => setSelectedMode(e.target.value)}
+                  className="pl-4 pr-8 py-2.5 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-primary-500 appearance-none cursor-pointer min-w-36"
+                >
+                  {modes.map((m) => (
+                    <option key={m} value={m}>
+                      {m === "All Types"
+                        ? m
+                        : m.charAt(0).toUpperCase() +
+                          m.slice(1).replace(/_/g, " ")}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={14}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none"
+                />
+              </div>
+            )}
           </div>
 
           <div className="mt-3 text-sm text-neutral-500">
             Showing {filteredModels.length.toLocaleString()} of{" "}
             {models.length.toLocaleString()} models
-            {selectedProvider !== "All Providers" && (
+            {(selectedProvider !== "All Providers" ||
+              selectedMode !== "All Types") && (
               <button
-                onClick={() => setSelectedProvider("All Providers")}
+                onClick={() => {
+                  setSelectedProvider("All Providers");
+                  setSelectedMode("All Types");
+                }}
                 className="ml-2 text-primary-400 hover:text-primary-300"
               >
-                (clear filter)
+                (clear filters)
               </button>
             )}
           </div>
@@ -406,7 +545,7 @@ export default function ModelsPage({
                 </div>
               ) : (
               <div className="overflow-x-auto max-w-full">
-                <table className="w-full min-w-140 text-sm">
+                <table className="w-full min-w-190 text-sm">
                   <thead>
                     <tr className="border-b border-neutral-700 bg-neutral-800/50">
                       <th
@@ -437,6 +576,19 @@ export default function ModelsPage({
                         Output / 1K
                         <SortIcon field="output" />
                       </th>
+                      <th
+                        className="text-right py-3 px-4 text-neutral-400 font-medium cursor-pointer hover:text-neutral-200"
+                        onClick={() => handleSort("cached_input")}
+                        title="Prompt-cache read rate, where the provider publishes one"
+                      >
+                        Cached In / 1K
+                        <SortIcon field="cached_input" />
+                      </th>
+                      {modes.length > 0 && (
+                        <th className="text-left py-3 px-4 text-neutral-400 font-medium">
+                          Type
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="text-neutral-300">
@@ -450,6 +602,14 @@ export default function ModelsPage({
                             <code className="font-mono text-sm text-white bg-neutral-800 px-2 py-0.5 rounded">
                               {model.model_name}
                             </code>
+                            {model.deprecation_date && (
+                              <span
+                                className="shrink-0 rounded-full border border-amber-700/40 bg-amber-900/20 px-2 py-0.5 text-[11px] text-amber-300/90"
+                                title="Provider-announced retirement date"
+                              >
+                                retires {formatDate(model.deprecation_date)}
+                              </span>
+                            )}
                             <button
                               onClick={() => copyModelName(model.model_name)}
                               className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 hover:text-neutral-300"
@@ -480,6 +640,24 @@ export default function ModelsPage({
                         <td className="py-3 px-4 text-right font-mono text-blue-400">
                           {formatPrice(model.output)}
                         </td>
+                        <td className="py-3 px-4 text-right font-mono text-sky-400/90">
+                          {model.cached_input != null ? (
+                            formatPrice(model.cached_input)
+                          ) : (
+                            <span className="text-neutral-600">—</span>
+                          )}
+                        </td>
+                        {modes.length > 0 && (
+                          <td className="py-3 px-4">
+                            {model.mode ? (
+                              <span className="inline-block rounded px-2 py-1 text-xs text-neutral-400 border border-neutral-700/60 bg-neutral-800/40">
+                                {model.mode.replace(/_/g, " ")}
+                              </span>
+                            ) : (
+                              <span className="text-neutral-600 text-xs">—</span>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
