@@ -23,6 +23,12 @@ export interface ModelPricing {
   input: number;
   output: number;
   provider: string;
+  /** Per-1k cached-input rate; null when the provider publishes none. */
+  cached_input: number | null;
+  /** chat / embedding / image_generation / ... ; null = unknown. */
+  mode: string | null;
+  /** Upstream-announced retirement date (YYYY-MM-DD); null = none. */
+  deprecation_date: string | null;
 }
 
 export interface SyncStatus {
@@ -67,7 +73,14 @@ async function getCatalog(): Promise<{
   const pricing = await fetchJson<{
     pricing?: Record<
       string,
-      { input?: number; output?: number; provider?: string }
+      {
+        input?: number;
+        output?: number;
+        provider?: string;
+        cached_input?: number | null;
+        mode?: string | null;
+        deprecation_date?: string | null;
+      }
     >;
   }>(`${PRICING_API}/v1/pricing`, 3);
   const status = await fetchJson<Partial<SyncStatus>>(
@@ -81,6 +94,9 @@ async function getCatalog(): Promise<{
       input: p.input ?? 0,
       output: p.output ?? 0,
       provider: p.provider ?? "unknown",
+      cached_input: p.cached_input ?? null,
+      mode: p.mode ?? null,
+      deprecation_date: p.deprecation_date ?? null,
     }),
   );
 

@@ -7,9 +7,11 @@ import { Grid2x2Plus, Menu, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 
 const navLinks = [
-  { label: "Features", href: "#features" },
+  // Root-anchored so section links work from every page, not just the
+  // landing page (a bare "#integration" resolves against the current path).
+  { label: "Features", href: "/#features" },
   { label: "Live Demo", href: "/demo?src=navbar" },
-  { label: "Integration", href: "#integration" },
+  { label: "Integration", href: "/#integration" },
   { label: "Pricing", href: "/pricing" },
   { label: "Blog", href: "/blog" },
   { label: "Changelog", href: "/changelog" },
