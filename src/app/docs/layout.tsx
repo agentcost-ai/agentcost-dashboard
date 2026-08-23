@@ -6,6 +6,7 @@ import { Home } from "lucide-react";
 import { track } from "@/lib/analytics";
 
 const DOCS_NAV = [
+  { href: "/docs", label: "Overview" },
   { href: "/docs/sdk", label: "SDK" },
   { href: "/docs/api", label: "API" },
   { href: "/docs/cli", label: "CLI" },

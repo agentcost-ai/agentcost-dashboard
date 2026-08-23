@@ -22,16 +22,16 @@ const columns = [
   {
     title: "Resources",
     links: [
-      { label: "Documentation", href: "/docs/sdk" },
+      { label: "Documentation", href: "/docs" },
       { label: "API Reference", href: "/docs/api" },
       { label: "Model Catalog", href: "/docs/models" },
+      // Named so they are findable by name, not just reachable by URL.
+      // external: these are raw files, not app routes — <Link> would try a
+      // client-side navigation to a non-page and fall back to a hard load.
+      { label: "OpenAPI Spec", href: "/openapi.json", external: true },
+      { label: "llms.txt", href: "/llms.txt", external: true },
       { label: "Blog", href: "/blog" },
       { label: "Changelog", href: "/changelog" },
-      {
-        label: "GitHub",
-        href: "https://github.com/agentcost-ai",
-        external: true,
-      },
     ],
   },
   {
@@ -42,6 +42,18 @@ const columns = [
       label: `vs ${c.competitor}`,
       href: `/compare/${c.slug}`,
     })),
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+      {
+        label: "GitHub",
+        href: "https://github.com/agentcost-ai",
+        external: true,
+      },
+    ],
   },
   {
     title: "Legal",
@@ -167,7 +179,7 @@ export function Footer() {
     <footer className="relative overflow-hidden border-t border-white/6 bg-[#07070a]">
       {/* Link columns */}
       <div className="relative z-30 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 sm:pt-16 pb-10">
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 sm:gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8 sm:gap-10">
           {/* Brand column — description only. No mini logo lockup: the navbar
               carries the brand up top and the giant wordmark carries it below,
               a third repeat here was noise. Double-width (col-span-2 of 6),

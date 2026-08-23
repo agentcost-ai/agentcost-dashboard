@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BackendPrewarm } from "@/components/BackendPrewarm";
+import { jsonLd, siteGraph } from "@/lib/structured-data";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -96,62 +97,11 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} ${sora.variable} ${caveat.variable} antialiased bg-neutral-950 text-neutral-100`}
         suppressHydrationWarning={true}
       >
-        {/* Site-wide structured data for search engines */}
+        {/* Site-wide structured data. Defined in lib/structured-data.ts so the
+            pages that extend it reference the same @id values. */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@graph": [
-                {
-                  "@type": "Organization",
-                  "@id": "https://agentcost.tech/#organization",
-                  name: "AgentCost",
-                  alternateName: ["Agent Cost", "AgentCost.tech"],
-                  url: "https://agentcost.tech",
-                  logo: "https://agentcost.tech/icon.svg",
-                  slogan: "Real-time LLM cost observability",
-                  description:
-                    "AgentCost is an open-source LLM cost observability platform with a free hosted cloud. Track, analyze, and optimize OpenAI, Anthropic, Gemini, and LangChain spending in real time across 3,500+ models.",
-                  sameAs: [
-                    "https://github.com/agentcost-ai",
-                    "https://pypi.org/project/agentcost/",
-                    "https://dev.to/kushagra125",
-                  ],
-                  founder: { "@id": "https://agentcost.tech/#founder" },
-                },
-                {
-                  "@type": "Person",
-                  "@id": "https://agentcost.tech/#founder",
-                  name: "Kushagra Agrawal",
-                  url: "https://www.linkedin.com/in/kushagra--agrawal/",
-                  sameAs: [
-                    "https://www.linkedin.com/in/kushagra--agrawal/",
-                    "https://x.com/KushagraA15",
-                    "https://github.com/DS-Kushagra",
-                  ],
-                },
-                {
-                  "@type": "WebSite",
-                  "@id": "https://agentcost.tech/#website",
-                  url: "https://agentcost.tech",
-                  name: "AgentCost",
-                  publisher: { "@id": "https://agentcost.tech/#organization" },
-                },
-                {
-                  "@type": "SoftwareApplication",
-                  name: "AgentCost",
-                  url: "https://agentcost.tech",
-                  applicationCategory: "DeveloperApplication",
-                  operatingSystem: "Any",
-                  description:
-                    "Real-time LLM cost tracking and optimization for OpenAI, Anthropic, Gemini, and LangChain across 3,500+ models.",
-                  downloadUrl: "https://pypi.org/project/agentcost/",
-                  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-                },
-              ],
-            }),
-          }}
+          dangerouslySetInnerHTML={jsonLd(siteGraph())}
         />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-KMLSX540HL"
