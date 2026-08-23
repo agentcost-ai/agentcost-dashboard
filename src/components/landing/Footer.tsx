@@ -25,11 +25,12 @@ const columns = [
       { label: "Documentation", href: "/docs" },
       { label: "API Reference", href: "/docs/api" },
       { label: "Model Catalog", href: "/docs/models" },
-      // Named so they are findable by name, not just reachable by URL.
-      // external: these are raw files, not app routes — <Link> would try a
-      // client-side navigation to a non-page and fall back to a hard load.
+      // external: a raw file, not an app route — <Link> would try a client-side
+      // navigation to a non-page and fall back to a hard load.
+      // llms.txt is deliberately NOT listed: agents probe /llms.txt by
+      // convention rather than following links, and it reads as noise to a
+      // human. It stays linked from /docs and the 404 page.
       { label: "OpenAPI Spec", href: "/openapi.json", external: true },
-      { label: "llms.txt", href: "/llms.txt", external: true },
       { label: "Blog", href: "/blog" },
       { label: "Changelog", href: "/changelog" },
     ],
@@ -193,7 +194,7 @@ export function Footer() {
 
             {/* Meta — one row: year, then the two chips */}
             <div className="flex-1 flex flex-col justify-center mt-8">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-neutral-500">
+              <div className="flex flex-nowrap items-center gap-x-2 text-xs whitespace-nowrap text-neutral-500">
                 <span>AgentCost © {new Date().getFullYear()}</span>
                 <span
                   aria-hidden
@@ -203,7 +204,7 @@ export function Footer() {
                   href="https://github.com/agentcost-ai/agentcost-sdk/blob/main/LICENSE"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-white/8 px-3 py-1 text-neutral-500 hover:border-white/20 hover:text-neutral-300 transition-colors"
+                  className="rounded-full border border-white/8 px-2.5 py-1 text-neutral-500 hover:border-white/20 hover:text-neutral-300 transition-colors"
                 >
                   MIT License
                 </a>
@@ -212,7 +213,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => track("github_clicked", { location: "footer" })}
-                  className="flex items-center gap-1.5 rounded-full border border-white/8 px-3 py-1 text-neutral-500 hover:border-white/20 hover:text-neutral-300 transition-colors"
+                  className="flex items-center gap-1.5 rounded-full border border-white/8 px-2.5 py-1 text-neutral-500 hover:border-white/20 hover:text-neutral-300 transition-colors"
                 >
                   <svg
                     className="size-3.5"
@@ -240,14 +241,14 @@ export function Footer() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block text-sm text-neutral-500 hover:text-neutral-200 hover:translate-x-0.5 transition-[color,transform] duration-200"
+                        className="inline-block text-sm text-neutral-500 hover:text-neutral-200 transition-colors duration-200"
                       >
                         {link.label}
                       </a>
                     ) : (
                       <Link
                         href={link.href}
-                        className="inline-block text-sm text-neutral-500 hover:text-neutral-200 hover:translate-x-0.5 transition-[color,transform] duration-200"
+                        className="inline-block text-sm text-neutral-500 hover:text-neutral-200 transition-colors duration-200"
                       >
                         {link.label}
                       </Link>
