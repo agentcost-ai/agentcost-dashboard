@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { isDemoMode, exitDemoMode } from "@/lib/demo/demo";
+import { isAuthOnlyRoute, shouldRedirectToLogin } from "@/lib/route-access";
 import {
   api,
   reconcileStoredConfigOwner,
@@ -112,37 +113,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Routes that don't require authentication
-const publicRoutes = [
-  "/", // Landing page is public
-  "/demo", // Demo entry point — sets demo mode then redirects to dashboard
-  "/pricing", // Pricing page is public
-  "/blog", // Blog is public
-  "/changelog", // Changelog is public
-  "/compare", // Competitor comparison pages — these exist to be found by
-  // strangers via search, so they must never bounce to login. Anything added
-  // to sitemap.ts belongs in this list too.
-  "/auth/login",
-  "/auth/register",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-  "/auth/verify-email",
-  "/auth/accept-policies",
-  "/docs", // Documentation is public
-  "/terms", // Legal pages are public
-  "/privacy",
-];
-
-// Routes that authenticated users should be redirected away from (auth pages
-// only). /auth/verify-email is deliberately NOT here: users are now signed in
-// immediately after registration and must be able to open the verification
-// link without being bounced to the dashboard before it completes.
-const authOnlyRoutes = [
-  "/auth/login",
-  "/auth/register",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -223,21 +193,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
 
-    const isPublicRoute =
-      pathname === "/" ||
-      publicRoutes.some(
-        (route) => route !== "/" && pathname?.startsWith(route),
-      );
-
-    const isAuthRoute = authOnlyRoutes.some((route) =>
-      pathname?.startsWith(route),
-    );
+    const isAuthRoute = isAuthOnlyRoute(pathname);
 
     // The demo user is synthetic — they must be able to reach the register/
     // login pages (that's the whole conversion path out of the demo).
     const isDemoUser = !!user && !token && user.id === "demo-user";
 
-    if (!user && !isPublicRoute) {
+    if (!user && shouldRedirectToLogin(pathname)) {
       // Not authenticated and trying to access protected route
       router.push("/auth/login");
     } else if (user && isAuthRoute && !isDemoUser) {
