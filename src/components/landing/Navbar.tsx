@@ -16,6 +16,7 @@ const navLinks = [
   { label: "Blog", href: "/blog" },
   { label: "Changelog", href: "/changelog" },
   { label: "Docs", href: "/docs" },
+  { label: "MCP", href: "/docs/mcp" },
 ];
 
 export function Navbar() {
