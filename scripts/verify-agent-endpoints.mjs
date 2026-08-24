@@ -177,6 +177,19 @@ async function main() {
     check("/api/v1 lists its endpoints", body.includes("estimate") && body.includes("pricing"));
   }
   {
+    // Rate limit headers, so an agent can pace itself rather than discovering
+    // the limit by tripping it.
+    const { response } = await get("/api/v1/pricing/gpt-4o");
+    const policy = header(response, "ratelimit-policy");
+    const current = header(response, "ratelimit");
+    check("API returns RateLimit-Policy (IETF draft form)", /^"[^"]+";q=\d+;w=\d+/.test(policy), policy || "absent");
+    check("API returns RateLimit (IETF draft form)", /^"[^"]+";r=\d+;t=\d+/.test(current), current || "absent");
+    check("API returns the RateLimit-Limit/Remaining/Reset triple",
+      Boolean(header(response, "ratelimit-limit") && header(response, "ratelimit-remaining") && header(response, "ratelimit-reset")),
+      `${header(response, "ratelimit-limit")}/${header(response, "ratelimit-remaining")}/${header(response, "ratelimit-reset")}`);
+    check("policy quota matches RateLimit-Limit", policy.includes(`q=${header(response, "ratelimit-limit")}`), policy);
+  }
+  {
     const { response, body } = await get("/api/v1/health");
     check("/api/v1/health is 200", response.status === 200, `got ${response.status}`);
     check("/api/v1/health reports status ok", JSON.parse(body).status === "ok");
@@ -218,6 +231,157 @@ async function main() {
     check("estimate names the matched catalogue entry", Boolean(payload.matched_to));
   }
 
+  // --- 4b. MCP server --------------------------------------------------------
+  console.log("\nMCP server");
+  async function mcp(body, headers = {}) {
+    const response = await fetch(`${BASE}/api/mcp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+        "MCP-Protocol-Version": "2026-07-28",
+        "Mcp-Method": body.method,
+        ...headers,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(120_000),
+    });
+    const text = await response.text();
+    let parsed = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      /* reported by the caller */
+    }
+    return { response, body: parsed, text };
+  }
+
+  {
+    const { response, body } = await mcp({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "server/discover",
+      params: { _meta: { "io.modelcontextprotocol/protocolVersion": "2026-07-28" } },
+    });
+    check("server/discover is 200", response.status === 200, `got ${response.status}`);
+    check("discover advertises supported versions", Array.isArray(body?.result?.supportedVersions), JSON.stringify(body)?.slice(0, 120));
+    check("discover declares the tools capability", Boolean(body?.result?.capabilities?.tools));
+    check("discover carries when-to-use instructions", String(body?.result?.instructions ?? "").length > 100);
+    check("results carry resultType (required from 2026-07-28)", body?.result?.resultType === "complete");
+  }
+  {
+    const { response, body } = await mcp({
+      jsonrpc: "2.0",
+      id: 2,
+      method: "tools/list",
+      params: { _meta: { "io.modelcontextprotocol/protocolVersion": "2026-07-28" } },
+    });
+    const tools = body?.result?.tools ?? [];
+    check("tools/list is 200", response.status === 200, `got ${response.status}`);
+    check("tools/list returns the four pricing tools", tools.length === 4, `got ${tools.length}`);
+    check("every tool has a description and inputSchema", tools.every((t) => t.description && t.inputSchema?.type === "object"));
+    check("tools/list is cacheable (ttlMs + cacheScope)", typeof body?.result?.ttlMs === "number" && Boolean(body?.result?.cacheScope));
+  }
+  {
+    const { response, body } = await mcp(
+      {
+        jsonrpc: "2.0",
+        id: 3,
+        method: "tools/call",
+        params: {
+          name: "estimate_cost",
+          arguments: { model: "gpt-4o", input_tokens: 12000, output_tokens: 800 },
+          _meta: { "io.modelcontextprotocol/protocolVersion": "2026-07-28" },
+        },
+      },
+      { "Mcp-Name": "estimate_cost" },
+    );
+    check("tools/call estimate_cost is 200", response.status === 200, `got ${response.status}`);
+    check("tool returns structuredContent", typeof body?.result?.structuredContent?.total_cost === "number", JSON.stringify(body?.result)?.slice(0, 140));
+    check("tool also returns a text block", Boolean(body?.result?.content?.[0]?.text));
+    check("tool did not report an error", body?.result?.isError !== true);
+  }
+  {
+    // Header/body agreement is required from 2026-07-28.
+    const { response, body } = await mcp(
+      {
+        jsonrpc: "2.0",
+        id: 4,
+        method: "tools/call",
+        params: {
+          name: "estimate_cost",
+          arguments: { model: "gpt-4o", input_tokens: 1, output_tokens: 1 },
+          _meta: { "io.modelcontextprotocol/protocolVersion": "2026-07-28" },
+        },
+      },
+      { "Mcp-Name": "list_models" },
+    );
+    check("mismatched Mcp-Name is rejected with -32020", response.status === 400 && body?.error?.code === -32020, `${response.status} ${body?.error?.code}`);
+  }
+  {
+    const { response, body } = await mcp({
+      jsonrpc: "2.0",
+      id: 5,
+      method: "tools/list",
+      params: { _meta: { "io.modelcontextprotocol/protocolVersion": "1900-01-01" } },
+    }, { "MCP-Protocol-Version": "1900-01-01" });
+    check("unsupported protocol version returns -32022 with a supported list", response.status === 400 && body?.error?.code === -32022 && Array.isArray(body?.error?.data?.supported), `${response.status} ${body?.error?.code}`);
+  }
+  {
+    // Legacy clients open with a handshake instead of per-request metadata.
+    const response = await fetch(`${BASE}/api/mcp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "verify", version: "1.0" } },
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+    const parsed = await response.json();
+    check("legacy initialize handshake still works", response.status === 200 && parsed?.result?.protocolVersion === "2025-06-18", `${response.status} ${parsed?.result?.protocolVersion}`);
+    check("legacy initialize returns serverInfo", Boolean(parsed?.result?.serverInfo?.name));
+  }
+  {
+    const response = await fetch(`${BASE}/api/mcp`, { method: "GET", signal: AbortSignal.timeout(30_000) });
+    check("GET on the MCP endpoint is 405", response.status === 405, `got ${response.status}`);
+  }
+  {
+    // The MCP spec requires servers to rate limit tool invocations.
+    const { response } = await mcp({
+      jsonrpc: "2.0",
+      id: 6,
+      method: "tools/list",
+      params: { _meta: { "io.modelcontextprotocol/protocolVersion": "2026-07-28" } },
+    });
+    check(
+      "MCP responses carry rate limit headers",
+      Boolean(header(response, "ratelimit-limit") && header(response, "ratelimit-policy")),
+      header(response, "ratelimit-policy") || "absent",
+    );
+  }
+
+  // --- 4c. Deprecation policy ------------------------------------------------
+  console.log("\nVersioning policy");
+  {
+    const { response } = await get("/api/v1/pricing/gpt-4o");
+    const link = header(response, "link");
+    check("API responses link the deprecation policy", link.includes('rel="deprecation"'), link || "absent");
+    check("nothing is currently deprecated", !header(response, "deprecation") && !header(response, "sunset"));
+  }
+  {
+    const { response, body } = await get("/docs/api-versioning");
+    check("/docs/api-versioning is 200", response.status === 200, `got ${response.status}`);
+    check("policy names Deprecation and Sunset", body.includes("Deprecation") && body.includes("Sunset"));
+  }
+  {
+    const { response, body } = await get("/docs/mcp");
+    check("/docs/mcp is 200", response.status === 200, `got ${response.status}`);
+    check("MCP docs give the endpoint URL", body.includes("/api/mcp"));
+  }
+
   // --- 5. JSON error responses ----------------------------------------------
   console.log("\nJSON errors");
   {
@@ -252,7 +416,7 @@ async function main() {
 
   // --- 6. Trust anchor pages -------------------------------------------------
   console.log("\nTrust anchors");
-  for (const path of ["/about", "/contact", "/privacy", "/terms", "/docs"]) {
+  for (const path of ["/about", "/contact", "/privacy", "/terms", "/docs", "/docs/mcp", "/docs/api-versioning"]) {
     const { response, body } = await get(path);
     check(`${path} is 200`, response.status === 200, `got ${response.status}`);
     const text = body

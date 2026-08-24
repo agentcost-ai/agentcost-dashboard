@@ -262,6 +262,86 @@ No credentials required. Schema: ${SITE_URL}/openapi.json`,
   },
 
   {
+    route: "/docs/mcp",
+    title: "AgentCost MCP Server",
+    description:
+      "A remote MCP server giving any agent live LLM model pricing, cost estimation and retirement lookups as callable tools. No install, no credentials.",
+    section: "API for agents",
+    body: `Endpoint: ${SITE_URL}/api/mcp (Streamable HTTP)
+
+Public. No credentials, no sign-up, no OAuth. Serves both the current stateless
+MCP revision (2026-07-28) and the older handshake era, so any client works.
+
+## Connect
+
+Claude Code:
+
+\`\`\`bash
+claude mcp add --transport http agentcost ${SITE_URL}/api/mcp
+\`\`\`
+
+Config-file clients (Claude Desktop and similar):
+
+\`\`\`json
+{ "mcpServers": { "agentcost": { "type": "http", "url": "${SITE_URL}/api/mcp" } } }
+\`\`\`
+
+## Tools
+
+- **list_models** — search the catalogue by provider and/or name substring, sorted cheapest-input-first. Use it to compare model costs or find a cheaper alternative.
+- **get_model_pricing** — per-1,000-token input, output, cached-input and cache-write rates for one named model. Resolves exact, then case-insensitive, then provider-prefixed suffix.
+- **estimate_cost** — dollars for a model and a token count, before you spend them. Multiply a single call out to a whole job with \`calls\`.
+- **list_model_deprecations** — models with an upstream-announced retirement date, soonest first.
+
+Every tool is read-only and needs no credentials, so they are safe to call
+speculatively. They read the public catalogue only — your own spend, projects
+and budgets need an authenticated account and the REST API.
+
+Full reference: ${SITE_URL}/docs/mcp`,
+  },
+
+  {
+    route: "/docs/api-versioning",
+    title: "AgentCost API Versioning & Deprecation Policy",
+    description:
+      "How the AgentCost API is versioned, how retirements are signalled with Deprecation and Sunset headers, and the minimum notice before an endpoint stops working.",
+    section: "API for agents",
+    body: `The API is versioned in the URL path — every endpoint lives under \`/v1/\`,
+on both \`${API_URL}/v1/…\` and the cached mirror at \`${SITE_URL}/api/v1/…\`.
+
+Within a version, changes are additive only: new endpoints, new optional request
+fields, new response fields. Existing field names keep their meaning and type.
+Anything that would break a working client means a new version path. Ignore
+response fields you do not recognise.
+
+## How a retirement is announced
+
+Every API response carries a link to the policy:
+
+\`\`\`
+Link: <${SITE_URL}/docs/api-versioning>; rel="deprecation"; type="text/html"
+\`\`\`
+
+That link alone does NOT mean anything is deprecated. When an endpoint is
+actually retiring, its responses additionally carry:
+
+- \`Deprecation\` — a Structured Fields Date (\`@\` plus whole seconds since the epoch) marking when it was announced. The endpoint still works.
+- \`Sunset\` — an HTTP-date (RFC 8594) marking when it stops working. Never earlier than the deprecation instant.
+- A \`rel="successor-version"\` link to the replacement, where there is one.
+
+Minimum 180 days between the two dates on any public endpoint. The headers are
+the notice — no subscription needed.
+
+**Currently deprecated: nothing.** No \`/v1/\` endpoint is deprecated or
+scheduled for retirement, so no response carries those headers today.
+
+Provider *model* retirements are a separate feed:
+\`GET ${SITE_URL}/api/v1/pricing/deprecations\`.
+
+Full policy: ${SITE_URL}/docs/api-versioning`,
+  },
+
+  {
     route: "/docs/privacy",
     title: "AgentCost Data and Privacy Architecture",
     description:

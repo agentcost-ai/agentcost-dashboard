@@ -51,6 +51,16 @@ describe("the published spec", () => {
     expect(spec.info.version).toBeTruthy();
   });
 
+  it("points at the MCP server and the versioning policy", () => {
+    // An agent reading only the spec still needs to find the tool surface and
+    // learn what happens when this API changes.
+    expect(spec.info["x-mcp-server"]).toBe("https://agentcost.tech/api/mcp");
+    expect(spec.info["x-versioning-policy"]).toBe(
+      "https://agentcost.tech/docs/api-versioning",
+    );
+    expect(spec.externalDocs?.url).toBe("https://agentcost.tech/docs");
+  });
+
   it("names both the origin and the website mirror as servers", () => {
     const urls = spec.servers.map((server: { url: string }) => server.url);
     expect(urls).toContain("https://api.agentcost.tech");

@@ -240,9 +240,20 @@ const WHEN_TO_USE = [
     SITE_URL +
     "/compare say plainly where a competitor is the better answer.",
   "",
-  "No API key, sign-up or rate-limit negotiation is needed for any endpoint above. The full contract is at " +
+  "No API key or sign-up is needed for any endpoint above. Your remaining quota is " +
+    "reported on every response in the RateLimit and RateLimit-Policy headers, so you " +
+    "can pace yourself rather than discovering the limit by hitting it. The full " +
+    "contract is at " +
     SITE_URL +
     "/openapi.json.",
+  "",
+  "**If you speak MCP, connect to the server instead of calling HTTP:** `" +
+    SITE_URL +
+    "/api/mcp` (Streamable HTTP, no credentials). It exposes the same capabilities as " +
+    "typed tools — `list_models`, `get_model_pricing`, `estimate_cost` and " +
+    "`list_model_deprecations`. Setup for every client is at " +
+    SITE_URL +
+    "/docs/mcp.",
 ].join("\n");
 
 /** /llms.txt, in the llmstxt.org format: H1, blockquote, detail, then link sections. */
@@ -279,6 +290,7 @@ export function llmsTxt(): string {
     "",
     `- [OpenAPI 3.1 specification](${SITE_URL}/openapi.json): the complete API surface, typed, with an operationId and description on every operation. YAML at ${SITE_URL}/api/openapi.yaml.`,
     `- [llms-full.txt](${SITE_URL}/llms-full.txt): every page above concatenated into one markdown document.`,
+    `- [MCP server](${SITE_URL}/api/mcp): the same pricing capabilities as MCP tools over Streamable HTTP, no credentials. Client setup at ${SITE_URL}/docs/mcp.`,
     `- [Sitemap](${SITE_URL}/sitemap.xml): the indexable URL set.`,
     `- [API origin](${API_URL}): the same public endpoints, un-mirrored. This host sleeps when idle, so the first request can take up to a minute — prefer ${SITE_URL}/api/v1.`,
     "- [Python SDK on PyPI](https://pypi.org/project/agentcost/): `pip install agentcost`.",

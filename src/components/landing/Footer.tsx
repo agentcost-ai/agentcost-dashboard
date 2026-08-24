@@ -25,6 +25,7 @@ const columns = [
       { label: "Documentation", href: "/docs" },
       { label: "API Reference", href: "/docs/api" },
       { label: "Model Catalog", href: "/docs/models" },
+      { label: "MCP Server", href: "/docs/mcp" },
       // external: a raw file, not an app route — <Link> would try a client-side
       // navigation to a non-page and fall back to a hard load.
       // llms.txt is deliberately NOT listed: agents probe /llms.txt by

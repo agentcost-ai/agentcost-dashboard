@@ -55,6 +55,40 @@ const TOKEN_COUNT_SCHEMA = (description) => ({
   description,
 });
 
+// Document the shared error envelope on every operation that can fail, so a
+// function-calling client knows what a non-2xx body looks like.
+const errorResponse = (description, headers) => ({
+  description,
+  ...(headers ? { headers } : {}),
+  content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } },
+});
+
+// Rate limit headers ride on every response. Declaring them in the spec is
+// what lets a generated client read the quota instead of guessing at it.
+const RATE_LIMIT_HEADERS = {
+  "RateLimit-Policy": {
+    description:
+      'The quota policy in force, e.g. "public";q=120;w=60 - 120 requests per 60 seconds.',
+    schema: { type: "string" },
+  },
+  RateLimit: {
+    description:
+      'Remaining quota and seconds until reset, e.g. "public";r=119;t=60.',
+    schema: { type: "string" },
+  },
+  "RateLimit-Limit": { description: "Requests allowed per window.", schema: { type: "integer" } },
+  "RateLimit-Remaining": { description: "Requests left in the current window.", schema: { type: "integer" } },
+  "RateLimit-Reset": { description: "Seconds until the window resets.", schema: { type: "integer" } },
+};
+
+const RETRY_AFTER_HEADER = {
+  ...RATE_LIMIT_HEADERS,
+  "Retry-After": {
+    description: "Seconds to wait before retrying. Always present on a 429.",
+    schema: { type: "integer" },
+  },
+};
+
 /** The estimator, which is computed on the website from the cached catalogue. */
 const ESTIMATE_PATH = {
   servers: [MIRROR_SERVER],
@@ -269,6 +303,15 @@ function transform(spec) {
     ...out.info,
     title: "AgentCost API",
     "x-mirror": MIRROR_SERVER.url,
+    // Where an agent finds the two things it needs before integrating: a tool
+    // surface it can call natively, and what happens when this API changes.
+    "x-mcp-server": "https://agentcost.tech/api/mcp",
+    "x-versioning-policy": "https://agentcost.tech/docs/api-versioning",
+  };
+
+  out.externalDocs = {
+    description: "AgentCost documentation",
+    url: "https://agentcost.tech/docs",
   };
 
   // Pin every non-mirrored path to the origin so the two root servers are not a
@@ -287,15 +330,13 @@ function transform(spec) {
   }
 
   out.paths["/v1/estimate"] = ESTIMATE_PATH;
+  ESTIMATE_PATH.post.responses["200"].headers = RATE_LIMIT_HEADERS;
+  ESTIMATE_PATH.post.responses["429"] = errorResponse(
+    "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry.",
+    RETRY_AFTER_HEADER,
+  );
   out.components = out.components ?? {};
   out.components.schemas = { ...(out.components.schemas ?? {}), ...EXTRA_SCHEMAS };
-
-  // Document the shared error envelope on every operation that can fail, so a
-  // function-calling client knows what a non-2xx body looks like.
-  const errorResponse = (description) => ({
-    description,
-    content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } },
-  });
 
   for (const [pathname, item] of Object.entries(out.paths)) {
     if (MIRROR_ONLY_PATHS.has(pathname)) continue;
@@ -308,7 +349,18 @@ function transform(spec) {
       if (operation.security?.length) {
         operation.responses["401"] = errorResponse("Missing or invalid credentials.");
       }
-      operation.responses["429"] = errorResponse("Rate limit exceeded. See the Retry-After header.");
+      operation.responses["429"] = errorResponse(
+        "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry.",
+        RETRY_AFTER_HEADER,
+      );
+
+      // Advertise the quota on the success responses too — a client that only
+      // learns its remaining quota from a 429 has already been throttled.
+      for (const [code, response] of Object.entries(operation.responses)) {
+        if (code.startsWith("2") && response && typeof response === "object") {
+          response.headers = { ...RATE_LIMIT_HEADERS, ...(response.headers ?? {}) };
+        }
+      }
     }
   }
 
