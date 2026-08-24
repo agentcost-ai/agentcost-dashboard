@@ -591,7 +591,8 @@ export default function TeamPage() {
                 <div key={member.user_id} className="py-4 first:pt-0 last:pb-0">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-medium">
+                      {/* Initials only, matching the sidebar avatar. */}
+                      <div className="h-10 w-10 shrink-0 text-neutral-200 flex items-center justify-center font-medium">
                         {(member.name || member.email).charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">

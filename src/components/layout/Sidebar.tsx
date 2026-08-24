@@ -288,8 +288,10 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 isCollapsed && "justify-center",
               )}
             >
-              {/* Avatar */}
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary-500 to-primary-700 text-white font-medium text-sm">
+              {/* Initials only, no disc. The accent belongs to the active nav
+                  item; a filled avatar competes with it for attention and adds
+                  nothing — the letter already identifies the account. */}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center text-neutral-200 font-medium text-sm">
                 {getUserInitials()}
               </div>
 
