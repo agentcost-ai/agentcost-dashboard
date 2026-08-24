@@ -33,6 +33,16 @@ const GUIDES = [
     body: "Every model AgentCost can bill, with live per-1,000-token input, output and cached rates across OpenAI, Anthropic, Google, AWS, Azure and 50+ other providers, plus announced retirement dates.",
   },
   {
+    href: "/docs/mcp",
+    title: "AgentCost MCP server",
+    body: "Connect any MCP client and give your agent live model pricing, cost estimation and retirement lookups as callable tools. Remote endpoint, no install, no credentials.",
+  },
+  {
+    href: "/docs/api-versioning",
+    title: "AgentCost API versioning & deprecation policy",
+    body: "How the API is versioned, how retirements are signalled with Deprecation and Sunset headers, and the minimum notice before any endpoint stops working.",
+  },
+  {
     href: "/docs/privacy",
     title: "AgentCost data & privacy architecture",
     body: "Field by field: what the SDK transmits, what it never collects, what is hashed, how hosted and local mode differ, how long data is retained, and how to verify all of it yourself.",

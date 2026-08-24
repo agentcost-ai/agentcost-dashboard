@@ -2,6 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { negotiate } from "@/lib/http/accept";
 import { errorBody } from "@/lib/http/api-response";
+import { deprecationHeaders } from "@/lib/http/deprecation";
+import {
+  WINDOW_SECONDS,
+  clientKey,
+  consume,
+  rateLimitHeaders,
+} from "@/lib/http/rate-limit";
 
 /**
  * Content negotiation for the public site.
@@ -52,8 +59,79 @@ function isRscRequest(request: NextRequest, accept: string | null): boolean {
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // The MCP spec requires servers to rate limit tool invocations. Same quota
+  // and same headers as the REST surface; the endpoint answers POST only, so
+  // there is nothing to content-negotiate here.
+  if (pathname === "/api/mcp") {
+    const quota = consume(clientKey(request.headers));
+    const quotaHeaders = rateLimitHeaders(quota);
+
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          jsonrpc: "2.0",
+          id: null,
+          error: {
+            code: -32003,
+            message: `Rate limit exceeded: ${quota.limit} requests per ${WINDOW_SECONDS} seconds. Retry in ${quota.reset}s.`,
+          },
+        },
+        {
+          status: 429,
+          headers: {
+            ...quotaHeaders,
+            "Retry-After": String(quota.reset),
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
+      );
+    }
+
+    const response = NextResponse.next();
+    for (const [key, value] of Object.entries(quotaHeaders)) {
+      response.headers.set(key, value);
+    }
+    return response;
+  }
+
   if (pathname.startsWith("/api/v1")) {
-    if (isKnownApiRoute(pathname)) return NextResponse.next();
+    // Runs before the CDN cache, so the quota is counted on cache hits too and
+    // these headers are recomputed per request rather than cached alongside a
+    // response body.
+    const quota = consume(clientKey(request.headers));
+    // Rate limit headers so a caller can pace itself; the deprecation link so
+    // it can find the versioning policy before building against this surface.
+    const quotaHeaders = {
+      ...rateLimitHeaders(quota),
+      ...deprecationHeaders(pathname),
+    };
+
+    if (!quota.allowed) {
+      const body = errorBody(
+        "rate_limited",
+        `Rate limit exceeded: ${quota.limit} requests per ${WINDOW_SECONDS} seconds.`,
+        `Wait ${quota.reset}s, then retry. The RateLimit and RateLimit-Policy response headers report your remaining quota on every request, so you can pace yourself without hitting this.`,
+      );
+      return NextResponse.json(body, {
+        status: 429,
+        headers: {
+          ...quotaHeaders,
+          "Retry-After": String(quota.reset),
+          "Cache-Control": "no-store",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
+    if (isKnownApiRoute(pathname)) {
+      const response = NextResponse.next();
+      for (const [key, value] of Object.entries(quotaHeaders)) {
+        response.headers.set(key, value);
+      }
+      return response;
+    }
+
     const body = errorBody(
       "not_found",
       `No API endpoint at ${pathname}.`,
@@ -61,7 +139,11 @@ export default function proxy(request: NextRequest) {
     );
     return NextResponse.json(body, {
       status: 404,
-      headers: { "Cache-Control": "no-store", "Access-Control-Allow-Origin": "*" },
+      headers: {
+        ...quotaHeaders,
+        "Cache-Control": "no-store",
+        "Access-Control-Allow-Origin": "*",
+      },
     });
   }
 

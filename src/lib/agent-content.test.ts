@@ -102,6 +102,7 @@ describe("llms.txt", () => {
       `${SITE_URL}/openapi.json`,
       `${SITE_URL}/llms-full.txt`,
       `${SITE_URL}/sitemap.xml`,
+      `${SITE_URL}/api/mcp`,
     ]);
     const unknown = linked.filter((url) => !known.has(url));
     expect(unknown).toEqual([]);

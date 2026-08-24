@@ -28,6 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/docs/api`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/docs/models`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/docs/cli`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE_URL}/docs/mcp`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/docs/api-versioning`, lastModified: lastmod, changeFrequency: "yearly", priority: 0.6 },
     { url: `${BASE_URL}/docs/privacy`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/blog`, lastModified: lastmod, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/changelog`, lastModified: lastmod, changeFrequency: "weekly", priority: 0.7 },

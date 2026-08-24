@@ -11,6 +11,7 @@ const DOCS_NAV = [
   { href: "/docs/api", label: "API" },
   { href: "/docs/cli", label: "CLI" },
   { href: "/docs/models", label: "Models" },
+  { href: "/docs/mcp", label: "MCP" },
   { href: "/docs/privacy", label: "Privacy" },
 ];
 

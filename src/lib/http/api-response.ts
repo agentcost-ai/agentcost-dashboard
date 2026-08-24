@@ -16,6 +16,7 @@ export type ApiErrorCode =
   | "not_acceptable"
   | "unsupported_media_type"
   | "validation_error"
+  | "rate_limited"
   | "upstream_error"
   | "service_unavailable"
   | "internal_error";
@@ -27,6 +28,7 @@ const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   not_acceptable: 406,
   unsupported_media_type: 415,
   validation_error: 422,
+  rate_limited: 429,
   upstream_error: 502,
   service_unavailable: 503,
   internal_error: 500,
