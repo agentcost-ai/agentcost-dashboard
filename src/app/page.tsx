@@ -6,6 +6,7 @@ import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { ArchitectureSection } from "@/components/landing/ArchitectureSection";
 import { IntegrationSection } from "@/components/landing/IntegrationSection";
 import { MetricsSection } from "@/components/landing/MetricsSection";
+import { TrustSection } from "@/components/landing/TrustSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { faqs } from "@/components/landing/faq-data";
 import { CTASection } from "@/components/landing/CTASection";
@@ -48,6 +49,7 @@ export default function LandingPage() {
       <ArchitectureSection />
       <IntegrationSection />
       <MetricsSection />
+      <TrustSection />
       <FAQSection />
       <CTASection />
       <Footer />

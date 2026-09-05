@@ -15,6 +15,7 @@ const columns = [
       // Root-anchored so they work from /pricing, /blog, etc.
       { label: "Features", href: "/#features" },
       { label: "Integration", href: "/#integration" },
+      { label: "Privacy by design", href: "/#privacy" },
       { label: "Pricing", href: "/pricing" },
       { label: "Dashboard", href: "/auth/login" },
     ],
@@ -62,6 +63,7 @@ const columns = [
     links: [
       { label: "Terms of Service", href: "/terms" },
       { label: "Privacy Policy", href: "/privacy" },
+      { label: "Data & Privacy Docs", href: "/docs/privacy" },
       {
         label: "License (MIT)",
         href: "https://github.com/agentcost-ai/agentcost-sdk/blob/main/LICENSE",

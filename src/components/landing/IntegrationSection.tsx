@@ -47,7 +47,7 @@ export function IntegrationSection() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                     >
-                        <p className="text-sm font-medium text-emerald-400 uppercase tracking-widest mb-4">
+                        <p className="text-xs font-medium text-sky-400 uppercase tracking-[0.18em] mb-4">
                             Integration
                         </p>
                         <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight">
@@ -107,16 +107,9 @@ export function IntegrationSection() {
                         <div className="relative rounded-2xl border border-white/8 bg-[#0c0c0e] overflow-hidden shadow-2xl shadow-black/40">
                             {/* Header */}
                             <div className="flex items-center justify-between px-5 py-3 border-b border-white/6 bg-white/2">
-                                <div className="flex items-center gap-2">
-                                    <div className="flex gap-1.5">
-                                        <span className="w-3 h-3 rounded-full bg-red-500/70" />
-                                        <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
-                                        <span className="w-3 h-3 rounded-full bg-green-500/70" />
-                                    </div>
-                                    <span className="ml-3 text-xs text-neutral-500 font-mono">
-                                        my_agent.py
-                                    </span>
-                                </div>
+                                <span className="text-xs text-neutral-500 font-mono">
+                                    my_agent.py
+                                </span>
                                 <button
                                     onClick={handleCopy}
                                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-neutral-500 hover:text-neutral-300 hover:bg-white/5 transition-all"

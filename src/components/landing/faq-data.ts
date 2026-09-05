@@ -27,6 +27,10 @@ export const faqs = [
                 a: "Near-zero. The SDK uses async batching to accumulate events and send them in bulk, so delivery never blocks your LLM calls. Token counting is done locally using tiktoken, and cost calculation is a simple lookup — neither blocks your application.",
             },
             {
+                q: "What data does the SDK actually send? Are my prompts private?",
+                a: "The SDK is a metadata-only tracker. Each event carries the agent name, model, token counts, cost, latency, timestamp, and a success flag — never your prompts, completions, system instructions, or files, and there is no setting that transmits them. For duplicate detection the prompt is hashed locally with SHA-256, so only the one-way hash leaves your process. The full wire payload is documented field-by-field at agentcost.tech/docs/privacy, with links to the open-source SDK code so you can verify every claim.",
+            },
+            {
                 q: "Is AgentCost hosted or self-hosted? Where does my data go?",
                 a: "Both — you choose. By default you use the free hosted cloud: sign up, and your usage events are stored securely at api.agentcost.tech; you can delete your data or your account at any time. Because the whole stack is MIT-licensed, you can instead self-host the FastAPI backend and PostgreSQL database on your own infrastructure with Docker — in that mode, nothing leaves your environment and there is no telemetry or phone-home behavior.",
             },
