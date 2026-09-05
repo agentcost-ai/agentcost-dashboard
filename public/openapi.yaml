@@ -9613,6 +9613,665 @@
     "servers":
       - "url": "https://api.agentcost.tech"
         "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/guardrails":
+    "get":
+      "tags":
+        - "Guardrails"
+      "summary": "List Guardrails"
+      "description": "Declared guardrails for every agent in the project."
+      "operationId": "guardrails_list_guardrails"
+      "security":
+        - "APIKeyHeader": []
+      "parameters":
+        - "name": "project_id"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Project ID. Required for JWT-authenticated requests; ignored for SDK API-key requests (the project is derived from the key)."
+            "title": "Project Id"
+          "description": "Project ID. Required for JWT-authenticated requests; ignored for SDK API-key requests (the project is derived from the key)."
+      "responses":
+        "200":
+          "description": "Successful Response"
+          "content":
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/GuardrailResponse"
+                "title": "Response List Guardrails V1 Guardrails Get"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/guardrails/compliance":
+    "get":
+      "tags":
+        - "Guardrails"
+      "summary": "Guardrail Compliance"
+      "description": "Observed tool usage judged against each agent's declared guardrail.\n\nCoverage caveat: only calls wrapped in ``track_costs.tool(...)`` carry a\ntool name, so compliance is judged on instrumented calls — the response\nreports ``tool_tracked_calls`` against ``total_calls`` for that reason."
+      "operationId": "guardrails_guardrail_compliance"
+      "security":
+        - "APIKeyHeader": []
+      "parameters":
+        - "name": "range"
+          "in": "query"
+          "required": false
+          "schema":
+            "enum":
+              - "1h"
+              - "24h"
+              - "7d"
+              - "30d"
+              - "90d"
+            "type": "string"
+            "description": "Time range: 1h, 24h, 7d, 30d, 90d"
+            "default": "7d"
+            "title": "Range"
+          "description": "Time range: 1h, 24h, 7d, 30d, 90d"
+        - "name": "project_id"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Project ID. Required for JWT-authenticated requests; ignored for SDK API-key requests (the project is derived from the key)."
+            "title": "Project Id"
+          "description": "Project ID. Required for JWT-authenticated requests; ignored for SDK API-key requests (the project is derived from the key)."
+      "responses":
+        "200":
+          "description": "Successful Response"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/GuardrailComplianceResponse"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/projects/{project_id}/guardrails":
+    "put":
+      "tags":
+        - "Guardrails"
+      "summary": "Upsert Guardrail"
+      "description": "Create or replace the guardrail for one agent."
+      "operationId": "guardrails_upsert_guardrail"
+      "security":
+        - "HTTPBearer": []
+      "parameters":
+        - "name": "project_id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "title": "Project Id"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/GuardrailUpsert"
+      "responses":
+        "200":
+          "description": "Successful Response"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/GuardrailResponse"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/projects/{project_id}/guardrails/{agent_name}":
+    "delete":
+      "tags":
+        - "Guardrails"
+      "summary": "Delete Guardrail"
+      "description": "Remove the guardrail for one agent; its status returns to no_guardrail."
+      "operationId": "guardrails_delete_guardrail"
+      "security":
+        - "HTTPBearer": []
+      "parameters":
+        - "name": "project_id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "title": "Project Id"
+        - "name": "agent_name"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "title": "Agent Name"
+      "responses":
+        "204":
+          "description": "Successful Response"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/projects/{project_id}/guardrails/tool-tags":
+    "put":
+      "tags":
+        - "Guardrails"
+      "summary": "Upsert Tool Tag"
+      "description": "Tag a tool name as read or write for read-only guardrail evaluation."
+      "operationId": "guardrails_upsert_tool_tag"
+      "security":
+        - "HTTPBearer": []
+      "parameters":
+        - "name": "project_id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "title": "Project Id"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/ToolAccessTagUpsert"
+      "responses":
+        "200":
+          "description": "Successful Response"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ToolAccessTagResponse"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/projects/{project_id}/guardrails/tool-tags/{tool_name}":
+    "delete":
+      "tags":
+        - "Guardrails"
+      "summary": "Delete Tool Tag"
+      "description": "Remove a tool's read/write tag; read-only checks treat it as unknown again."
+      "operationId": "guardrails_delete_tool_tag"
+      "security":
+        - "HTTPBearer": []
+      "parameters":
+        - "name": "project_id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "title": "Project Id"
+        - "name": "tool_name"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "title": "Tool Name"
+      "responses":
+        "204":
+          "description": "Successful Response"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/docs/feedback":
+    "post":
+      "tags":
+        - "Docs"
+      "summary": "Vote Docs Page"
+      "description": "Record an anonymous yes/no vote for one documentation page."
+      "operationId": "docs_vote_docs_page"
+      "requestBody":
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/DocsFeedbackCreate"
+        "required": true
+      "responses":
+        "204":
+          "description": "Successful Response"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
   "/v1/admin/auth/verify":
     "get":
       "tags":
@@ -12384,6 +13043,83 @@
     "servers":
       - "url": "https://api.agentcost.tech"
         "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/admin/docs-feedback":
+    "get":
+      "tags":
+        - "Admin"
+      "summary": "Docs Feedback Summary"
+      "description": "Per-page tally of the public docs' \"Was this page helpful?\" votes."
+      "operationId": "admin_docs_feedback_summary"
+      "responses":
+        "200":
+          "description": "Successful Response"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/DocsFeedbackSummary"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+      "security":
+        - "HTTPBearer": []
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
   "/v1/admin/feedback":
     "get":
       "tags":
@@ -13367,6 +14103,106 @@
       "type": "object"
       "title": "AdminUserUpdate"
       "description": "Typed body for admin user update."
+    "AgentCompliance":
+      "properties":
+        "agent_name":
+          "type": "string"
+          "title": "Agent Name"
+        "status":
+          "type": "string"
+          "enum":
+            - "no_guardrail"
+            - "compliant"
+            - "breach"
+          "title": "Status"
+        "read_only":
+          "type": "boolean"
+          "title": "Read Only"
+          "default": false
+        "allowed_tools":
+          "anyOf":
+            - "items":
+                "type": "string"
+              "type": "array"
+            - "type": "null"
+          "title": "Allowed Tools"
+        "allowed_models":
+          "anyOf":
+            - "items":
+                "type": "string"
+              "type": "array"
+            - "type": "null"
+          "title": "Allowed Models"
+        "max_tool_calls_per_run":
+          "anyOf":
+            - "type": "integer"
+            - "type": "null"
+          "title": "Max Tool Calls Per Run"
+        "max_cost_per_run_usd":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Max Cost Per Run Usd"
+        "total_calls":
+          "type": "integer"
+          "title": "Total Calls"
+          "default": 0
+        "total_cost":
+          "type": "number"
+          "title": "Total Cost"
+          "default": 0
+        "tracked_tool_calls":
+          "type": "integer"
+          "title": "Tracked Tool Calls"
+          "default": 0
+        "runs_seen":
+          "type": "integer"
+          "title": "Runs Seen"
+          "default": 0
+        "observed_tools":
+          "items":
+            "type": "string"
+          "type": "array"
+          "title": "Observed Tools"
+        "observed_models":
+          "items":
+            "type": "string"
+          "type": "array"
+          "title": "Observed Models"
+        "tool_usage":
+          "items":
+            "$ref": "#/components/schemas/ToolUsage"
+          "type": "array"
+          "title": "Tool Usage"
+        "model_usage":
+          "items":
+            "$ref": "#/components/schemas/ModelUsage"
+          "type": "array"
+          "title": "Model Usage"
+        "run_stats":
+          "anyOf":
+            - "$ref": "#/components/schemas/RunStats"
+            - "type": "null"
+        "breach_series":
+          "items":
+            "$ref": "#/components/schemas/DailyBreaches"
+          "type": "array"
+          "title": "Breach Series"
+        "breaches":
+          "items":
+            "$ref": "#/components/schemas/GuardrailBreach"
+          "type": "array"
+          "title": "Breaches"
+        "unknown_access_tools":
+          "items":
+            "type": "string"
+          "type": "array"
+          "title": "Unknown Access Tools"
+      "type": "object"
+      "required":
+        - "agent_name"
+        - "status"
+      "title": "AgentCompliance"
     "AgentStats":
       "properties":
         "agent_name":
@@ -13600,6 +14436,19 @@
         - "calls"
         - "cost"
       "title": "CadenceBucket"
+    "DailyBreaches":
+      "properties":
+        "day":
+          "type": "string"
+          "title": "Day"
+        "count":
+          "type": "integer"
+          "title": "Count"
+      "type": "object"
+      "required":
+        - "day"
+        - "count"
+      "title": "DailyBreaches"
     "DailyCost":
       "properties":
         "date":
@@ -13748,6 +14597,76 @@
         - "success_rate"
       "title": "DimensionStat"
       "description": "Aggregates for one value of a grouping dimension."
+    "DocsFeedbackCreate":
+      "properties":
+        "page":
+          "type": "string"
+          "maxLength": 255
+          "minLength": 5
+          "pattern": "^/docs(/[A-Za-z0-9_\\-]+)*/?$"
+          "title": "Page"
+        "helpful":
+          "type": "boolean"
+          "title": "Helpful"
+      "type": "object"
+      "required":
+        - "page"
+        - "helpful"
+      "title": "DocsFeedbackCreate"
+      "description": "A \"Was this page helpful?\" vote. Anonymous; only the page and the answer."
+    "DocsFeedbackPageSummary":
+      "properties":
+        "page":
+          "type": "string"
+          "title": "Page"
+        "helpful":
+          "type": "integer"
+          "title": "Helpful"
+        "not_helpful":
+          "type": "integer"
+          "title": "Not Helpful"
+        "total":
+          "type": "integer"
+          "title": "Total"
+        "score":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Score"
+        "last_vote_at":
+          "anyOf":
+            - "type": "string"
+              "format": "date-time"
+            - "type": "null"
+          "title": "Last Vote At"
+      "type": "object"
+      "required":
+        - "page"
+        - "helpful"
+        - "not_helpful"
+        - "total"
+        - "score"
+        - "last_vote_at"
+      "title": "DocsFeedbackPageSummary"
+    "DocsFeedbackSummary":
+      "properties":
+        "pages":
+          "items":
+            "$ref": "#/components/schemas/DocsFeedbackPageSummary"
+          "type": "array"
+          "title": "Pages"
+        "total_votes":
+          "type": "integer"
+          "title": "Total Votes"
+        "votes_last_30d":
+          "type": "integer"
+          "title": "Votes Last 30D"
+      "type": "object"
+      "required":
+        - "pages"
+        - "total_votes"
+        - "votes_last_30d"
+      "title": "DocsFeedbackSummary"
     "EmailVerificationRequest":
       "properties":
         "token":
@@ -14641,6 +15560,188 @@
         - "credential"
       "title": "GoogleAuthRequest"
       "description": "Google OAuth sign-in/sign-up request"
+    "GuardrailBreach":
+      "properties":
+        "kind":
+          "type": "string"
+          "enum":
+            - "undeclared_tool"
+            - "write_in_readonly"
+            - "undeclared_model"
+            - "tool_calls_over_limit"
+            - "run_cost_over_limit"
+          "title": "Kind"
+        "subject":
+          "type": "string"
+          "title": "Subject"
+        "count":
+          "type": "integer"
+          "title": "Count"
+        "limit":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Limit"
+        "observed":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Observed"
+        "last_seen":
+          "anyOf":
+            - "type": "string"
+              "format": "date-time"
+            - "type": "null"
+          "title": "Last Seen"
+      "type": "object"
+      "required":
+        - "kind"
+        - "subject"
+        - "count"
+      "title": "GuardrailBreach"
+    "GuardrailComplianceResponse":
+      "properties":
+        "agents":
+          "items":
+            "$ref": "#/components/schemas/AgentCompliance"
+          "type": "array"
+          "title": "Agents"
+        "tool_tags":
+          "items":
+            "$ref": "#/components/schemas/ToolAccessTagResponse"
+          "type": "array"
+          "title": "Tool Tags"
+        "start_time":
+          "type": "string"
+          "format": "date-time"
+          "title": "Start Time"
+        "end_time":
+          "type": "string"
+          "format": "date-time"
+          "title": "End Time"
+        "total_calls":
+          "type": "integer"
+          "title": "Total Calls"
+        "tool_tracked_calls":
+          "type": "integer"
+          "title": "Tool Tracked Calls"
+      "type": "object"
+      "required":
+        - "agents"
+        - "tool_tags"
+        - "start_time"
+        - "end_time"
+        - "total_calls"
+        - "tool_tracked_calls"
+      "title": "GuardrailComplianceResponse"
+    "GuardrailResponse":
+      "properties":
+        "id":
+          "type": "string"
+          "title": "Id"
+        "agent_name":
+          "type": "string"
+          "title": "Agent Name"
+        "allowed_tools":
+          "anyOf":
+            - "items":
+                "type": "string"
+              "type": "array"
+            - "type": "null"
+          "title": "Allowed Tools"
+        "read_only":
+          "type": "boolean"
+          "title": "Read Only"
+        "allowed_models":
+          "anyOf":
+            - "items":
+                "type": "string"
+              "type": "array"
+            - "type": "null"
+          "title": "Allowed Models"
+        "max_tool_calls_per_run":
+          "anyOf":
+            - "type": "integer"
+            - "type": "null"
+          "title": "Max Tool Calls Per Run"
+        "max_cost_per_run_usd":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Max Cost Per Run Usd"
+        "enabled":
+          "type": "boolean"
+          "title": "Enabled"
+        "created_at":
+          "type": "string"
+          "format": "date-time"
+          "title": "Created At"
+        "updated_at":
+          "anyOf":
+            - "type": "string"
+              "format": "date-time"
+            - "type": "null"
+          "title": "Updated At"
+      "type": "object"
+      "required":
+        - "id"
+        - "agent_name"
+        - "allowed_tools"
+        - "read_only"
+        - "enabled"
+        - "created_at"
+        - "updated_at"
+      "title": "GuardrailResponse"
+    "GuardrailUpsert":
+      "properties":
+        "agent_name":
+          "type": "string"
+          "maxLength": 255
+          "minLength": 1
+          "title": "Agent Name"
+        "allowed_tools":
+          "anyOf":
+            - "items":
+                "type": "string"
+              "type": "array"
+              "maxItems": 200
+            - "type": "null"
+          "title": "Allowed Tools"
+        "read_only":
+          "type": "boolean"
+          "title": "Read Only"
+          "default": false
+        "allowed_models":
+          "anyOf":
+            - "items":
+                "type": "string"
+              "type": "array"
+              "maxItems": 200
+            - "type": "null"
+          "title": "Allowed Models"
+        "max_tool_calls_per_run":
+          "anyOf":
+            - "type": "integer"
+              "maximum": 100000
+              "minimum": 1
+            - "type": "null"
+          "title": "Max Tool Calls Per Run"
+        "max_cost_per_run_usd":
+          "anyOf":
+            - "type": "number"
+              "maximum": 1000000
+              "exclusiveMinimum": 0
+            - "type": "null"
+          "title": "Max Cost Per Run Usd"
+        "enabled":
+          "type": "boolean"
+          "title": "Enabled"
+          "default": true
+      "type": "object"
+      "required":
+        - "agent_name"
+      "title": "GuardrailUpsert"
+      "description": "Create or replace the guardrail for one agent."
     "HTTPValidationError":
       "properties":
         "detail":
@@ -14970,6 +16071,27 @@
         - "avg_latency_ms"
       "title": "ModelStats"
       "description": "Stats for a single model"
+    "ModelUsage":
+      "properties":
+        "model":
+          "type": "string"
+          "title": "Model"
+        "calls":
+          "type": "integer"
+          "title": "Calls"
+        "cost":
+          "type": "number"
+          "title": "Cost"
+        "permitted":
+          "type": "boolean"
+          "title": "Permitted"
+          "default": true
+      "type": "object"
+      "required":
+        - "model"
+        - "calls"
+        - "cost"
+      "title": "ModelUsage"
     "NotificationCountResponse":
       "properties":
         "unread_count":
@@ -15862,6 +16984,40 @@
         - "projected_monthly_cost"
         - "window_days"
       "title": "RunRateProjection"
+    "RunStats":
+      "properties":
+        "runs":
+          "type": "integer"
+          "title": "Runs"
+        "p50_tool_calls":
+          "type": "number"
+          "title": "P50 Tool Calls"
+        "p95_tool_calls":
+          "type": "number"
+          "title": "P95 Tool Calls"
+        "max_tool_calls":
+          "type": "integer"
+          "title": "Max Tool Calls"
+        "p50_cost":
+          "type": "number"
+          "title": "P50 Cost"
+        "p95_cost":
+          "type": "number"
+          "title": "P95 Cost"
+        "max_cost":
+          "type": "number"
+          "title": "Max Cost"
+      "type": "object"
+      "required":
+        - "runs"
+        - "p50_tool_calls"
+        - "p95_tool_calls"
+        - "max_tool_calls"
+        - "p50_cost"
+        - "p95_cost"
+        - "max_cost"
+      "title": "RunStats"
+      "description": "Distribution of tool calls and cost per run (calls sharing a trace_id),\nso a limit can be set from what the agent actually does."
     "SavingsRollup":
       "properties":
         "total_potential_savings_monthly":
@@ -16026,6 +17182,72 @@
         - "user"
       "title": "TokenResponse"
       "description": "JWT token response"
+    "ToolAccessTagResponse":
+      "properties":
+        "tool_name":
+          "type": "string"
+          "title": "Tool Name"
+        "access":
+          "type": "string"
+          "title": "Access"
+      "type": "object"
+      "required":
+        - "tool_name"
+        - "access"
+      "title": "ToolAccessTagResponse"
+    "ToolAccessTagUpsert":
+      "properties":
+        "tool_name":
+          "type": "string"
+          "maxLength": 255
+          "minLength": 1
+          "title": "Tool Name"
+        "access":
+          "type": "string"
+          "enum":
+            - "read"
+            - "write"
+          "title": "Access"
+      "type": "object"
+      "required":
+        - "tool_name"
+        - "access"
+      "title": "ToolAccessTagUpsert"
+    "ToolUsage":
+      "properties":
+        "tool_name":
+          "type": "string"
+          "title": "Tool Name"
+        "calls":
+          "type": "integer"
+          "title": "Calls"
+        "last_seen":
+          "anyOf":
+            - "type": "string"
+              "format": "date-time"
+            - "type": "null"
+          "title": "Last Seen"
+        "access":
+          "anyOf":
+            - "type": "string"
+            - "type": "null"
+          "title": "Access"
+        "breach_kind":
+          "anyOf":
+            - "type": "string"
+              "enum":
+                - "undeclared_tool"
+                - "write_in_readonly"
+                - "undeclared_model"
+                - "tool_calls_over_limit"
+                - "run_cost_over_limit"
+            - "type": "null"
+          "title": "Breach Kind"
+      "type": "object"
+      "required":
+        - "tool_name"
+        - "calls"
+      "title": "ToolUsage"
     "TopError":
       "properties":
         "error":
@@ -16401,6 +17623,10 @@
       "in": "header"
       "name": "Authorization"
 "tags":
+  - "name": "Docs"
+    "description": "Anonymous \"Was this page helpful?\" votes from the public documentation. No credentials; the vote carries a page path and a yes/no, nothing else."
+  - "name": "Guardrails"
+    "description": "Declared agent policy — permitted tools and read-only flags — and the compliance view judging observed tool usage against it. A separate concept from success rate: success measures whether a call raised; compliance measures whether an agent stayed inside its declared boundary. Reads take the project API key; definitions require a member session with EDIT_PROJECT."
   - "name": "Pricing"
     "description": "Public model catalogue. Per-1k input/output/cached rates, provider, mode and announced retirement dates for every model AgentCost can bill. No credentials required -- this is the read surface SDKs and agents call."
   - "name": "Health"

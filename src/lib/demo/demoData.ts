@@ -35,6 +35,10 @@ import type {
   TraceSummary,
   RunCostDistribution,
   OutcomeStats,
+  Guardrail,
+  GuardrailComplianceResponse,
+  AgentCompliance,
+  ToolAccessTag,
 } from "@/lib/api";
 
 export const DEMO_PROJECT_ID = "demo-project";
@@ -593,7 +597,7 @@ export function demoMembers(): ProjectMember[] {
     {
       id: "demo-member-1",
       user_id: "demo-user",
-      email: "demo@agentcost.dev",
+      email: "demo@agentcost.tech",
       name: "Demo Explorer",
       role: "admin",
       is_owner: true,
@@ -629,7 +633,7 @@ export function demoMembers(): ProjectMember[] {
 export function demoProfile(): UserProfile {
   return {
     id: "demo-user",
-    email: "demo@agentcost.dev",
+    email: "demo@agentcost.tech",
     name: "Demo Explorer",
     avatar_url: null,
     email_verified: true,
@@ -1331,4 +1335,263 @@ export function demoOutcomeStats(range: string, limit: number): OutcomeStats[] {
   })
     .sort((a, b) => b.total_cost - a.total_cost)
     .slice(0, limit);
+}
+
+// ── Guardrails ────────────────────────────────────────────────────────────
+// Three declared policies so every status renders: a clean pass, a read-only
+// pass, and one breach (email-drafter calling a write-tagged tool). Volumes
+// derive from the same agent profiles as everything else.
+
+const DEMO_TOOL_TAGS: ToolAccessTag[] = [
+  { tool_name: "search_docs", access: "read" },
+  { tool_name: "send_email", access: "write" },
+  { tool_name: "web_search", access: "read" },
+];
+
+export function demoGuardrails(): Guardrail[] {
+  const created = new Date(Date.now() - 21 * 86400_000).toISOString();
+  return [
+    {
+      id: "demo-guardrail-1",
+      agent_name: "support-triage-agent",
+      allowed_tools: ["search_docs"],
+      read_only: false,
+      allowed_models: ["gpt-4o-mini", "gpt-4o"],
+      max_tool_calls_per_run: 6,
+      max_cost_per_run_usd: 0.05,
+      enabled: true,
+      created_at: created,
+      updated_at: created,
+    },
+    {
+      id: "demo-guardrail-2",
+      agent_name: "research-agent",
+      allowed_tools: ["web_search"],
+      read_only: true,
+      allowed_models: null,
+      max_tool_calls_per_run: 8,
+      max_cost_per_run_usd: null,
+      enabled: true,
+      created_at: created,
+      updated_at: created,
+    },
+    {
+      id: "demo-guardrail-3",
+      agent_name: "email-drafter",
+      allowed_tools: null,
+      read_only: true,
+      allowed_models: null,
+      max_tool_calls_per_run: null,
+      max_cost_per_run_usd: null,
+      enabled: true,
+      created_at: created,
+      updated_at: created,
+    },
+  ];
+}
+
+// Blended cost per call, matching the figures the Agents page derives.
+const DEMO_COST_PER_CALL: Record<string, number> = {
+  "support-triage-agent": 0.0087,
+  "research-agent": 0.054,
+  "report-writer": 0.0322,
+  "code-review-agent": 0.21,
+  "faq-bot": 0.00445,
+  "sentiment-classifier": 0.00082,
+  "email-drafter": 0.000285,
+};
+
+/** Derive tool/model usage, run distribution and the daily breach series
+ *  from an agent row, so the detail panel has the same shape as production. */
+function withComplianceDetail(
+  a: AgentCompliance,
+  days: number,
+  now: number,
+): AgentCompliance {
+  const perCall = DEMO_COST_PER_CALL[a.agent_name] ?? 0.01;
+  const total_cost = Math.round(a.total_calls * perCall * 100) / 100;
+  const tool_usage = a.observed_tools.map((tool_name, i) => {
+    const breach = a.breaches.find(
+      (b) => b.subject === tool_name && (b.kind === "undeclared_tool" || b.kind === "write_in_readonly"),
+    );
+    return {
+      tool_name,
+      calls: Math.max(1, Math.round(a.tracked_tool_calls / a.observed_tools.length) - i),
+      last_seen: new Date(now - (i + 1) * 47 * 60_000).toISOString(),
+      access: DEMO_TOOL_TAGS.find((t) => t.tool_name === tool_name)?.access ?? null,
+      breach_kind: breach?.kind ?? null,
+    };
+  });
+  const model_usage = a.observed_models.map((model, i) => {
+    const calls = i === 0 ? a.total_calls : Math.round(a.total_calls * 0.08);
+    return {
+      model,
+      calls,
+      cost: Math.round(calls * perCall * 100) / 100,
+      permitted: a.allowed_models === null || a.allowed_models.includes(model),
+    };
+  });
+  const perRun = a.runs_seen > 0 ? Math.max(1, Math.round(a.tracked_tool_calls / a.runs_seen)) : 0;
+  const run_stats =
+    a.runs_seen > 0
+      ? {
+          runs: a.runs_seen,
+          p50_tool_calls: perRun,
+          p95_tool_calls: Math.round(perRun * 2.2),
+          max_tool_calls: Math.round(perRun * 2.8),
+          p50_cost: Math.round(perRun * perCall * 1000) / 1000,
+          p95_cost: Math.round(perRun * 2.2 * perCall * 1000) / 1000,
+          max_cost: Math.round(perRun * 2.8 * perCall * 1000) / 1000,
+        }
+      : null;
+  const breaching = a.breaches.reduce((sum, b) => sum + b.count, 0);
+  const breach_series =
+    breaching > 0
+      ? Array.from({ length: days }, (_, i) => {
+          // Deterministic spread with a bump near the end of the window.
+          const weight = 1 + ((i * 7) % 5) + (i >= days - 2 ? 4 : 0);
+          return { day: new Date(now - (days - 1 - i) * 86400_000).toISOString().slice(0, 10), weight };
+        })
+          .map(({ day, weight }, _, arr) => ({
+            day,
+            count: Math.round((breaching * weight) / arr.reduce((s, x) => s + x.weight, 0)),
+          }))
+          .filter((d) => d.count > 0)
+      : [];
+  return { ...a, total_cost, tool_usage, model_usage, run_stats, breach_series };
+}
+
+export function demoGuardrailCompliance(
+  range: string,
+): GuardrailComplianceResponse {
+  const mult = runMultiplier(range);
+  const now = Date.now();
+  const totalFor = (name: string) =>
+    Math.round((AGENTS.find((a) => a.name === name)?.callsPerDay ?? 0) * mult);
+
+  // Fractions of each agent's own call volume, so tracked <= total holds the
+  // way it does on the real backend (tool calls are a subset of all calls).
+  const triageTracked = Math.round(totalFor("support-triage-agent") * 0.62);
+  const researchTracked = Math.round(totalFor("research-agent") * 0.85);
+  const emailTracked = Math.max(3, Math.round(totalFor("email-drafter") * 0.008));
+
+  const agents: AgentCompliance[] = [
+    {
+      agent_name: "email-drafter",
+      status: "breach",
+      read_only: true,
+      allowed_tools: null,
+      allowed_models: null,
+      max_tool_calls_per_run: null,
+      max_cost_per_run_usd: null,
+      total_calls: totalFor("email-drafter"),
+      tracked_tool_calls: emailTracked,
+      runs_seen: 0,
+      observed_tools: ["send_email"],
+      observed_models: ["gpt-4o"],
+      breaches: [
+        {
+          kind: "write_in_readonly",
+          subject: "send_email",
+          count: emailTracked,
+          limit: null,
+          observed: null,
+          last_seen: new Date(now - 2 * 3600_000).toISOString(),
+        },
+      ],
+      unknown_access_tools: [],
+      total_cost: 0,
+      tool_usage: [],
+      model_usage: [],
+      run_stats: null,
+      breach_series: [],
+    },
+    {
+      agent_name: "research-agent",
+      status: "breach",
+      read_only: true,
+      allowed_tools: ["web_search"],
+      allowed_models: null,
+      max_tool_calls_per_run: 8,
+      max_cost_per_run_usd: null,
+      total_calls: totalFor("research-agent"),
+      tracked_tool_calls: researchTracked,
+      runs_seen: Math.max(4, Math.round(researchTracked / 5)),
+      observed_tools: ["web_search"],
+      observed_models: ["claude-sonnet-4"],
+      breaches: [
+        {
+          kind: "tool_calls_over_limit",
+          subject: "7c1e4b0a9d2f48e6b3a5c7d9e1f2a3b4",
+          count: Math.max(1, Math.round(researchTracked / 90)),
+          limit: 8,
+          observed: 14,
+          last_seen: new Date(now - 9 * 3600_000).toISOString(),
+        },
+      ],
+      unknown_access_tools: [],
+      total_cost: 0,
+      tool_usage: [],
+      model_usage: [],
+      run_stats: null,
+      breach_series: [],
+    },
+    {
+      agent_name: "support-triage-agent",
+      status: "compliant",
+      read_only: false,
+      allowed_tools: ["search_docs"],
+      allowed_models: ["gpt-4o-mini", "gpt-4o"],
+      max_tool_calls_per_run: 6,
+      max_cost_per_run_usd: 0.05,
+      total_calls: totalFor("support-triage-agent"),
+      tracked_tool_calls: triageTracked,
+      runs_seen: Math.round(totalFor("support-triage-agent") / 3),
+      observed_tools: ["search_docs"],
+      observed_models: ["gpt-4o-mini"],
+      breaches: [],
+      unknown_access_tools: [],
+      total_cost: 0,
+      tool_usage: [],
+      model_usage: [],
+      run_stats: null,
+      breach_series: [],
+    },
+    ...["code-review-agent", "faq-bot", "report-writer", "sentiment-classifier"].map(
+      (name): AgentCompliance => ({
+        agent_name: name,
+        status: "no_guardrail",
+        read_only: false,
+        allowed_tools: null,
+        allowed_models: null,
+        max_tool_calls_per_run: null,
+        max_cost_per_run_usd: null,
+        total_calls: totalFor(name),
+        tracked_tool_calls: 0,
+        runs_seen: 0,
+        observed_tools: [],
+        observed_models: [name === "faq-bot" ? "gpt-4o-mini" : "gpt-4o"],
+        breaches: [],
+        unknown_access_tools: [],
+        total_cost: 0,
+        tool_usage: [],
+        model_usage: [],
+        run_stats: null,
+        breach_series: [],
+      }),
+    ),
+  ];
+
+  const totalCalls = Math.round(
+    AGENTS.reduce((s, a) => s + a.callsPerDay, 0) * mult,
+  );
+  const days = rangeToDays(range);
+  return {
+    agents: agents.map((a) => withComplianceDetail(a, days, now)),
+    tool_tags: DEMO_TOOL_TAGS,
+    start_time: new Date(now - rangeToDays(range) * 86400_000).toISOString(),
+    end_time: new Date(now).toISOString(),
+    total_calls: totalCalls,
+    tool_tracked_calls: triageTracked + researchTracked + emailTracked,
+  };
 }

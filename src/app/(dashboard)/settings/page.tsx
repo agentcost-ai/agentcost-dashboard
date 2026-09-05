@@ -3,8 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Card } from "@/components/ui/Card";
 import { BudgetSettingsCard } from "@/components/settings/BudgetSettingsCard";
+import {
+  SectionCard,
+  SettingRow,
+  Toggle,
+  fieldClass,
+  monoFieldClass,
+  buttonPrimary,
+  buttonSecondary,
+  buttonDanger,
+} from "@/components/ui/Panels";
 import {
   api,
   getStoredApiKeyForProject,
@@ -15,25 +24,18 @@ import {
 import { useActiveProject } from "@/contexts/ActiveProjectContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { track } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 import {
-  Key,
   Check,
   RefreshCw,
   Copy,
   Eye,
   EyeOff,
-  Zap,
   CheckCircle2,
   XCircle,
-  Activity,
-  Code,
   Plus,
-  BookOpen,
   ChevronRight,
   Trash2,
-  AlertTriangle,
-  Users,
-  Pencil,
 } from "lucide-react";
 
 interface ProjectInfo {
@@ -60,35 +62,27 @@ const DEFAULT_CONFIG: SavedConfig = {
   refreshInterval: 30,
 };
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   return (
     <button
+      type="button"
       onClick={handleCopy}
-      className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-neutral-700/50 hover:bg-neutral-600/50 transition-colors"
+      aria-label={label}
+      className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
     >
-      {copied ? (
-        <Check size={12} className="text-green-400" />
-      ) : (
-        <Copy size={12} className="text-neutral-400" />
-      )}
+      {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
     </button>
   );
 }
 
 export default function SettingsPage() {
-  const {
-    activeProject,
-    refresh: refreshProjectList,
-    selectProject,
-  } = useActiveProject();
+  const { activeProject, refresh: refreshProjectList, selectProject } = useActiveProject();
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [project, setProject] = useState<ProjectInfo | null>(null);
@@ -100,15 +94,11 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRotatingKey, setIsRotatingKey] = useState(false);
   const [showSnippetKey, setShowSnippetKey] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [dangerZoneExpanded, setDangerZoneExpanded] = useState(false);
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [editProjectName, setEditProjectName] = useState("");
   const [editProjectDesc, setEditProjectDesc] = useState("");
@@ -209,6 +199,11 @@ export default function SettingsPage() {
     fetchProject();
   }, [fetchProject]);
 
+  const flash = (type: "success" | "error", text: string) => {
+    setSaveMessage({ type, text });
+    setTimeout(() => setSaveMessage(null), 3000);
+  };
+
   const updateConfig = (updates: Partial<SavedConfig>) => {
     setConfig((prev) => ({ ...prev, ...updates }));
     setHasChanges(true);
@@ -233,17 +228,13 @@ export default function SettingsPage() {
           refreshInterval: config.refreshInterval,
         }),
       );
-
-      // Dispatch a custom event so other components know config changed
       window.dispatchEvent(new Event("agentcost_config_updated"));
-
-      setSaveMessage({ type: "success", text: "Configuration saved!" });
+      flash("success", "Preferences saved.");
       setHasChanges(false);
     } catch {
-      setSaveMessage({ type: "error", text: "Failed to save" });
+      flash("error", "Failed to save.");
     }
     setIsSaving(false);
-    setTimeout(() => setSaveMessage(null), 3000);
   };
 
   const createProject = async () => {
@@ -253,7 +244,6 @@ export default function SettingsPage() {
       const newProject = await api.createProject(newProjectName.trim());
       setProject(newProject);
       track("project_created");
-
       // Auto-save the new project's API key (per-project, owner-scoped).
       // storeProjectApiKey dispatches "agentcost_config_updated" itself.
       if (newProject.api_key) {
@@ -264,27 +254,17 @@ export default function SettingsPage() {
         apiKey: newProject.api_key ?? "",
         projectId: newProject.id,
       }));
-
-      // Make the new project the active one for the switcher + refresh list
       selectProject(newProject.id);
       await refreshProjectList();
-
-      setSaveMessage({
-        type: "success",
-        text: "Project created and API key saved!",
-      });
+      flash("success", "Project created. Its API key is saved in this browser.");
       setShowCreateProject(false);
       setNewProjectName("");
       setHasChanges(false);
     } catch (error) {
       console.error("Failed to create project:", error);
-      setSaveMessage({
-        type: "error",
-        text: "Failed to create project. Make sure you're logged in.",
-      });
+      flash("error", "Failed to create project. Make sure you're logged in.");
     }
     setIsCreatingProject(false);
-    setTimeout(() => setSaveMessage(null), 3000);
   };
 
   const rotateApiKey = async () => {
@@ -292,699 +272,423 @@ export default function SettingsPage() {
     setIsRotatingKey(true);
     try {
       const result = await api.rotateProjectApiKey(project.id);
-      // Per-project, owner-scoped save; dispatches the config-updated event.
       if (result.api_key) {
         storeProjectApiKey(project.id, result.api_key, user?.id);
       }
-      setConfig((prev) => ({
-        ...prev,
-        apiKey: result.api_key ?? "",
-        projectId: project.id,
-      }));
-
-      setSaveMessage({
-        type: "success",
-        text: "API key rotated. Save the new key now.",
-      });
+      setConfig((prev) => ({ ...prev, apiKey: result.api_key ?? "", projectId: project.id }));
+      flash("success", "API key rotated. Save the new key now.");
     } catch (error) {
       console.error("Failed to rotate API key:", error);
-      setSaveMessage({
-        type: "error",
-        text: "Failed to rotate API key. Make sure you're logged in with admin access.",
-      });
+      flash("error", "Failed to rotate the API key. Admin access is required.");
     }
     setIsRotatingKey(false);
-    setTimeout(() => setSaveMessage(null), 3000);
   };
+
+  const saveProjectDetails = async () => {
+    if (!project || !editProjectName.trim()) return;
+    setIsSavingProject(true);
+    try {
+      const updated = await api.updateProject(project.id, {
+        name: editProjectName.trim(),
+        description: editProjectDesc.trim() || undefined,
+      });
+      setProject(updated);
+      setIsEditingProject(false);
+      flash("success", "Project updated.");
+    } catch {
+      flash("error", "Failed to update the project.");
+    }
+    setIsSavingProject(false);
+  };
+
+  const deleteProject = async () => {
+    if (!project || deleteConfirmText !== project.name) return;
+    setIsDeleting(true);
+    try {
+      await api.deleteProject(project.id);
+      // Drop only the deleted project's key (other projects keep theirs) and
+      // clear the active selection so the dashboard doesn't render stale
+      // data. removeStoredProjectApiKey fires the config-updated event itself.
+      removeStoredProjectApiKey(project.id);
+      localStorage.removeItem("agentcost_active_project_id");
+      window.dispatchEvent(new Event("agentcost_active_project_changed"));
+      await refreshProjectList();
+      setProject(null);
+      setConfig(DEFAULT_CONFIG);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText("");
+      flash("success", "Project deleted.");
+    } catch {
+      flash("error", "Failed to delete the project.");
+    }
+    setIsDeleting(false);
+  };
+
+  const snippet = `from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your OpenAI, Anthropic, Gemini, and LangChain calls are now tracked.`;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Settings</h1>
-          <p className="mt-1 text-neutral-400">
-            Configure your AgentCost connection
+          <h1 className="text-2xl font-semibold tracking-tight text-white">Settings</h1>
+          <p className="mt-1 text-sm text-neutral-500">
+            {project ? project.name : "No project selected"}
+            {project && (
+              <span className="text-neutral-600">
+                {" "}· created{" "}
+                {new Date(project.created_at).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            )}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowCreateProject(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 transition-colors"
-        >
-          <Plus size={16} />
-          New project
-        </button>
+        <div className="flex items-center gap-3">
+          {saveMessage && (
+            <span
+              className={cn(
+                "flex items-center gap-1.5 text-[13px]",
+                saveMessage.type === "success" ? "text-emerald-300" : "text-red-300",
+              )}
+              role="status"
+            >
+              {saveMessage.type === "success" ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+              {saveMessage.text}
+            </span>
+          )}
+          <button type="button" onClick={() => setShowCreateProject(true)} className={buttonPrimary}>
+            <Plus size={14} />
+            New project
+          </button>
+        </div>
       </div>
 
-      {/* Inline create-project form, always available so users can add more
-          projects without first clearing their existing one. */}
       {showCreateProject && (
-        <Card>
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
-              <Plus size={24} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-medium text-white">
-                Create new project
-              </h3>
-              <p className="text-sm text-neutral-400">
-                Each project has its own API key, members, budget, and
-                analytics. You can switch between projects from the sidebar.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <input
-                  type="text"
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      createProject();
-                    }
-                  }}
-                  placeholder="Project name"
-                  className="flex-1 min-w-0 sm:min-w-55 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-white focus:border-primary-500 focus:outline-none"
-                />
-                <button
-                  onClick={createProject}
-                  disabled={isCreatingProject || !newProjectName.trim()}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-white hover:bg-primary-500 disabled:opacity-50"
-                >
-                  {isCreatingProject ? (
-                    <RefreshCw size={16} className="animate-spin" />
-                  ) : (
-                    <Plus size={16} />
-                  )}
-                  Create
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCreateProject(false);
-                    setNewProjectName("");
-                  }}
-                  className="rounded-lg bg-neutral-700 px-4 py-2 text-white hover:bg-neutral-600"
-                >
-                  Cancel
-                </button>
-              </div>
-              <p className="mt-3 text-xs text-neutral-500">
-                After creation you&apos;ll be switched to the new project and
-                shown its API key (once — store it securely).
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* API Key & Project */}
-      <Card>
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400">
-            <Key size={24} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-medium text-white">
-              API Key & Project
-            </h3>
-            <p className="text-sm text-neutral-400">
-              Your API credentials for the SDK
-            </p>
-
-            <div className="mt-4 space-y-4">
-              {project ? (
-                <>
-                  {/* API Key Display (Read-only) */}
-                  <div>
-                    <label className="block text-sm text-neutral-400">
-                      API Key
-                    </label>
-                    <div className="mt-1 flex gap-2">
-                      <div className="relative flex-1 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 pr-20">
-                        <code className="text-white font-mono text-sm break-all">
-                          {config.apiKey
-                            ? showApiKey
-                              ? config.apiKey
-                              : "•".repeat(Math.min(config.apiKey.length, 32))
-                            : "No key stored in this browser — rotate to generate a new one."}
-                        </code>
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                          <button
-                            onClick={() => setShowApiKey(!showApiKey)}
-                            className="p-1 text-neutral-400 hover:text-white"
-                            disabled={!config.apiKey}
-                          >
-                            {showApiKey ? (
-                              <EyeOff size={16} />
-                            ) : (
-                              <Eye size={16} />
-                            )}
-                          </button>
-                          {config.apiKey && <CopyButton text={config.apiKey} />}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-xs text-neutral-500">
-                      API keys are shown once at creation and kept only in the
-                      browser where they were created — the server can&apos;t
-                      re-display them. Missing here? Rotating generates a new
-                      key.
-                    </p>
-                    <div className="mt-3">
-                      <button
-                        onClick={rotateApiKey}
-                        disabled={isRotatingKey}
-                        className="inline-flex items-center gap-2 rounded-lg bg-neutral-700 px-3 py-2 text-xs text-white hover:bg-neutral-600 disabled:opacity-50"
-                      >
-                        <RefreshCw
-                          size={12}
-                          className={isRotatingKey ? "animate-spin" : ""}
-                        />
-                        Rotate API Key
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Project Info */}
-                  <div className="bg-neutral-800/50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-emerald-400" />
-                        <span className="font-medium text-white">
-                          {project.name}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Project ID with Copy */}
-                    <div className="p-3 bg-neutral-900/50 rounded-lg">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <span className="text-sm text-neutral-400">
-                            Project ID
-                          </span>
-                          <p className="text-white font-mono text-sm break-all">
-                            {project.id}
-                          </p>
-                        </div>
-                        <CopyButton text={project.id} />
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="border border-dashed border-neutral-700 rounded-lg p-6 text-center">
-                  <p className="text-sm text-neutral-400">
-                    No project yet. Use the{" "}
-                    <span className="font-medium text-white">
-                      &ldquo;New project&rdquo;
-                    </span>{" "}
-                    button at the top of the page to create one.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Project Details (Edit) */}
-      {project && (
-        <Card>
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
-              <Pencil size={24} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <div>
-                  <h3 className="text-lg font-medium text-white">
-                    Project Details
-                  </h3>
-                  <p className="text-sm text-neutral-400">
-                    Update your project name and description
-                  </p>
-                </div>
-                {!isEditingProject && (
-                  <button
-                    onClick={() => {
-                      setEditProjectName(project.name);
-                      setEditProjectDesc(project.description || "");
-                      setIsEditingProject(true);
-                    }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-sm text-white transition-colors"
-                  >
-                    <Pencil size={14} />
-                    Edit
-                  </button>
-                )}
-              </div>
-
-              {isEditingProject ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-neutral-300">
-                      Project Name
-                    </label>
-                    <input
-                      type="text"
-                      value={editProjectName}
-                      onChange={(e) => setEditProjectName(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-200 focus:border-primary-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-neutral-300">
-                      Description
-                    </label>
-                    <textarea
-                      value={editProjectDesc}
-                      onChange={(e) => setEditProjectDesc(e.target.value)}
-                      rows={3}
-                      placeholder="A brief description of this project"
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-200 focus:border-primary-500 focus:outline-none resize-none"
-                    />
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={() => setIsEditingProject(false)}
-                      className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-sm text-white transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (!editProjectName.trim()) return;
-                        setIsSavingProject(true);
-                        try {
-                          const updated = await api.updateProject(project.id, {
-                            name: editProjectName.trim(),
-                            description: editProjectDesc.trim() || undefined,
-                          });
-                          setProject(updated);
-                          setIsEditingProject(false);
-                          setSaveMessage({
-                            type: "success",
-                            text: "Project updated successfully",
-                          });
-                        } catch {
-                          setSaveMessage({
-                            type: "error",
-                            text: "Failed to update project",
-                          });
-                        }
-                        setIsSavingProject(false);
-                        setTimeout(() => setSaveMessage(null), 3000);
-                      }}
-                      disabled={isSavingProject || !editProjectName.trim()}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-sm text-white disabled:opacity-50 transition-colors"
-                    >
-                      {isSavingProject && (
-                        <RefreshCw size={14} className="animate-spin" />
-                      )}
-                      Save Changes
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2 bg-neutral-800/50 rounded-lg p-4">
-                  <div>
-                    <span className="text-xs text-neutral-500">Name</span>
-                    <p className="text-sm font-medium text-neutral-200">
-                      {project.name}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-neutral-500">
-                      Description
-                    </span>
-                    <p className="text-sm text-neutral-300">
-                      {project.description || (
-                        <span className="italic text-neutral-500">
-                          No description set
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Team Management */}
-      {project && (
-        <Card>
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-900/30 text-blue-400">
-              <Users size={24} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-white">
-                    Team Management
-                  </h3>
-                  <p className="text-sm text-neutral-400">
-                    Invite team members and manage their access to this project
-                  </p>
-                </div>
-                <Link
-                  href="/settings/team"
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white transition-colors"
-                >
-                  <Users size={16} />
-                  Manage Team
-                  <ChevronRight size={16} />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Budget Guardrails */}
-      {project && <BudgetSettingsCard projectId={project.id} />}
-
-      {/* Danger Zone - Delete Project */}
-      {project && (
-        <Card className="border-red-900/50">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-900/30 text-red-400">
-              <AlertTriangle size={24} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-white">
-                    Danger Zone
-                  </h3>
-                  <p className="text-sm text-neutral-400">
-                    Irreversible actions that affect your project
-                  </p>
-                </div>
-                <button
-                  onClick={() => setDangerZoneExpanded(!dangerZoneExpanded)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors"
-                >
-                  {dangerZoneExpanded ? "Hide" : "Show"} Danger Zone
-                  <ChevronRight
-                    size={16}
-                    className={`transition-transform ${dangerZoneExpanded ? "rotate-90" : ""}`}
-                  />
-                </button>
-              </div>
-
-              {dangerZoneExpanded && (
-                <div className="mt-4 border border-red-900/50 rounded-lg p-4 bg-red-950/20">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">Delete Project</h4>
-                      <p className="text-sm text-neutral-400 mt-1">
-                        Permanently delete &quot;{project.name}&quot; and all
-                        its data including events, analytics, and API keys.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setShowDeleteConfirm(true)}
-                      className="shrink-0 px-4 py-2 rounded-lg border border-red-600 text-red-400 hover:bg-red-900/30 transition-colors"
-                    >
-                      Delete Project
-                    </button>
-                  </div>
-
-                  {showDeleteConfirm && (
-                    <div className="mt-4 pt-4 border-t border-red-900/50">
-                      <p className="text-sm text-red-300 mb-3">
-                        This action <strong>cannot be undone</strong>. Please
-                        type{" "}
-                        <code className="bg-red-900/30 px-1 rounded">
-                          {project.name}
-                        </code>{" "}
-                        to confirm.
-                      </p>
-                      <div className="flex flex-col gap-3 sm:flex-row">
-                        <input
-                          type="text"
-                          value={deleteConfirmText}
-                          onChange={(e) => setDeleteConfirmText(e.target.value)}
-                          placeholder={`Type "${project.name}" to confirm`}
-                          className="flex-1 rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-white placeholder-red-300/50 focus:border-red-500 focus:outline-none"
-                        />
-                        <button
-                          onClick={async () => {
-                            if (deleteConfirmText !== project.name) return;
-                            setIsDeleting(true);
-                            try {
-                              await api.deleteProject(project.id);
-                              // Drop only the deleted project's key (other
-                              // projects keep theirs) and clear the active
-                              // selection so the dashboard doesn't render
-                              // stale data. removeStoredProjectApiKey fires
-                              // the config-updated event itself.
-                              removeStoredProjectApiKey(project.id);
-                              localStorage.removeItem(
-                                "agentcost_active_project_id",
-                              );
-                              window.dispatchEvent(
-                                new Event("agentcost_active_project_changed"),
-                              );
-                              // Refresh the project switcher; reconciliation
-                              // will pick another accessible project (or none)
-                              // automatically.
-                              await refreshProjectList();
-                              setProject(null);
-                              setConfig(DEFAULT_CONFIG);
-                              setShowDeleteConfirm(false);
-                              setDeleteConfirmText("");
-                              setDangerZoneExpanded(false);
-                              setSaveMessage({
-                                type: "success",
-                                text: "Project deleted successfully",
-                              });
-                            } catch {
-                              setSaveMessage({
-                                type: "error",
-                                text: "Failed to delete project",
-                              });
-                            }
-                            setIsDeleting(false);
-                          }}
-                          disabled={
-                            deleteConfirmText !== project.name || isDeleting
-                          }
-                          className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                        >
-                          {isDeleting ? (
-                            <RefreshCw size={16} className="animate-spin" />
-                          ) : (
-                            <Trash2 size={16} />
-                          )}
-                          Delete Forever
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowDeleteConfirm(false);
-                            setDeleteConfirmText("");
-                          }}
-                          className="px-4 py-2 rounded-lg bg-neutral-700 text-white hover:bg-neutral-600 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Auto-Refresh */}
-      <Card>
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-900/30 text-emerald-400">
-            <Activity size={24} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-medium text-white">Auto-Refresh</h3>
-            <p className="text-sm text-neutral-400">
-              Automatically refresh dashboard data
-            </p>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-neutral-300">Enable auto-refresh</span>
-              <button
-                onClick={() =>
-                  updateConfig({ autoRefresh: !config.autoRefresh })
+        <SectionCard
+          title="Create a project"
+          description="Each project has its own API key, members, budget and analytics. Switch between them from the sidebar."
+        >
+          <div className="flex flex-col gap-2 px-5 py-4 sm:flex-row">
+            <input
+              type="text"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  createProject();
                 }
-                className={`relative h-6 w-11 rounded-full transition-colors ${config.autoRefresh ? "bg-primary-600" : "bg-neutral-600"}`}
+              }}
+              placeholder="Project name"
+              autoFocus
+              className={cn(fieldClass, "sm:max-w-sm")}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={createProject}
+                disabled={isCreatingProject || !newProjectName.trim()}
+                className={buttonPrimary}
               >
-                <span
-                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${config.autoRefresh ? "left-6" : "left-1"}`}
-                />
+                {isCreatingProject ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
+                Create
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreateProject(false);
+                  setNewProjectName("");
+                }}
+                className={buttonSecondary}
+              >
+                Cancel
               </button>
             </div>
-            {config.autoRefresh && (
-              <div className="mt-4">
-                <label className="block text-sm text-neutral-400">
-                  Interval (seconds)
-                </label>
-                <input
-                  type="number"
-                  value={config.refreshInterval}
-                  onChange={(e) =>
-                    updateConfig({
-                      refreshInterval: parseInt(e.target.value) || 30,
-                    })
-                  }
-                  min={5}
-                  max={300}
-                  className="mt-1 w-32 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-white focus:border-primary-500 focus:outline-none"
-                />
-              </div>
-            )}
           </div>
-        </div>
-      </Card>
+          <p className="border-t border-white/6 px-5 py-3 text-[12.5px] text-neutral-500">
+            The new project becomes active and its API key is shown once. Store it securely.
+          </p>
+        </SectionCard>
+      )}
 
-      {/* Save Button */}
-      <div className="flex flex-wrap items-center gap-4">
-        <button
-          onClick={saveConfig}
-          disabled={!hasChanges || isSaving}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary-600 hover:bg-primary-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isSaving ? (
-            <RefreshCw size={16} className="animate-spin" />
-          ) : (
-            <Zap size={16} />
-          )}
-          Save Configuration
-        </button>
-        {saveMessage && (
-          <div
-            className={`flex items-center gap-2 ${saveMessage.type === "success" ? "text-emerald-400" : "text-red-400"}`}
-          >
-            {saveMessage.type === "success" ? (
-              <CheckCircle2 size={16} />
-            ) : (
-              <XCircle size={16} />
-            )}
-            {saveMessage.text}
-          </div>
-        )}
-      </div>
-
-      {/* Quick Start */}
-      <Card>
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-purple-900/30 text-purple-400">
-            <Code size={24} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-medium text-white">Quick Start</h3>
-            <p className="text-sm text-neutral-400">
-              Use your configuration in your Python code
-            </p>
-            <p className="mt-2 text-xs text-neutral-500">
-              API keys are stored only in the browser where they were created.
-              If your key is not shown here, rotate it in the card above to
-              generate a new one.
-            </p>
-            <div className="mt-4 bg-neutral-900 rounded-lg overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2 bg-neutral-800 border-b border-neutral-700">
-                <span className="text-sm text-neutral-400">Python</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowSnippetKey(!showSnippetKey)}
-                    className="text-xs text-neutral-400 hover:text-white transition-colors"
-                    disabled={!config.apiKey}
-                  >
-                    {showSnippetKey ? "Hide key" : "Show key"}
-                  </button>
-                  <CopyButton
-                    text={`from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your OpenAI, Anthropic, Gemini, and LangChain calls are now tracked!`}
-                  />
-                </div>
-              </div>
-              <pre className="p-4 overflow-x-auto text-sm">
-                <code className="text-neutral-300">
-                  <span className="text-purple-400">from</span>{" "}
-                  <span className="text-blue-400">agentcost</span>{" "}
-                  <span className="text-purple-400">import</span> track_costs
-                  {"\n\n"}
-                  track_costs.init({"\n"}
-                  {"    "}api_key=
-                  <span className="text-green-400">
-                    &quot;
-                    {showSnippetKey && config.apiKey
-                      ? config.apiKey
-                      : "your_api_key"}
-                    &quot;
-                  </span>
-                  ,{"\n"}
-                  {"    "}project_id=
-                  <span className="text-green-400">
-                    &quot;{config.projectId || project?.id || "your_project_id"}
-                    &quot;
-                  </span>
-                  ,{"\n"}){"\n\n"}
-                  <span className="text-neutral-500">
-                    # Your OpenAI, Anthropic, Gemini, and LangChain calls are now tracked!
-                  </span>
-                </code>
-              </pre>
+      {/* Project: identity and credentials in one place */}
+      <SectionCard
+        title="Project"
+        description="Name, ID and the API key the SDK uses. The key is shown once at creation and kept only in the browser where it was created."
+        action={
+          project && !isEditingProject ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditProjectName(project.name);
+                setEditProjectDesc(project.description || "");
+                setIsEditingProject(true);
+              }}
+              className={buttonSecondary}
+            >
+              Edit
+            </button>
+          ) : undefined
+        }
+      >
+        {!project ? (
+          <p className="px-5 py-6 text-sm text-neutral-500">
+            No project yet. Use “New project” above to create one.
+          </p>
+        ) : isEditingProject ? (
+          <>
+            <SettingRow label="Name" align="start">
+              <input
+                type="text"
+                value={editProjectName}
+                onChange={(e) => setEditProjectName(e.target.value)}
+                className={cn(fieldClass, "sm:max-w-md")}
+              />
+            </SettingRow>
+            <SettingRow label="Description" align="start">
+              <textarea
+                value={editProjectDesc}
+                onChange={(e) => setEditProjectDesc(e.target.value)}
+                rows={3}
+                placeholder="What this project tracks"
+                className={cn(fieldClass, "h-auto resize-none py-2 sm:max-w-md")}
+              />
+            </SettingRow>
+            <div className="flex justify-end gap-2 px-5 py-3">
+              <button type="button" onClick={() => setIsEditingProject(false)} className={buttonSecondary}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveProjectDetails}
+                disabled={isSavingProject || !editProjectName.trim()}
+                className={buttonPrimary}
+              >
+                {isSavingProject && <RefreshCw size={14} className="animate-spin" />}
+                Save changes
+              </button>
             </div>
-          </div>
+          </>
+        ) : (
+          <>
+            <SettingRow label="Name">
+              <span className="text-[13.5px] text-white sm:text-right">{project.name}</span>
+            </SettingRow>
+            <SettingRow label="Description">
+              <span className="text-[13.5px] text-neutral-300 sm:text-right">
+                {project.description || <span className="text-neutral-600">Not set</span>}
+              </span>
+            </SettingRow>
+            <SettingRow label="Project ID" description="Pass this as project_id in track_costs.init().">
+              <span className="flex items-center gap-1 sm:justify-end">
+                <code className="break-all font-mono text-[12.5px] text-neutral-200">{project.id}</code>
+                <CopyButton text={project.id} label="Copy project ID" />
+              </span>
+            </SettingRow>
+            <SettingRow label="API key" description="Used by track_costs.init(). The server cannot display it again." align="start">
+            <div className="w-full sm:max-w-md">
+              <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/30 pl-3 pr-1">
+                <code className="min-w-0 flex-1 break-all py-2 font-mono text-[12.5px] text-neutral-200">
+                  {config.apiKey
+                    ? showApiKey
+                      ? config.apiKey
+                      : "•".repeat(Math.min(config.apiKey.length, 32))
+                    : "No key stored in this browser."}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  disabled={!config.apiKey}
+                  aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                  className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-neutral-400 hover:bg-white/5 hover:text-white disabled:opacity-40"
+                >
+                  {showApiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+                {config.apiKey && <CopyButton text={config.apiKey} label="Copy API key" />}
+              </div>
+            </div>
+          </SettingRow>
+            <SettingRow
+              label="Rotate key"
+              description="Generates a new key and invalidates the old one. Update every SDK that uses it."
+            >
+              <button type="button" onClick={rotateApiKey} disabled={isRotatingKey} className={buttonSecondary}>
+                <RefreshCw size={13} className={isRotatingKey ? "animate-spin" : ""} />
+                Rotate API key
+              </button>
+            </SettingRow>
+          </>
+        )}
+      </SectionCard>
+
+      {/* Team */}
+      {project && (
+        <SectionCard title="Team" description="Invite people and set what each of them can see and change.">
+          <SettingRow label="Members" description="Roles, invitations and pending requests.">
+            <Link href="/settings/team" className={buttonSecondary}>
+              Manage team
+              <ChevronRight size={14} />
+            </Link>
+          </SettingRow>
+        </SectionCard>
+      )}
+
+      {/* Budget */}
+      {project && (
+        <div id="budget" className="scroll-mt-24">
+          <BudgetSettingsCard projectId={project.id} />
         </div>
-      </Card>
+      )}
+
+      {/* Dashboard preferences */}
+      <SectionCard
+        title="Dashboard"
+        description="Preferences for this browser."
+        action={
+          <button
+            type="button"
+            onClick={saveConfig}
+            disabled={!hasChanges || isSaving}
+            className={buttonPrimary}
+          >
+            {isSaving && <RefreshCw size={14} className="animate-spin" />}
+            Save
+          </button>
+        }
+      >
+        <SettingRow label="Auto-refresh" description="Reload dashboard data on an interval.">
+          <Toggle
+            label="Enable auto-refresh"
+            checked={config.autoRefresh}
+            onChange={(v) => updateConfig({ autoRefresh: v })}
+          />
+        </SettingRow>
+        {config.autoRefresh && (
+          <SettingRow label="Interval" description="Seconds between refreshes, 5 to 300.">
+            <input
+              type="number"
+              value={config.refreshInterval}
+              onChange={(e) => updateConfig({ refreshInterval: parseInt(e.target.value) || 30 })}
+              min={5}
+              max={300}
+              className={cn(fieldClass, "w-28 tabular-nums")}
+            />
+          </SettingRow>
+        )}
+      </SectionCard>
+
+      {/* Quick start */}
+      <SectionCard
+        title="Quick start"
+        description="Your project wired into Python. Toggle the key on to copy a ready-to-run snippet."
+        action={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowSnippetKey(!showSnippetKey)}
+              disabled={!config.apiKey}
+              className={buttonSecondary}
+            >
+              {showSnippetKey ? "Hide key" : "Show key"}
+            </button>
+            <CopyButton text={snippet} label="Copy snippet" />
+          </>
+        }
+      >
+        <pre className="overflow-x-auto px-5 py-4 font-mono text-[12.5px] leading-6 text-neutral-300">
+          <code>
+            <span className="text-neutral-500">from</span> agentcost{" "}
+            <span className="text-neutral-500">import</span> track_costs{"\n\n"}
+            track_costs.init({"\n"}
+            {"    "}api_key=
+            <span className="text-neutral-100">
+              &quot;{showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}&quot;
+            </span>
+            ,{"\n"}
+            {"    "}project_id=
+            <span className="text-neutral-100">
+              &quot;{config.projectId || project?.id || "your_project_id"}&quot;
+            </span>
+            {"\n"}){"\n\n"}
+            <span className="text-neutral-500">
+              # Your OpenAI, Anthropic, Gemini, and LangChain calls are now tracked.
+            </span>
+          </code>
+        </pre>
+      </SectionCard>
 
       {/* Documentation */}
-      <Card>
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-900/30 text-blue-400">
-            <BookOpen size={24} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-medium text-white">Documentation</h3>
-            <p className="text-sm text-neutral-400">
-              Learn how to use AgentCost effectively
-            </p>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Link
-                href="/docs/sdk"
-                className="flex items-center justify-between p-4 rounded-lg bg-neutral-800/50 hover:bg-neutral-700/50 transition-colors group"
-              >
-                <div>
-                  <p className="font-medium text-white">SDK Documentation</p>
-                  <p className="text-sm text-neutral-400">
-                    Python SDK setup and usage
-                  </p>
+      <SectionCard title="Documentation">
+        <SettingRow label="SDK" description="Setup, tracing, outcomes and tools.">
+          <Link
+            href="/docs/sdk"
+            className="text-[13px] text-neutral-300 underline decoration-white/20 underline-offset-2 hover:text-white"
+          >
+            Read the SDK docs
+          </Link>
+        </SettingRow>
+        <SettingRow label="API" description="Every endpoint, with examples.">
+          <Link
+            href="/docs/api"
+            className="text-[13px] text-neutral-300 underline decoration-white/20 underline-offset-2 hover:text-white"
+          >
+            Read the API reference
+          </Link>
+        </SettingRow>
+      </SectionCard>
+
+      {/* Danger zone */}
+      {project && (
+        <SectionCard
+          title="Danger zone"
+          tone="danger"
+          description="Deleting a project removes its events, analytics, guardrails and API keys. This cannot be undone."
+        >
+          <SettingRow label="Delete project" description={`Permanently delete “${project.name}”.`}>
+            {!showDeleteConfirm ? (
+              <button type="button" onClick={() => setShowDeleteConfirm(true)} className={buttonDanger}>
+                Delete project
+              </button>
+            ) : (
+              <div className="w-full space-y-2 sm:max-w-md">
+                <p className="text-[12.5px] text-neutral-400">
+                  Type <code className="text-neutral-200">{project.name}</code> to confirm.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder={project.name}
+                    className={monoFieldClass}
+                  />
+                  <button
+                    type="button"
+                    onClick={deleteProject}
+                    disabled={deleteConfirmText !== project.name || isDeleting}
+                    className={cn(buttonDanger, "shrink-0")}
+                  >
+                    {isDeleting ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                    Delete forever
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeleteConfirmText("");
+                    }}
+                    className={cn(buttonSecondary, "shrink-0")}
+                  >
+                    Cancel
+                  </button>
                 </div>
-                <ChevronRight
-                  size={20}
-                  className="text-neutral-500 group-hover:text-white transition-colors"
-                />
-              </Link>
-              <Link
-                href="/docs/api"
-                className="flex items-center justify-between p-4 rounded-lg bg-neutral-800/50 hover:bg-neutral-700/50 transition-colors group"
-              >
-                <div>
-                  <p className="font-medium text-white">API Reference</p>
-                  <p className="text-sm text-neutral-400">REST API endpoints</p>
-                </div>
-                <ChevronRight
-                  size={20}
-                  className="text-neutral-500 group-hover:text-white transition-colors"
-                />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </Card>
+              </div>
+            )}
+          </SettingRow>
+        </SectionCard>
+      )}
     </div>
   );
 }

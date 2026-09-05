@@ -8,7 +8,6 @@ import {
   useState,
 } from "react";
 import {
-  ShieldAlert,
   RefreshCw,
   Plus,
   X,
@@ -21,7 +20,12 @@ import {
   Check,
   ChevronDown,
 } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import {
+  SectionCard,
+  fieldClass,
+  buttonPrimary,
+  buttonSecondary,
+} from "@/components/ui/Panels";
 import {
   api,
   type BudgetCurrency,
@@ -57,7 +61,7 @@ const ENFORCEMENT_OPTIONS: {
     label: "Tracking only",
     description: "Watch spend silently. No alerts, no blocking.",
     icon: Eye,
-    iconClass: "text-neutral-400 bg-neutral-700/40",
+    iconClass: "text-neutral-400 bg-white/5",
   },
   {
     value: "warn",
@@ -65,7 +69,7 @@ const ENFORCEMENT_OPTIONS: {
     description:
       "Send in-app + email alerts to owners and admins when each threshold is crossed.",
     icon: Bell,
-    iconClass: "text-sky-400 bg-sky-900/30",
+    iconClass: "text-neutral-200 bg-white/8",
   },
   {
     value: "hard_cap",
@@ -73,7 +77,7 @@ const ENFORCEMENT_OPTIONS: {
     description:
       "Same alerts as Notify, plus reject new events once month-to-date spend hits the budget.",
     icon: Ban,
-    iconClass: "text-red-400 bg-red-900/30",
+    iconClass: "text-red-300 bg-red-500/10",
   },
 ];
 
@@ -127,8 +131,8 @@ function EnforcementDropdown({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          "w-full flex items-center justify-between gap-3 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2.5 text-white transition-colors",
-          "hover:bg-neutral-800 focus:border-primary-500 focus:outline-none",
+          "flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[13.5px] text-white transition-colors",
+          "hover:border-white/20 focus:border-white/30 focus:outline-none",
         )}
       >
         <span className="flex items-center gap-2 min-w-0">
@@ -154,7 +158,7 @@ function EnforcementDropdown({
       {open && (
         <div
           role="listbox"
-          className="absolute z-30 mt-2 w-full overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900 shadow-xl"
+          className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-lg border border-white/10 bg-[#0e0e10] shadow-[0_20px_60px_-20px_rgba(0,0,0,0.9)]"
         >
           {ENFORCEMENT_OPTIONS.map((opt) => {
             const Icon = opt.icon;
@@ -172,8 +176,8 @@ function EnforcementDropdown({
                 className={cn(
                   "w-full flex items-start gap-3 px-3 py-3 text-left transition-colors",
                   isSelected
-                    ? "bg-neutral-800/80"
-                    : "hover:bg-neutral-800/50",
+                    ? "bg-white/8"
+                    : "hover:bg-white/5",
                 )}
               >
                 <span
@@ -190,7 +194,7 @@ function EnforcementDropdown({
                       {opt.label}
                     </span>
                     {isSelected && (
-                      <Check size={14} className="text-primary-400" />
+                      <Check size={14} className="text-white" />
                     )}
                   </span>
                   <span className="mt-0.5 block text-xs text-neutral-400 leading-relaxed">
@@ -220,7 +224,7 @@ function CurrencyToggle({
     <div
       role="tablist"
       aria-label="Budget currency"
-      className="inline-flex rounded-lg border border-neutral-700 bg-neutral-800/40 p-0.5"
+      className="inline-flex rounded-lg border border-white/8 bg-white/2 p-0.5"
     >
       {options.map((cur) => {
         const isActive = cur === value;
@@ -233,9 +237,9 @@ function CurrencyToggle({
             disabled={disabled}
             onClick={() => onChange(cur)}
             className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+              "cursor-pointer rounded-md px-3 py-1 text-[12.5px] font-medium transition-colors",
               isActive
-                ? "bg-neutral-700 text-white"
+                ? "bg-white text-neutral-900"
                 : "text-neutral-400 hover:text-white",
               disabled && "opacity-50 cursor-not-allowed",
             )}
@@ -326,7 +330,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
     if (utilization == null) return "bg-neutral-700";
     if (utilization >= 100) return "bg-red-500";
     if (utilization >= 80) return "bg-amber-500";
-    if (utilization >= 50) return "bg-sky-500";
+    if (utilization >= 50) return "bg-white";
     return "bg-emerald-500";
   }, [utilization]);
 
@@ -404,29 +408,19 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
   const budgetDisplay = settings?.monthly_budget_usd;
 
   return (
-    <Card>
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400 shrink-0">
-          <ShieldAlert size={24} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-medium text-white">
-                Budget Guardrails
-              </h3>
-              <p className="text-sm text-neutral-400">
-                Set a monthly cap and alert thresholds. Owners and project
-                admins are notified in-app and via email when thresholds are
-                crossed.
-              </p>
-            </div>
-            {!isLoading && settings?.period_key && (
-              <span className="shrink-0 rounded-full border border-neutral-700 bg-neutral-800/50 px-2.5 py-1 text-xs text-neutral-400">
-                {settings.period_key} (UTC)
-              </span>
-            )}
-          </div>
+    <SectionCard
+      title="Budget"
+      description="A monthly cap for the whole project with alert thresholds. Owners and admins are notified in-app and by email when a threshold is crossed."
+      action={
+        !isLoading && settings?.period_key ? (
+          <span className="rounded-full border border-white/10 px-2.5 py-1 text-[11.5px] text-neutral-400">
+            {settings.period_key} (UTC)
+          </span>
+        ) : undefined
+      }
+    >
+      <div className="px-5 pb-5">
+        <div className="min-w-0">
 
           {isLoading ? (
             <div className="mt-6 flex items-center gap-2 text-sm text-neutral-500">
@@ -441,7 +435,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
             <>
               {/* Current utilization */}
               {settings && (
-                <div className="mt-5 rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
+                <div className="mt-5 rounded-lg border border-white/8 bg-black/20 p-4">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <div>
                       <p className="text-xs uppercase tracking-wide text-neutral-500">
@@ -471,7 +465,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-neutral-800">
+                  <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/8">
                     <div
                       className={`h-full ${utilizationBarColor} transition-all`}
                       style={{
@@ -512,7 +506,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                   <label className="block text-sm font-medium text-neutral-300">
                     Monthly budget ({currency})
                   </label>
-                  <div className="mt-1.5 flex items-center rounded-lg border border-neutral-700 bg-neutral-800/50 focus-within:border-primary-500">
+                  <div className="mt-1.5 flex h-10 items-center rounded-lg border border-white/10 bg-black/30 focus-within:border-white/30">
                     <span className="pl-3 pr-1 text-neutral-500 select-none">
                       {CURRENCY_META[currency].symbol}
                     </span>
@@ -525,7 +519,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                       placeholder={
                         currency === "INR" ? "e.g. 4000" : "e.g. 50"
                       }
-                      className="w-full bg-transparent px-2 py-2 text-white placeholder:text-neutral-600 focus:outline-none"
+                      className="h-full w-full bg-transparent px-2 text-[13.5px] text-white placeholder:text-neutral-600 focus:outline-none"
                     />
                   </div>
                   <p className="mt-1.5 text-xs text-neutral-500">
@@ -556,7 +550,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                   {thresholds.map((t) => (
                     <span
                       key={t}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-800/60 px-3 py-1 text-sm text-neutral-200"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/3 px-3 py-1 text-[13px] text-neutral-200"
                     >
                       {t}%
                       <button
@@ -584,12 +578,12 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                       }
                     }}
                     placeholder="Add threshold (1–100)"
-                    className="w-full sm:w-56 rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:border-primary-500 focus:outline-none"
+                    className={cn(fieldClass, "sm:w-56")}
                   />
                   <button
                     type="button"
                     onClick={handleAddThreshold}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-700 px-3 py-2 text-sm text-white hover:bg-neutral-600 transition-colors"
+                    className={buttonSecondary}
                   >
                     <Plus size={14} /> Add
                   </button>
@@ -605,14 +599,10 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                   type="button"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className={buttonPrimary}
                 >
-                  {isSaving ? (
-                    <RefreshCw size={14} className="animate-spin" />
-                  ) : (
-                    <ShieldAlert size={14} />
-                  )}
-                  Save budget settings
+                  {isSaving && <RefreshCw size={14} className="animate-spin" />}
+                  Save budget
                 </button>
                 {saveMessage && (
                   <div
@@ -635,6 +625,6 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
           )}
         </div>
       </div>
-    </Card>
+    </SectionCard>
   );
 }

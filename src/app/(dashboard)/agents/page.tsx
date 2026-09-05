@@ -1,32 +1,53 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Card } from "@/components/ui/Card";
+import Link from "next/link";
 import { TimeRangeSelector } from "@/components/layout/TimeRangeSelector";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/Table";
-import { Badge } from "@/components/ui/Badge";
 import { TableSkeleton } from "@/components/ui/Skeleton";
-import { HeroStatCard } from "@/components/dashboard/HeroStatCard";
-import { api, AgentStats } from "@/lib/api";
+import { StatBand, SectionCard } from "@/components/ui/Panels";
+import { api, AgentStats, AgentCompliance } from "@/lib/api";
 import {
   formatCurrency,
   formatNumber,
   formatLatency,
   formatPercentage,
+  cn,
 } from "@/lib/utils";
-import { Users, DollarSign, Activity, Gauge } from "lucide-react";
 import {
   useApiConfiguration,
   OnboardingScreen,
   LoadingSpinner,
 } from "@/hooks/useApiConfiguration";
+
+/* ─────────────────────────────────────────────
+   Agents — one ranked ledger of what each agent
+   cost, how it behaved, and whether it stayed
+   inside its guardrail.
+   ───────────────────────────────────────────── */
+
+const COLUMNS =
+  "grid-cols-[2rem_minmax(0,2fr)_minmax(0,1.3fr)_repeat(3,minmax(0,1fr))_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1.1fr)]";
+
+function guardrailCell(c: AgentCompliance | undefined) {
+  if (!c || c.status === "no_guardrail") {
+    return <span className="text-neutral-600">—</span>;
+  }
+  const breaches = c.breaches.reduce((s, b) => s + b.count, 0);
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        className={cn(
+          "h-1.5 w-1.5 rounded-full",
+          c.status === "breach" ? "bg-red-400" : "bg-emerald-400",
+        )}
+        aria-hidden
+      />
+      <span className={c.status === "breach" ? "text-red-300" : "text-neutral-300"}>
+        {c.status === "breach" ? `${formatNumber(breaches)} breach${breaches === 1 ? "" : "es"}` : "Compliant"}
+      </span>
+    </span>
+  );
+}
 
 export default function AgentsPage() {
   const { isConfigured } = useApiConfiguration();
@@ -34,6 +55,7 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [agents, setAgents] = useState<AgentStats[]>([]);
+  const [compliance, setCompliance] = useState<Record<string, AgentCompliance>>({});
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -42,31 +64,31 @@ export default function AgentsPage() {
         setLoading(false);
         return;
       }
-
       setLoading(true);
       setError(null);
-
       try {
-        const data = await api.getAgentStats(timeRange, 50);
-        setAgents(data);
+        // Guardrail status is a secondary column: its failure must not blank the page.
+        const [stats, guard] = await Promise.all([
+          api.getAgentStats(timeRange, 50),
+          api.getGuardrailCompliance(timeRange).catch(() => null),
+        ]);
+        setAgents(stats);
+        setCompliance(
+          Object.fromEntries((guard?.agents ?? []).map((a) => [a.agent_name, a])),
+        );
         setShowOnboarding(false);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to fetch data";
-        if (
-          errorMessage.includes("401") ||
-          errorMessage.includes("Invalid API key")
-        ) {
+        const message = err instanceof Error ? err.message : "Failed to fetch data";
+        if (message.includes("401") || message.includes("Invalid API key")) {
           setShowOnboarding(true);
           setError(null);
         } else {
-          setError(errorMessage);
+          setError(message);
         }
       } finally {
         setLoading(false);
       }
     }
-
     fetchData();
   }, [timeRange]);
 
@@ -76,201 +98,170 @@ export default function AgentsPage() {
     // Weight success by call volume so a tiny noisy agent can't skew it.
     const weightedSuccess =
       totalCalls > 0
-        ? agents.reduce((sum, a) => sum + a.success_rate * a.total_calls, 0) /
-          totalCalls
+        ? agents.reduce((sum, a) => sum + a.success_rate * a.total_calls, 0) / totalCalls
         : 0;
     const sorted = [...agents].sort((a, b) => b.total_cost - a.total_cost);
-    return {
-      totalCost,
-      totalCalls,
-      weightedSuccess,
-      sorted,
-      topAgent: sorted[0] ?? null,
-    };
+    return { totalCost, totalCalls, weightedSuccess, sorted, topAgent: sorted[0] ?? null };
   }, [agents]);
 
-  // Show onboarding if not configured or invalid API key
   if (isConfigured === false || showOnboarding) return <OnboardingScreen />;
   if (isConfigured === null) return <LoadingSpinner />;
 
+  const breachingAgents = Object.values(compliance).filter((c) => c.status === "breach").length;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">
-            Agents
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white">Agents</h1>
           <p className="mt-1 text-sm text-neutral-500">
-            Cost and performance breakdown by agent
+            Cost, behaviour and guardrail status for every agent in the window.
           </p>
         </div>
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
 
-      {/* Error State */}
       {error && (
-        <Card className="border-red-900/50 bg-red-950/20">
-          <p className="text-red-400">{error}</p>
-        </Card>
+        <div className="rounded-lg border border-red-900/40 bg-red-950/20 px-4 py-3 text-sm text-red-300">
+          {error}
+        </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <HeroStatCard
-          label="Active Agents"
-          value={String(agents.length)}
-          sub={
-            summary.topAgent
-              ? `Top spender: ${summary.topAgent.agent_name}`
-              : undefined
-          }
-          icon={<Users size={15} />}
-          iconClassName="bg-sky-500/10 text-sky-400"
-        />
-        <HeroStatCard
-          label="Total Spend"
-          value={formatCurrency(summary.totalCost)}
-          sub={
-            summary.topAgent && summary.totalCost > 0
-              ? `${((summary.topAgent.total_cost / summary.totalCost) * 100).toFixed(0)}% from top agent`
-              : undefined
-          }
-          icon={<DollarSign size={15} />}
-          iconClassName="bg-emerald-500/10 text-emerald-400"
-        />
-        <HeroStatCard
-          label="Total Calls"
-          value={formatNumber(summary.totalCalls)}
-          sub={
-            summary.totalCalls > 0
-              ? `${formatCurrency(summary.totalCost / summary.totalCalls)} / call blended`
-              : undefined
-          }
-          icon={<Activity size={15} />}
-          iconClassName="bg-violet-500/10 text-violet-400"
-        />
-        <HeroStatCard
-          label="Success Rate"
-          value={
-            summary.totalCalls > 0
-              ? formatPercentage(summary.weightedSuccess)
-              : "—"
-          }
-          sub="Weighted by call volume"
-          icon={<Gauge size={15} />}
-          iconClassName={
-            summary.weightedSuccess >= 97 || summary.totalCalls === 0
-              ? "bg-emerald-500/10 text-emerald-400"
-              : "bg-amber-500/10 text-amber-400"
-          }
-        />
-      </div>
+      <StatBand
+        items={[
+          {
+            label: "Active agents",
+            value: String(agents.length),
+            sub: summary.topAgent ? `Top spender: ${summary.topAgent.agent_name}` : undefined,
+          },
+          {
+            label: "Spend",
+            value: formatCurrency(summary.totalCost),
+            sub:
+              summary.topAgent && summary.totalCost > 0
+                ? `${((summary.topAgent.total_cost / summary.totalCost) * 100).toFixed(0)}% from the top agent`
+                : undefined,
+          },
+          {
+            label: "Calls",
+            value: formatNumber(summary.totalCalls),
+            sub:
+              summary.totalCalls > 0
+                ? `${formatCurrency(summary.totalCost / summary.totalCalls)} per call, blended`
+                : undefined,
+          },
+          {
+            label: "Success rate",
+            value: summary.totalCalls > 0 ? formatPercentage(summary.weightedSuccess) : "—",
+            tone:
+              summary.totalCalls > 0 && summary.weightedSuccess < 95 ? "bad" : "default",
+            sub:
+              breachingAgents > 0
+                ? `${breachingAgents} agent${breachingAgents === 1 ? "" : "s"} breaching a guardrail`
+                : "Weighted by call volume",
+          },
+        ]}
+      />
 
-      {/* Agents Table */}
-      <Card padding="none">
-        <div className="border-b border-white/6 px-4 py-4 sm:px-6">
-          <h3 className="text-[15px] font-semibold tracking-tight text-white">
-            Agent Performance
-          </h3>
-          <p className="text-[12.5px] text-neutral-500 mt-0.5">
-            Ranked by spend in the selected window
-          </p>
-        </div>
+      <SectionCard
+        title="Ranked by spend"
+        description="Share is each agent's part of the window's spend. Guardrail shows the agent's compliance in the same window."
+        action={
+          <Link
+            href="/guardrails"
+            className="text-[12.5px] text-neutral-400 underline decoration-white/20 underline-offset-2 hover:text-white"
+          >
+            Manage guardrails
+          </Link>
+        }
+      >
         {loading ? (
           <div className="p-6">
             <TableSkeleton rows={8} />
           </div>
         ) : agents.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">#</TableHead>
-                <TableHead>Agent</TableHead>
-                <TableHead className="w-44">Cost Share</TableHead>
-                <TableHead className="text-right">Cost</TableHead>
-                <TableHead className="text-right">Cost / Call</TableHead>
-                <TableHead className="text-right">Calls</TableHead>
-                <TableHead className="text-right">Tokens</TableHead>
-                <TableHead className="text-right">Latency</TableHead>
-                <TableHead className="text-right">Success</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {summary.sorted.map((agent, index) => {
-                const share =
-                  summary.totalCost > 0
-                    ? (agent.total_cost / summary.totalCost) * 100
-                    : 0;
-                return (
-                  <TableRow key={agent.agent_name}>
-                    <TableCell className="font-mono text-xs text-neutral-600 tabular-nums">
-                      {String(index + 1).padStart(2, "0")}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/12 border border-white/6 text-[12px] font-semibold text-sky-300">
-                          {agent.agent_name.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="font-medium text-white">
-                          {agent.agent_name}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-1.5 w-24 rounded-full bg-white/5 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-sky-500"
-                            style={{ width: `${share}%` }}
+          <div className="overflow-x-auto">
+            <div className="min-w-260">
+              <div
+                className={cn(
+                  "grid items-center gap-x-4 border-b border-white/6 px-5 py-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500",
+                  COLUMNS,
+                )}
+              >
+                <span>#</span>
+                <span>Agent</span>
+                <span>Share</span>
+                <span className="text-right">Cost</span>
+                <span className="text-right">Per call</span>
+                <span className="text-right">Calls</span>
+                <span className="text-right">Tokens</span>
+                <span className="text-right">Latency</span>
+                <span className="text-right">Success</span>
+                <span>Guardrail</span>
+              </div>
+              <div className="divide-y divide-white/5">
+                {summary.sorted.map((agent, index) => {
+                  const share = summary.totalCost > 0 ? (agent.total_cost / summary.totalCost) * 100 : 0;
+                  const c = compliance[agent.agent_name];
+                  return (
+                    <div
+                      key={agent.agent_name}
+                      className={cn(
+                        "grid items-center gap-x-4 px-5 py-3 text-[13px] transition-colors hover:bg-white/2",
+                        COLUMNS,
+                      )}
+                    >
+                      <span className="font-mono text-[12px] tabular-nums text-neutral-600">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="truncate font-medium text-white">{agent.agent_name}</span>
+                      <span className="flex items-center gap-2.5">
+                        <span className="h-1 w-full max-w-24 overflow-hidden rounded-full bg-white/8">
+                          <span
+                            className="block h-full rounded-full bg-white"
+                            style={{ width: `${Math.max(2, share)}%` }}
                           />
-                        </div>
-                        <span className="text-[11.5px] text-neutral-500 tabular-nums">
+                        </span>
+                        <span className="w-11 shrink-0 tabular-nums text-neutral-500">
                           {share.toFixed(1)}%
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-white">
-                      {formatCurrency(agent.total_cost)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-neutral-400">
-                      {agent.total_calls > 0
-                        ? formatCurrency(agent.total_cost / agent.total_calls)
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-neutral-300">
-                      {formatNumber(agent.total_calls)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-neutral-300">
-                      {formatNumber(agent.total_tokens)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-neutral-300">
-                      {formatLatency(agent.avg_latency_ms)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        variant={
-                          agent.success_rate >= 95
-                            ? "success"
-                            : agent.success_rate >= 80
-                              ? "warning"
-                              : "error"
-                        }
+                      </span>
+                      <span className="text-right font-mono tabular-nums text-white">
+                        {formatCurrency(agent.total_cost)}
+                      </span>
+                      <span className="text-right font-mono tabular-nums text-neutral-400">
+                        {agent.total_calls > 0 ? formatCurrency(agent.total_cost / agent.total_calls) : "—"}
+                      </span>
+                      <span className="text-right font-mono tabular-nums text-neutral-300">
+                        {formatNumber(agent.total_calls)}
+                      </span>
+                      <span className="text-right font-mono tabular-nums text-neutral-300">
+                        {formatNumber(agent.total_tokens)}
+                      </span>
+                      <span className="text-right font-mono tabular-nums text-neutral-300">
+                        {formatLatency(agent.avg_latency_ms)}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-right font-mono tabular-nums",
+                          agent.success_rate < 90 ? "text-red-300" : "text-neutral-200",
+                        )}
                       >
                         {formatPercentage(agent.success_rate)}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      </span>
+                      <span className="text-[12.5px]">{guardrailCell(c)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         ) : (
-          <div className="flex h-64 items-center justify-center text-neutral-500">
-            No agent data available
+          <div className="flex h-56 items-center justify-center text-sm text-neutral-500">
+            No agent data in this window
           </div>
         )}
-      </Card>
+      </SectionCard>
     </div>
   );
 }

@@ -32,6 +32,8 @@ import {
   demoTraces,
   demoRunCostDistribution,
   demoOutcomeStats,
+  demoGuardrails,
+  demoGuardrailCompliance,
 } from "./demoData";
 
 export const DEMO_SIGNUP_PROMPT_EVENT = "demo-signup-prompt";
@@ -41,6 +43,7 @@ function describeAction(endpoint: string, method: string): string {
   if (endpoint.includes("/optimizations")) return "act on optimizations";
   if (endpoint.includes("/members")) return "invite your team";
   if (endpoint.includes("/budget")) return "set budgets and alerts";
+  if (endpoint.includes("/guardrails")) return "define guardrails";
   if (endpoint.includes("/api-key")) return "manage API keys";
   if (endpoint.includes("/feedback")) return "submit feedback";
   if (endpoint.includes("/projects") && method === "POST")
@@ -209,6 +212,13 @@ export async function resolveDemoRequest<T>(
       models: demoModelStats(range, 10),
       timeseries: demoTimeSeries(range),
     } as T;
+  }
+
+  if (path === "/v1/guardrails") {
+    return demoGuardrails() as T;
+  }
+  if (path === "/v1/guardrails/compliance") {
+    return demoGuardrailCompliance(param(endpoint, "range") ?? "7d") as T;
   }
 
   if (path === "/v1/events/count") {

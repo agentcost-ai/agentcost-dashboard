@@ -66,6 +66,121 @@ export interface ToolStats {
   avg_latency_ms: number;
 }
 
+// ── Guardrails — declared agent policy vs observed tool usage ──
+// A separate concept from success rate: success measures call outcomes,
+// compliance measures whether an agent stayed inside its declared boundary.
+
+export interface Guardrail {
+  id: string;
+  agent_name: string;
+  /** null = any tool permitted; [] = no tool calls permitted. */
+  allowed_tools: string[] | null;
+  read_only: boolean;
+  /** null = any model permitted. */
+  allowed_models: string[] | null;
+  /** Per-run limits over calls sharing a trace_id; null = no limit. */
+  max_tool_calls_per_run: number | null;
+  max_cost_per_run_usd: number | null;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export type BreachKind =
+  | "undeclared_tool"
+  | "write_in_readonly"
+  | "undeclared_model"
+  | "tool_calls_over_limit"
+  | "run_cost_over_limit";
+
+export interface GuardrailPolicyInput {
+  agent_name: string;
+  allowed_tools: string[] | null;
+  read_only: boolean;
+  allowed_models: string[] | null;
+  max_tool_calls_per_run: number | null;
+  max_cost_per_run_usd: number | null;
+  enabled: boolean;
+}
+
+export interface ToolAccessTag {
+  tool_name: string;
+  access: "read" | "write";
+}
+
+export interface GuardrailBreach {
+  kind: BreachKind;
+  /** The tool, the model, or for per-run kinds the worst run's trace_id. */
+  subject: string;
+  /** Breaching calls, or runs over the limit. */
+  count: number;
+  limit: number | null;
+  observed: number | null;
+  last_seen: string | null;
+}
+
+export interface ToolUsage {
+  tool_name: string;
+  calls: number;
+  last_seen: string | null;
+  access: "read" | "write" | null;
+  breach_kind: BreachKind | null;
+}
+
+export interface ModelUsage {
+  model: string;
+  calls: number;
+  cost: number;
+  permitted: boolean;
+}
+
+/** Distribution of tool calls and cost per run, for choosing a limit. */
+export interface RunStats {
+  runs: number;
+  p50_tool_calls: number;
+  p95_tool_calls: number;
+  max_tool_calls: number;
+  p50_cost: number;
+  p95_cost: number;
+  max_cost: number;
+}
+
+export interface DailyBreaches {
+  day: string;
+  count: number;
+}
+
+export interface AgentCompliance {
+  agent_name: string;
+  status: "no_guardrail" | "compliant" | "breach";
+  read_only: boolean;
+  allowed_tools: string[] | null;
+  allowed_models: string[] | null;
+  max_tool_calls_per_run: number | null;
+  max_cost_per_run_usd: number | null;
+  total_calls: number;
+  total_cost: number;
+  tracked_tool_calls: number;
+  runs_seen: number;
+  observed_tools: string[];
+  observed_models: string[];
+  tool_usage: ToolUsage[];
+  model_usage: ModelUsage[];
+  run_stats: RunStats | null;
+  breach_series: DailyBreaches[];
+  breaches: GuardrailBreach[];
+  unknown_access_tools: string[];
+}
+
+export interface GuardrailComplianceResponse {
+  agents: AgentCompliance[];
+  tool_tags: ToolAccessTag[];
+  start_time: string;
+  end_time: string;
+  total_calls: number;
+  tool_tracked_calls: number;
+}
+
 export interface RepeatedWorkFinding {
   trace_id: string;
   workflow: string | null;
@@ -1186,6 +1301,56 @@ class ApiClient {
         method: "PUT",
         body: JSON.stringify(payload),
       },
+      "jwt",
+    );
+  }
+
+  async getGuardrails(): Promise<Guardrail[]> {
+    return this.request("/v1/guardrails");
+  }
+
+  async getGuardrailCompliance(
+    range: string = "7d",
+  ): Promise<GuardrailComplianceResponse> {
+    return this.request(
+      `/v1/guardrails/compliance?range=${encodeURIComponent(range)}`,
+    );
+  }
+
+  async upsertGuardrail(
+    projectId: string,
+    payload: GuardrailPolicyInput,
+  ): Promise<Guardrail> {
+    return this.request(
+      `/v1/projects/${projectId}/guardrails`,
+      { method: "PUT", body: JSON.stringify(payload) },
+      "jwt",
+    );
+  }
+
+  async deleteGuardrail(projectId: string, agentName: string): Promise<null> {
+    return this.request(
+      `/v1/projects/${projectId}/guardrails/${encodeURIComponent(agentName)}`,
+      { method: "DELETE" },
+      "jwt",
+    );
+  }
+
+  async upsertToolTag(
+    projectId: string,
+    payload: ToolAccessTag,
+  ): Promise<ToolAccessTag> {
+    return this.request(
+      `/v1/projects/${projectId}/guardrails/tool-tags`,
+      { method: "PUT", body: JSON.stringify(payload) },
+      "jwt",
+    );
+  }
+
+  async deleteToolTag(projectId: string, toolName: string): Promise<null> {
+    return this.request(
+      `/v1/projects/${projectId}/guardrails/tool-tags/${encodeURIComponent(toolName)}`,
+      { method: "DELETE" },
       "jwt",
     );
   }

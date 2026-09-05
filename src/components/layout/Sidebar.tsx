@@ -22,6 +22,7 @@ import {
   FileText,
   Grid2x2Plus,
   Workflow,
+  ShieldCheck,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
@@ -34,6 +35,7 @@ const navigation = [
   { name: "Reports", href: "/reports", icon: FileText },
   { name: "Events", href: "/events", icon: List },
   { name: "Optimizations", href: "/optimizations", icon: Zap },
+  { name: "Guardrails", href: "/guardrails", icon: ShieldCheck },
   { name: "Feedback", href: "/feedback", icon: MessageSquare },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
