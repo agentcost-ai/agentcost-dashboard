@@ -1,86 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import {
-  Copy,
-  Check,
-  TerminalSquare,
-  FileSearch,
-  Play,
-  ListChecks,
-  GitBranch,
-  ShieldCheck,
-  SlidersHorizontal,
-} from "lucide-react";
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  return (
-    <button
-      onClick={async () => {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="absolute right-3 top-3 rounded-md bg-neutral-700/50 p-2 transition-colors hover:bg-neutral-600/50"
-      title="Copy to clipboard"
-    >
-      {copied ? (
-        <Check size={14} className="text-green-400" />
-      ) : (
-        <Copy size={14} className="text-neutral-400" />
-      )}
-    </button>
-  );
-}
-
-function CodeBlock({
-  code,
-  language = "bash",
-}: {
-  code: string;
-  language?: string;
-}) {
-  return (
-    <div className="relative rounded-lg border border-neutral-700/50 bg-neutral-800/50">
-      <div className="flex items-center justify-between border-b border-neutral-700/50 px-4 py-2">
-        <span className="text-xs font-medium uppercase text-neutral-500">
-          {language}
-        </span>
-        <CopyButton text={code} />
-      </div>
-      <pre className="overflow-x-auto p-4 text-sm">
-        <code className="text-neutral-300">{code}</code>
-      </pre>
-    </div>
-  );
-}
-
-function Section({
-  id,
-  title,
-  icon: Icon,
-  children,
-}: {
-  id: string;
-  title: string;
-  icon: React.ElementType;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="scroll-mt-24">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
-          <Icon size={20} />
-        </div>
-        <h2 className="text-xl font-semibold text-white">{title}</h2>
-      </div>
-      <div className="min-w-0 space-y-4 sm:ml-13">{children}</div>
-    </section>
-  );
-}
+import { Check } from "lucide-react";
+import { PageHeader, Section, CodeBlock } from "@/components/docs/primitives";
 
 const FLAGS: Array<{ flag: string; value: string; note: string }> = [
   {
@@ -170,68 +93,63 @@ const FINDINGS: Array<{
 
 export default function CliDocsContent() {
   return (
-    <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-4xl px-4 py-8 pt-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">CLI Reference</h1>
-          <p className="mt-2 text-neutral-400">
-            <code className="text-primary-300">agentcost analyze</code> — what an
+    <>
+        <PageHeader eyebrow="CLI" title={<>CLI Reference</>}>
+        <p><code>agentcost analyze</code> — what an
             agent will cost, and where it will misbehave, before it has spent
-            anything.
-          </p>
-        </div>
+            anything.</p>
+      </PageHeader>
 
         {/* Summary */}
-        <div className="mb-12 rounded-lg border border-primary-700/40 bg-primary-900/20 p-5">
-          <p className="leading-relaxed text-neutral-300">
+        <div className="docs-panel mb-12">
+          <p>
             The dashboard reports what your agent already spent. This command
             asks the same questions about a version that has not run in
             production yet: what one run will cost, which step dominates it,
             and where it loops.
           </p>
-          <p className="mt-3 leading-relaxed text-neutral-300">
+          <p>
             It runs entirely on your machine. It reads your prompt and skill
             files and it never transmits them — no network call is made, and no
             file content outlives the token count taken from it.
           </p>
         </div>
 
-        <div className="space-y-12">
-          <Section id="install" title="Install" icon={TerminalSquare}>
-            <p className="leading-relaxed text-neutral-300">
+        <div>
+          <Section id="install" title="Install">
+            <p>
               The CLI ships with the SDK. Installing the package registers the{" "}
-              <code className="text-primary-300">agentcost</code> command.
+              <code>agentcost</code> command.
             </p>
             <CodeBlock code={`pip install agentcost\nagentcost --version`} />
           </Section>
 
-          <Section id="files" title="Analysing your files" icon={FileSearch}>
-            <p className="leading-relaxed text-neutral-300">
+          <Section id="files" title="Analysing your files">
+            <p>
               Point it at the directory holding your system prompt and skill
               files. It token-counts each one and prices what they cost on every
               single call — the fixed toll your agent pays before it does any
               work.
             </p>
             <CodeBlock code={`agentcost analyze ./agent --model gpt-4o`} />
-            <p className="leading-relaxed text-neutral-300">
+            <p>
               By default it reads{" "}
-              <code className="text-primary-300">
+              <code>
                 *.md *.txt *.prompt *.tmpl *.j2 *.jinja *.jinja2
               </code>{" "}
               and skips vendored directories such as{" "}
-              <code className="text-neutral-400">node_modules</code>,{" "}
-              <code className="text-neutral-400">.git</code> and{" "}
-              <code className="text-neutral-400">.venv</code>. Override with{" "}
-              <code className="text-primary-300">--pattern</code>:
+              <code>node_modules</code>,{" "}
+              <code>.git</code> and{" "}
+              <code>.venv</code>. Override with{" "}
+              <code>--pattern</code>:
             </p>
             <CodeBlock
               code={`agentcost analyze ./agent --pattern "*.md" --pattern "*.yaml"`}
             />
           </Section>
 
-          <Section id="run" title="Analysing a test run" icon={Play}>
-            <p className="leading-relaxed text-neutral-300">
+          <Section id="run" title="Analysing a test run">
+            <p>
               For a cost-per-run figure, record one representative run in local
               mode. Local mode opens no socket and needs no API key, so this
               works before you have an account.
@@ -252,25 +170,25 @@ with track_costs.workflow("support-triage"):
 track_costs.flush()
 json.dump(track_costs.get_local_events(), open("run.json", "w"))`}
             />
-            <p className="leading-relaxed text-neutral-300">
+            <p>
               Then hand the recording to the analyser, with the volume you
               expect in production:
             </p>
             <CodeBlock
               code={`agentcost analyze ./agent --events run.json --runs-per-day 2000`}
             />
-            <div className="rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-4">
-              <p className="text-sm leading-relaxed text-neutral-400">
+            <div className="docs-panel">
+              <p>
                 Instrumenting with{" "}
-                <code className="text-primary-300">workflow()</code> and{" "}
-                <code className="text-primary-300">step()</code> is optional. An
+                <code>workflow()</code> and{" "}
+                <code>step()</code> is optional. An
                 uninstrumented recording still yields a cost per run — it just
                 cannot break that cost down per step, and the report says so.
               </p>
             </div>
           </Section>
 
-          <Section id="report" title="Reading the report" icon={ListChecks}>
+          <Section id="report" title="Reading the report">
             <CodeBlock
               language="text"
               code={`AgentCost pre-deployment analysis
@@ -298,25 +216,25 @@ Findings (3)
 
 Nothing in this report was transmitted anywhere.`}
             />
-            <p className="leading-relaxed text-neutral-300">
+            <p>
               The percentage beside each step is its share of one run, so the
               step to optimise is the one at the top rather than the one that
               looks slowest.
             </p>
           </Section>
 
-          <Section id="findings" title="Every finding it can raise" icon={ListChecks}>
-            <div className="overflow-x-auto rounded-lg border border-neutral-700/50">
-              <table className="w-full text-sm">
+          <Section id="findings" title="Every finding it can raise">
+            <div className="docs-table-wrap">
+              <table>
                 <thead>
-                  <tr className="border-b border-neutral-700/50 bg-neutral-800/50">
-                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                  <tr>
+                    <th className="font-medium">
                       Code
                     </th>
-                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                    <th className="font-medium">
                       Severity
                     </th>
-                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                    <th className="font-medium">
                       What it means
                     </th>
                   </tr>
@@ -327,10 +245,10 @@ Nothing in this report was transmitted anywhere.`}
                       key={row.code}
                       className="border-b border-neutral-800 last:border-0"
                     >
-                      <td className="whitespace-nowrap px-4 py-2.5 font-mono text-primary-300">
+                      <td className="whitespace-nowrap font-mono">
                         {row.code}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-2.5">
+                      <td className="whitespace-nowrap">
                         <span
                           className={
                             row.severity === "high"
@@ -343,7 +261,7 @@ Nothing in this report was transmitted anywhere.`}
                           {row.severity}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-neutral-400">
+                      <td>
                         {row.meaning}
                       </td>
                     </tr>
@@ -351,26 +269,26 @@ Nothing in this report was transmitted anywhere.`}
                 </tbody>
               </table>
             </div>
-            <p className="text-sm leading-relaxed text-neutral-400">
+            <p>
               Findings are ordered most severe first, and each carries a{" "}
-              <code className="text-primary-300">detail</code> object in the
+              <code>detail</code> object in the
               JSON output with the specific paths, counts and trace ids behind
               it.
             </p>
           </Section>
 
-          <Section id="flags" title="All flags" icon={SlidersHorizontal}>
-            <div className="overflow-x-auto rounded-lg border border-neutral-700/50">
-              <table className="w-full text-sm">
+          <Section id="flags" title="All flags">
+            <div className="docs-table-wrap">
+              <table>
                 <thead>
-                  <tr className="border-b border-neutral-700/50 bg-neutral-800/50">
-                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                  <tr>
+                    <th className="font-medium">
                       Flag
                     </th>
-                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                    <th className="font-medium">
                       Value
                     </th>
-                    <th className="px-4 py-2.5 text-left font-medium text-neutral-300">
+                    <th className="font-medium">
                       Purpose
                     </th>
                   </tr>
@@ -381,13 +299,13 @@ Nothing in this report was transmitted anywhere.`}
                       key={row.flag}
                       className="border-b border-neutral-800 last:border-0"
                     >
-                      <td className="whitespace-nowrap px-4 py-2.5 font-mono text-primary-300">
+                      <td className="whitespace-nowrap font-mono">
                         {row.flag}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-2.5 text-neutral-500">
+                      <td className="whitespace-nowrap text-neutral-500">
                         {row.value}
                       </td>
-                      <td className="px-4 py-2.5 text-neutral-400">
+                      <td>
                         {row.note}
                       </td>
                     </tr>
@@ -395,19 +313,19 @@ Nothing in this report was transmitted anywhere.`}
                 </tbody>
               </table>
             </div>
-            <p className="text-sm text-neutral-400">
+            <p>
               At least one of a path or{" "}
-              <code className="text-primary-300">--events</code> is required.
+              <code>--events</code> is required.
             </p>
           </Section>
 
-          <Section id="ci" title="Using it in CI" icon={GitBranch}>
-            <p className="leading-relaxed text-neutral-300">
-              <code className="text-primary-300">--fail-on</code> turns the
+          <Section id="ci" title="Using it in CI">
+            <p>
+              <code>--fail-on</code> turns the
               report into a gate. Exit codes:{" "}
-              <code className="text-neutral-400">0</code> clean,{" "}
-              <code className="text-neutral-400">1</code> a finding met the
-              threshold, <code className="text-neutral-400">2</code> the events
+              <code>0</code> clean,{" "}
+              <code>1</code> a finding met the
+              threshold, <code>2</code> the events
               file could not be read.
             </p>
             <CodeBlock
@@ -422,15 +340,15 @@ Nothing in this report was transmitted anywhere.`}
       --json cost-report.json \\
       --fail-on high`}
             />
-            <p className="leading-relaxed text-neutral-300">
-              Keep <code className="text-primary-300">cost-report.json</code> as
+            <p>
+              Keep <code>cost-report.json</code> as
               a build artifact and diff it between branches to see cost move
               before it reaches production.
             </p>
           </Section>
 
-          <Section id="privacy" title="What it reads, and what it sends" icon={ShieldCheck}>
-            <p className="leading-relaxed text-neutral-300">
+          <Section id="privacy" title="What it reads, and what it sends">
+            <p>
               The analyser reads your prompt and skill files. That is more than
               the SDK ever touches, which is why it runs where the files already
               are and sends nothing.
@@ -445,7 +363,7 @@ Nothing in this report was transmitted anywhere.`}
                 <li key={line} className="flex items-start gap-2.5">
                   <Check
                     size={16}
-                    className="mt-0.5 shrink-0 text-green-400"
+                    className="mt-1 shrink-0 text-neutral-400"
                     aria-hidden
                   />
                   <span className="text-sm leading-relaxed text-neutral-300">
@@ -454,11 +372,11 @@ Nothing in this report was transmitted anywhere.`}
                 </li>
               ))}
             </ul>
-            <p className="leading-relaxed text-neutral-300">
+            <p>
               The full data model is on the{" "}
               <Link
                 href="/docs/privacy"
-                className="text-primary-400 underline underline-offset-2 hover:text-primary-300"
+               
               >
                 Data &amp; Privacy Architecture
               </Link>{" "}
@@ -470,24 +388,23 @@ Nothing in this report was transmitted anywhere.`}
         <div className="mt-16 flex flex-wrap gap-x-6 gap-y-2 border-t border-neutral-800 pt-8 text-sm">
           <Link
             href="/docs/sdk"
-            className="text-neutral-400 transition-colors hover:text-white"
+           
           >
             SDK Documentation
           </Link>
           <Link
             href="/docs/api"
-            className="text-neutral-400 transition-colors hover:text-white"
+           
           >
             API Reference
           </Link>
           <Link
             href="/docs/privacy"
-            className="text-neutral-400 transition-colors hover:text-white"
+           
           >
             Privacy Architecture
           </Link>
         </div>
-      </div>
-    </div>
+    </>
   );
 }

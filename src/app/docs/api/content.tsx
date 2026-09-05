@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Copy, Check, Code, Server, Database, Shield, Zap } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
+import { PageHeader, Section, CodeBlock, Endpoint, Callout } from "@/components/docs/primitives";
 
 /** Resolved on the client, where window.location is the source of truth. */
 function readApiBaseUrl(): string {
@@ -29,291 +29,63 @@ function useApiBaseUrl() {
   );
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="absolute top-3 right-3 p-2 rounded-md bg-neutral-700/50 hover:bg-neutral-600/50 transition-colors"
-      title="Copy to clipboard"
-    >
-      {copied ? (
-        <Check size={14} className="text-green-400" />
-      ) : (
-        <Copy size={14} className="text-neutral-400" />
-      )}
-    </button>
-  );
-}
-
-function CodeBlock({
-  code,
-  language = "bash",
-}: {
-  code: string;
-  language?: string;
-}) {
-  return (
-    <div className="relative rounded-lg bg-neutral-800/50 border border-neutral-700/50">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-700/50">
-        <span className="text-xs font-medium text-neutral-500 uppercase">
-          {language}
-        </span>
-        <CopyButton text={code} />
-      </div>
-      <pre className="p-4 overflow-x-auto text-sm">
-        <code className="text-neutral-300">{code}</code>
-      </pre>
-    </div>
-  );
-}
-
-function MethodBadge({ method }: { method: string }) {
-  const colors: Record<string, string> = {
-    GET: "bg-green-900/30 text-green-400 border-green-700/50",
-    POST: "bg-blue-900/30 text-blue-400 border-blue-700/50",
-    PUT: "bg-yellow-900/30 text-yellow-400 border-yellow-700/50",
-    DELETE: "bg-red-900/30 text-red-400 border-red-700/50",
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium border ${colors[method] || colors.GET}`}
-    >
-      {method}
-    </span>
-  );
-}
-
-function Endpoint({
-  method,
-  path,
-  description,
-  auth = true,
-  children,
-}: {
-  method: string;
-  path: string;
-  description: string;
-  auth?: boolean;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 overflow-hidden">
-      <div className="p-4 border-b border-neutral-700/50">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2">
-          <MethodBadge method={method} />
-          <code className="text-white font-mono break-all">{path}</code>
-          {auth && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-yellow-900/30 text-yellow-400 border border-yellow-700/50">
-              <Shield size={12} />
-              Auth
-            </span>
-          )}
-        </div>
-        <p className="text-neutral-400 text-sm">{description}</p>
-      </div>
-      {children && <div className="p-4 bg-neutral-900/50">{children}</div>}
-    </div>
-  );
-}
-
-function Section({
-  id,
-  title,
-  icon: Icon,
-  children,
-}: {
-  id: string;
-  title: string;
-  icon: React.ElementType;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="scroll-mt-24">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-900/30 text-primary-400">
-          <Icon size={20} />
-        </div>
-        <h2 className="text-xl font-semibold text-white">{title}</h2>
-      </div>
-      <div className="space-y-4">{children}</div>
-    </section>
-  );
-}
-
 export default function APIReferencePage() {
   const apiBaseUrl = useApiBaseUrl();
 
   return (
-    <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-4">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">API Reference</h1>
-          <p className="mt-2 text-neutral-400">
-            Complete REST API documentation for the AgentCost backend
-          </p>
-        </div>
-
-        {/* Table of Contents */}
-        <div className="mb-12 rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-6">
-          <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">
-            Contents
-          </h3>
-          <nav className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <a
-              href="#authentication"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Authentication
-            </a>
-            <a
-              href="#user-auth"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              User Login & Registration
-            </a>
-            <a
-              href="#health"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Health Check
-            </a>
-            <a
-              href="#projects"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Projects
-            </a>
-            <a
-              href="#team"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Team Management
-            </a>
-            <a
-              href="#events"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Events
-            </a>
-            <a
-              href="#analytics"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Analytics
-            </a>
-            <a
-              href="#workflows"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Workflows &amp; Traces
-            </a>
-            <a
-              href="#optimizations"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Optimizations
-            </a>
-            <a
-              href="#errors"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Error Handling
-            </a>
-            <a
-              href="#rate-limiting"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Rate Limiting
-            </a>
-            <a
-              href="#sdks"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              SDKs & Libraries
-            </a>
-            <a
-              href="#webhooks"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Webhooks
-            </a>
-            <a
-              href="#egress"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              Budget State &amp; Metrics
-            </a>
-            <a
-              href="#versioning"
-              className="text-primary-400 hover:text-primary-300 transition-colors text-sm"
-            >
-              API Versioning
-            </a>
-          </nav>
-        </div>
+    <>
+        <PageHeader eyebrow="REST API" title={<>API Reference</>}>
+        <p>Complete REST API documentation for the AgentCost backend</p>
+      </PageHeader>
 
         {/* Base URL */}
-        <div className="mb-12 rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-6">
-          <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
-            Base URL
-          </h3>
-          <code className="text-primary-400 font-mono text-lg break-all">
-            {apiBaseUrl || "https://api.yourdomain.com"}
-          </code>
-          <p className="mt-2 text-sm text-neutral-500">
+        <div className="docs-panel mb-12">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">Base URL</p>
+          <code className="text-[15px] text-white">{apiBaseUrl || "https://api.agentcost.tech"}</code>
+          <p>
             All API endpoints are relative to this base URL
           </p>
         </div>
 
         {/* Authentication */}
-        <Section id="authentication" title="Authentication" icon={Shield}>
-          <p className="text-neutral-300 mb-4">
+        <Section id="authentication" title="Authentication">
+          <p>
             AgentCost uses two types of authentication:
           </p>
-          <div className="overflow-x-auto max-w-full mb-4">
-            <table className="w-full min-w-140 text-sm">
+          <div className="docs-table-wrap">
+            <table className="min-w-140">
               <thead>
-                <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                <tr>
+                  <th className="font-medium">
                     Type
                   </th>
-                  <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                  <th className="font-medium">
                     Used For
                   </th>
-                  <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                  <th className="font-medium">
                     Header
                   </th>
                 </tr>
               </thead>
-              <tbody className="text-neutral-300">
-                <tr className="border-b border-neutral-800">
-                  <td className="py-2 px-3 font-medium text-white">API Key</td>
-                  <td className="py-2 px-3">SDK tracking, analytics, events</td>
-                  <td className="py-2 px-3">
-                    <code className="text-primary-400">
+              <tbody>
+                <tr>
+                  <td className="font-medium text-white">API Key</td>
+                  <td>SDK tracking, analytics, events</td>
+                  <td>
+                    <code>
                       Authorization: Bearer sk_xxx
                     </code>
                   </td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-2 px-3 font-medium text-white">
+                <tr>
+                  <td className="font-medium text-white">
                     JWT Token
                   </td>
-                  <td className="py-2 px-3">
+                  <td>
                     Dashboard, user actions, team management
                   </td>
-                  <td className="py-2 px-3">
-                    <code className="text-primary-400">
+                  <td>
+                    <code>
                       Authorization: Bearer eyJ...
                     </code>
                   </td>
@@ -330,8 +102,8 @@ curl -H "Authorization: Bearer sk_your_project_api_key" \\
 curl -H "Authorization: Bearer your_jwt_token" \\
   YOUR_API_URL/v1/projects/{project_id}/members`}
           />
-          <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-4 mt-4">
-            <p className="text-yellow-300 text-sm">
+          <div className="docs-panel docs-panel--warning mt-4">
+            <p>
               <strong>Security:</strong> API keys provide project-level access
               for your SDK. JWT tokens are user-specific and expire after 1
               hour, but are automatically refreshed.
@@ -340,8 +112,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
         </Section>
 
         {/* User Authentication */}
-        <Section id="user-auth" title="User Login & Registration" icon={Shield}>
-          <p className="text-neutral-300 mb-4">
+        <Section id="user-auth" title="User Login & Registration">
+          <p>
             These endpoints handle user account creation and authentication.
             After login, you receive a JWT token to use with protected
             endpoints.
@@ -353,7 +125,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             description="Create a new user account"
             auth={false}
           >
-            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <p>Request Body:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -362,7 +134,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "name": "John Doe"
 }`}
             />
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -383,13 +155,13 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   }
 }`}
             />
-            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3">
-              <p className="text-blue-300 text-sm">
+            <div className="docs-panel mt-3">
+              <p>
                 Registration signs you in immediately — the response carries
                 the same tokens as login. A verification email is sent in the
                 background; verify whenever convenient. The default
                 project&apos;s{" "}
-                <code className="bg-blue-900/30 px-1 rounded">api_key</code> is
+                <code>api_key</code> is
                 shown only this once — store it securely.
               </p>
             </div>
@@ -401,7 +173,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             description="Authenticate and get access tokens"
             auth={false}
           >
-            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <p>Request Body:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -410,7 +182,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "remember_me": true
 }`}
             />
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -433,14 +205,14 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             description="Get a new access token using refresh token"
             auth={false}
           >
-            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <p>Request Body:</p>
             <CodeBlock
               language="json"
               code={`{
   "refresh_token": "your_refresh_token"
 }`}
             />
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -457,24 +229,24 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/auth/logout"
             description="Invalidate current session"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Response (204 No Content)
             </p>
-            <p className="text-neutral-400 text-sm">
+            <p>
               Session is invalidated. The access token will no longer be valid.
             </p>
           </Endpoint>
         </Section>
 
         {/* Health */}
-        <Section id="health" title="Health Check" icon={Zap}>
+        <Section id="health" title="Health Check">
           <Endpoint
             method="GET"
             path="/v1/health"
             description="Check if the backend is running and healthy"
             auth={false}
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -487,14 +259,14 @@ curl -H "Authorization: Bearer your_jwt_token" \\
         </Section>
 
         {/* Projects */}
-        <Section id="projects" title="Projects" icon={Database}>
+        <Section id="projects" title="Projects">
           <Endpoint
             method="POST"
             path="/v1/projects"
             description="Create a new project and get an API key"
             auth={false}
           >
-            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <p>Request Body:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -502,7 +274,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "description": "Optional project description"
 }`}
             />
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -518,8 +290,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "warning": "Save this API key now! It cannot be retrieved later."
 }`}
             />
-            <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-3 mt-3">
-              <p className="text-yellow-300 text-sm">
+            <div className="docs-panel docs-panel--warning mt-3">
+              <p>
                 <strong>Important:</strong> The API key is shown only once on
                 creation. Store it securely and use rotation to generate a new
                 one later.
@@ -532,7 +304,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/me"
             description="Get the current project (API key auth)"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -553,7 +325,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{id}"
             description="Get project details by ID"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -566,7 +338,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "created_at": "2024-01-23T10:30:45.123Z"
 }`}
             />
-            <p className="text-xs text-neutral-500 mt-2">
+            <p>
               API keys are write-only and are never returned in read endpoints.
             </p>
           </Endpoint>
@@ -576,7 +348,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}"
             description="Update project settings"
           >
-            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <p>Request Body:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -585,7 +357,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "is_active": true
 }`}
             />
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -605,10 +377,10 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}"
             description="Delete a project"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response (200 OK)</p>
+            <p>Response (200 OK)</p>
             <CodeBlock language="json" code={`{ "status": "deleted" }`} />
-            <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-3 mt-3">
-              <p className="text-yellow-300 text-sm">
+            <div className="docs-panel docs-panel--warning mt-3">
+              <p>
                 <strong>Warning:</strong> Deleting a project removes all
                 associated events and analytics.
               </p>
@@ -620,7 +392,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}/api-key/rotate"
             description="Rotate the project API key (Admin only, JWT auth)"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -635,53 +407,53 @@ curl -H "Authorization: Bearer your_jwt_token" \\
         </Section>
 
         {/* Team Management */}
-        <Section id="team" title="Team Management" icon={Shield}>
-          <p className="text-neutral-300 mb-4">
+        <Section id="team" title="Team Management">
+          <p>
             Manage team members and their access to your project. All team
             endpoints require JWT authentication.
           </p>
 
           <div className="overflow-x-auto max-w-full mb-6">
-            <table className="w-full min-w-120 text-sm">
+            <table className="min-w-120">
               <thead>
-                <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                <tr>
+                  <th className="font-medium">
                     Role
                   </th>
-                  <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                  <th className="font-medium">
                     Permissions
                   </th>
                 </tr>
               </thead>
-              <tbody className="text-neutral-300">
-                <tr className="border-b border-neutral-800">
-                  <td className="py-2 px-3">
-                    <span className="px-2 py-0.5 rounded text-xs bg-amber-900/30 text-amber-400 border border-amber-700/50">
+              <tbody>
+                <tr>
+                  <td>
+                    <span className="rounded border border-white/10 px-1.5 py-0.5 font-mono text-[11px] text-neutral-300">
                       Admin
                     </span>
                   </td>
-                  <td className="py-2 px-3">
+                  <td>
                     Full access: invite/remove members, change roles, delete
                     project
                   </td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-2 px-3">
-                    <span className="px-2 py-0.5 rounded text-xs bg-blue-900/30 text-blue-400 border border-blue-700/50">
+                <tr>
+                  <td>
+                    <span className="rounded border border-white/10 px-1.5 py-0.5 font-mono text-[11px] text-neutral-300">
                       Member
                     </span>
                   </td>
-                  <td className="py-2 px-3">
+                  <td>
                     View analytics, create events, export data
                   </td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-2 px-3">
+                <tr>
+                  <td>
                     <span className="px-2 py-0.5 rounded text-xs bg-neutral-700 text-neutral-300 border border-neutral-600">
                       Viewer
                     </span>
                   </td>
-                  <td className="py-2 px-3">
+                  <td>
                     Read-only access to analytics and events
                   </td>
                 </tr>
@@ -694,7 +466,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}/members"
             description="List all members of a project"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -730,7 +502,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}/members"
             description="Invite a user to the project (Admin only)"
           >
-            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <p>Request Body:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -738,7 +510,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "role": "member"
 }`}
             />
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -747,8 +519,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "role": "member"
 }`}
             />
-            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3">
-              <p className="text-blue-300 text-sm">
+            <div className="docs-panel mt-3">
+              <p>
                 An invitation email is sent to the user. They must accept it to
                 join the project.
               </p>
@@ -760,7 +532,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/invitations/pending"
             description="Get your pending project invitations"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -786,7 +558,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}/invitations/accept"
             description="Accept a project invitation"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -802,7 +574,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}/invitations/decline"
             description="Decline a project invitation"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Response (204 No Content)
             </p>
           </Endpoint>
@@ -812,14 +584,14 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}/members/{user_id}"
             description="Update a member's role (Admin only)"
           >
-            <p className="text-sm text-neutral-400 mb-2">Request Body:</p>
+            <p>Request Body:</p>
             <CodeBlock
               language="json"
               code={`{
   "role": "admin"
 }`}
             />
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -834,7 +606,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}/members/{user_id}"
             description="Remove a member from the project (Admin only)"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Response (204 No Content)
             </p>
           </Endpoint>
@@ -844,11 +616,11 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/projects/{project_id}/leave"
             description="Leave a project voluntarily"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Response (204 No Content)
             </p>
-            <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-3 mt-3">
-              <p className="text-yellow-300 text-sm">
+            <div className="docs-panel docs-panel--warning mt-3">
+              <p>
                 Project owners cannot leave. They must transfer ownership or
                 delete the project.
               </p>
@@ -857,13 +629,13 @@ curl -H "Authorization: Bearer your_jwt_token" \\
         </Section>
 
         {/* Events */}
-        <Section id="events" title="Events" icon={Code}>
+        <Section id="events" title="Events">
           <Endpoint
             method="POST"
             path="/v1/events/batch"
             description="Ingest a batch of LLM call events (used by SDK)"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Try it from your terminal — this one command ingests a sample
               event and lights up your dashboard:
             </p>
@@ -886,20 +658,20 @@ curl -H "Authorization: Bearer your_jwt_token" \\
     ]
   }'`}
             />
-            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3 mb-4">
-              <p className="text-blue-300 text-sm">
-                <code className="bg-blue-900/30 px-1 rounded">project_id</code>{" "}
+            <div className="docs-panel mt-3 mb-4">
+              <p>
+                <code>project_id</code>{" "}
                 is your project&apos;s <strong>UUID</strong> from Settings (not
                 its name) and must match the API key&apos;s project — a
                 mismatch returns 403.{" "}
-                <code className="bg-blue-900/30 px-1 rounded">
+                <code>
                   total_tokens
                 </code>{" "}
-                and <code className="bg-blue-900/30 px-1 rounded">cost</code>{" "}
+                and <code>cost</code>{" "}
                 are optional; the server derives and prices them for you.
               </p>
             </div>
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Full request body — every field beyond the required four
               (agent_name, model, input_tokens, output_tokens, plus timestamp)
               is optional:
@@ -929,37 +701,37 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   ]
 }`}
             />
-            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3">
-              <ul className="text-blue-300 text-sm space-y-1.5">
+            <div className="docs-panel mt-3">
+              <ul className="space-y-1.5">
                 <li>
-                  <code className="bg-blue-900/30 px-1 rounded">cached_tokens</code>{" "}
-                  is the part of <code className="bg-blue-900/30 px-1 rounded">input_tokens</code>{" "}
+                  <code>cached_tokens</code>{" "}
+                  is the part of <code>input_tokens</code>{" "}
                   served from the provider&apos;s prompt cache — it changes cost
                   materially on cache-heavy workloads and is priced at real
                   cache rates.
                 </li>
                 <li>
-                  <code className="bg-blue-900/30 px-1 rounded">event_id</code>{" "}
+                  <code>event_id</code>{" "}
                   makes delivery idempotent: a replay returns 200 with{" "}
-                  <code className="bg-blue-900/30 px-1 rounded">events_duplicate</code>{" "}
+                  <code>events_duplicate</code>{" "}
                   incremented and stores nothing, even under concurrent retries.
                 </li>
                 <li>
-                  <code className="bg-blue-900/30 px-1 rounded">trace_id</code>{" "}
+                  <code>trace_id</code>{" "}
                   accepts up to 64 characters, so UUIDs minted by an external
-                  orchestrator fit. <code className="bg-blue-900/30 px-1 rounded">outcomes</code>{" "}
-                  may be sent with an empty <code className="bg-blue-900/30 px-1 rounded">events</code>{" "}
+                  orchestrator fit. <code>outcomes</code>{" "}
+                  may be sent with an empty <code>events</code>{" "}
                   list — a run denied by a policy layer still gets its ending recorded.
                 </li>
                 <li>
-                  <code className="bg-blue-900/30 px-1 rounded">metadata.user_id</code>{" "}
-                  and <code className="bg-blue-900/30 px-1 rounded">metadata.session_id</code>{" "}
+                  <code>metadata.user_id</code>{" "}
+                  and <code>metadata.session_id</code>{" "}
                   become indexed analytics dimensions — see{" "}
                   <a href="#analytics" className="underline">Analytics</a>.
                 </li>
               </ul>
             </div>
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -980,49 +752,49 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/events"
             description="Get recent events for the authenticated project"
           >
-            <p className="text-sm text-neutral-400 mb-2">Query Parameters:</p>
-            <div className="overflow-x-auto max-w-full mb-4">
-              <table className="w-full min-w-140 text-sm">
+            <p>Query Parameters:</p>
+            <div className="docs-table-wrap">
+              <table className="min-w-140">
                 <thead>
-                  <tr className="border-b border-neutral-700">
-                    <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                  <tr>
+                    <th className="font-medium">
                       Parameter
                     </th>
-                    <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                    <th className="font-medium">
                       Type
                     </th>
-                    <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                    <th className="font-medium">
                       Default
                     </th>
-                    <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                    <th className="font-medium">
                       Description
                     </th>
                   </tr>
                 </thead>
-                <tbody className="text-neutral-300">
-                  <tr className="border-b border-neutral-800">
-                    <td className="py-2 px-3 font-mono text-primary-400">
+                <tbody>
+                  <tr>
+                    <td className="font-mono">
                       limit
                     </td>
-                    <td className="py-2 px-3">int</td>
-                    <td className="py-2 px-3">100</td>
-                    <td className="py-2 px-3">Maximum events to return</td>
+                    <td>int</td>
+                    <td>100</td>
+                    <td>Maximum events to return</td>
                   </tr>
-                  <tr className="border-b border-neutral-800">
-                    <td className="py-2 px-3 font-mono text-primary-400">
+                  <tr>
+                    <td className="font-mono">
                       offset
                     </td>
-                    <td className="py-2 px-3">int</td>
-                    <td className="py-2 px-3">0</td>
-                    <td className="py-2 px-3">Number of events to skip</td>
+                    <td>int</td>
+                    <td>0</td>
+                    <td>Number of events to skip</td>
                   </tr>
-                  <tr className="border-b border-neutral-800">
-                    <td className="py-2 px-3 font-mono text-primary-400">
+                  <tr>
+                    <td className="font-mono">
                       agent_name
                     </td>
-                    <td className="py-2 px-3">str</td>
-                    <td className="py-2 px-3">-</td>
-                    <td className="py-2 px-3">Filter by agent name</td>
+                    <td>str</td>
+                    <td>-</td>
+                    <td>Filter by agent name</td>
                   </tr>
                 </tbody>
               </table>
@@ -1031,40 +803,40 @@ curl -H "Authorization: Bearer your_jwt_token" \\
         </Section>
 
         {/* Analytics */}
-        <Section id="analytics" title="Analytics" icon={Server}>
+        <Section id="analytics" title="Analytics">
           <Endpoint
             method="GET"
             path="/v1/analytics/overview"
             description="Get cost overview for the project"
           >
-            <p className="text-sm text-neutral-400 mb-2">Query Parameters:</p>
-            <div className="overflow-x-auto max-w-full mb-4">
-              <table className="w-full min-w-120 text-sm">
+            <p>Query Parameters:</p>
+            <div className="docs-table-wrap">
+              <table className="min-w-120">
                 <thead>
-                  <tr className="border-b border-neutral-700">
-                    <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                  <tr>
+                    <th className="font-medium">
                       Parameter
                     </th>
-                    <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                    <th className="font-medium">
                       Type
                     </th>
-                    <th className="text-left py-2 px-3 text-neutral-400 font-medium">
+                    <th className="font-medium">
                       Description
                     </th>
                   </tr>
                 </thead>
-                <tbody className="text-neutral-300">
-                  <tr className="border-b border-neutral-800">
-                    <td className="py-2 px-3 font-mono text-primary-400">
+                <tbody>
+                  <tr>
+                    <td className="font-mono">
                       range
                     </td>
-                    <td className="py-2 px-3">str</td>
-                    <td className="py-2 px-3">Time range: 24h, 7d, 30d, 90d</td>
+                    <td>str</td>
+                    <td>Time range: 24h, 7d, 30d, 90d</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -1085,7 +857,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/agents"
             description="Get per-agent cost breakdown"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`[
@@ -1114,7 +886,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/models"
             description="Get per-model cost breakdown"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`[
@@ -1145,7 +917,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/timeseries"
             description="Get time series data for charting"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`[
@@ -1170,7 +942,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/full"
             description="Get complete analytics response (overview + agents + models + timeseries)"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -1187,11 +959,11 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/by/{dimension}"
             description="Cost and volume grouped by user, session, workflow, tool, model or agent"
           >
-            <p className="text-sm text-neutral-400 mb-3">
-              <code className="text-primary-400">user</code> and{" "}
-              <code className="text-primary-400">session</code> read the{" "}
-              <code className="text-primary-400">user_id</code> /{" "}
-              <code className="text-primary-400">session_id</code> keys from
+            <p>
+              <code>user</code> and{" "}
+              <code>session</code> read the{" "}
+              <code>user_id</code> /{" "}
+              <code>session_id</code> keys from
               event metadata — this is what answers{" "}
               <em>what is each developer costing us</em>. Events with no value
               for the dimension are excluded, not bucketed under a placeholder.
@@ -1200,7 +972,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
               code={`curl -H "Authorization: Bearer sk_your_project_api_key" \\
   "${apiBaseUrl || "https://api.agentcost.tech"}/v1/analytics/by/user?range=30d"`}
             />
-            <p className="text-sm text-neutral-400 mb-2 mt-4">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`[
@@ -1221,7 +993,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/cache"
             description="Prompt-cache hit rate and savings for a window, in USD"
           >
-            <p className="text-sm text-neutral-400 mb-3">
+            <p>
               Savings are measured against billing every cached token at the
               model&apos;s full input rate; a model with no published cache
               rate contributes zero, exactly as ingest prices it.
@@ -1243,17 +1015,17 @@ curl -H "Authorization: Bearer your_jwt_token" \\
         </Section>
 
         {/* Workflows & traces */}
-        <Section id="workflows" title="Workflows &amp; Traces" icon={Server}>
-          <p className="text-neutral-300 mb-6">
+        <Section id="workflows" title="Workflows &amp; Traces">
+          <p>
             Cost attributed to the shape of a run rather than to the model that
             served it. These endpoints read only events carrying trace
             structure, which the SDK adds when you use{" "}
-            <code className="text-primary-300">workflow()</code>,{" "}
-            <code className="text-primary-300">step()</code> and{" "}
-            <code className="text-primary-300">tool()</code>. Calls made outside
+            <code>workflow()</code>,{" "}
+            <code>step()</code> and{" "}
+            <code>tool()</code>. Calls made outside
             a workflow are absent here by design, and remain visible under
             Analytics. Every endpoint accepts{" "}
-            <code className="text-primary-300">range</code> (1h, 24h, 7d, 30d,
+            <code>range</code> (1h, 24h, 7d, 30d,
             90d).
           </p>
 
@@ -1262,7 +1034,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/workflows"
             description="Cost per workflow, including the average cost of a single run"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`[
@@ -1287,8 +1059,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/workflows/steps"
             description="Cost per step. calls_per_run above 1 indicates retries or a loop"
           >
-            <p className="text-sm text-neutral-400 mb-2">
-              Optional <code className="text-primary-400">workflow</code> query
+            <p>
+              Optional <code>workflow</code> query
               parameter restricts the result to one workflow.
             </p>
             <CodeBlock
@@ -1314,7 +1086,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/workflows/tools"
             description="LLM spend incurred while a named tool was running"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`[
@@ -1335,11 +1107,11 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/workflows/repeated-work"
             description="Identical calls repeated within a single run, and what they cost"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Distinct from the cross-run duplication the caching analyzer
               reports: that argues for a cache, this usually means the control
               flow is looping.{" "}
-              <code className="text-primary-400">wasted_cost</code> covers every
+              <code>wasted_cost</code> covers every
               occurrence beyond the first.
             </p>
             <CodeBlock
@@ -1364,11 +1136,11 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/workflows/outcomes"
             description="Cost per completed outcome, charging failed runs to the successes"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Populated only for runs that called{" "}
-              <code className="text-primary-400">track_costs.outcome()</code>.
+              <code>track_costs.outcome()</code>.
               Runs that declared nothing are counted as{" "}
-              <code className="text-primary-400">unknown</code> rather than as
+              <code>unknown</code> rather than as
               failures.
             </p>
             <CodeBlock
@@ -1394,13 +1166,13 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/workflows/distribution"
             description="Distribution of cost per run, with percentiles and the tail's share of spend"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Computed over every run in the window rather than a top-N slice.
               Defaults to the highest-spend workflow; pass{" "}
-              <code className="text-primary-400">workflow</code> to choose one,
-              and <code className="text-primary-400">buckets</code> (6-60) to
+              <code>workflow</code> to choose one,
+              and <code>buckets</code> (6-60) to
               set the resolution. The final histogram bucket is the tail, marked{" "}
-              <code className="text-primary-400">is_tail</code>.
+              <code>is_tail</code>.
             </p>
             <CodeBlock
               language="json"
@@ -1428,10 +1200,10 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/traces"
             description="Individual runs, most expensive first"
           >
-            <p className="text-sm text-neutral-400 mb-2">
-              Optional <code className="text-primary-400">workflow</code>{" "}
+            <p>
+              Optional <code>workflow</code>{" "}
               parameter. Use the returned{" "}
-              <code className="text-primary-400">trace_id</code> with the
+              <code>trace_id</code> with the
               endpoint below.
             </p>
             <CodeBlock
@@ -1456,7 +1228,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/traces/{trace_id}"
             description="Every span of one run, ordered as it executed"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Spans are returned flat with parent ids rather than pre-nested, so
               a span whose parent never arrived cannot break the response.
               Returns 404 if the trace does not belong to your project.
@@ -1489,14 +1261,248 @@ curl -H "Authorization: Bearer your_jwt_token" \\
           </Endpoint>
         </Section>
 
+        {/* Guardrails */}
+        <Section id="guardrails" title="Guardrails">
+          <p>
+            A declared boundary per agent, judged against observed usage. Four
+            boundaries, each optional: permitted tools, read-only, permitted
+            models, and per-run limits on tool calls and cost. This is a
+            separate concept from success rate: success measures whether a call
+            raised an error, compliance measures whether an agent stayed inside
+            the boundary you declared. Tool boundaries only see calls instrumented
+            with <code>track_costs.tool(...)</code> and per-run limits only see
+            calls inside <code>track_costs.workflow()</code>, so every verdict is
+            reported alongside instrumentation coverage. Model boundaries see
+            every call.
+          </p>
+
+          <Endpoint
+            method="GET"
+            path="/v1/guardrails"
+            description="Declared guardrails for every agent in the project"
+          >
+            <p>Response:</p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "id": "6f0e2a44-9c1b-4d2f-8a3e-1b2c3d4e5f60",
+    "agent_name": "research-agent",
+    "allowed_tools": ["web_search"],
+    "read_only": true,
+    "allowed_models": null,
+    "max_tool_calls_per_run": 8,
+    "max_cost_per_run_usd": null,
+    "enabled": true,
+    "created_at": "2026-08-12T09:14:22Z",
+    "updated_at": "2026-08-30T16:02:10Z"
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/guardrails/compliance"
+            description="Observed tool usage judged against each agent's declared guardrail"
+          >
+            <p>
+              Accepts <code>range</code> (1h, 24h, 7d, 30d, 90d). A breach is{" "}
+              <code>{"{kind, subject, count, limit, observed, last_seen}"}</code>:{" "}
+              <code>subject</code> is the tool, the model, or for per-run kinds
+              the worst run&apos;s <code>trace_id</code>; <code>count</code> is
+              breaching calls, or runs over the limit. Kinds:{" "}
+              <code>undeclared_tool</code>, <code>write_in_readonly</code>,{" "}
+              <code>undeclared_model</code>, <code>tool_calls_over_limit</code>{" "}
+              and <code>run_cost_over_limit</code>. Tools a read-only agent used
+              that carry no read/write tag are listed in{" "}
+              <code>unknown_access_tools</code> rather than silently judged
+              either way. Each agent also carries the detail behind the verdict:{" "}
+              <code>tool_usage</code> and <code>model_usage</code> (calls, cost,
+              tag, whether permitted), <code>run_stats</code> (p50, p95 and max
+              tool calls and cost per run, so a limit can be set from observed
+              behaviour) and <code>breach_series</code> (breaching calls or runs
+              per day).
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "agents": [
+    {
+      "agent_name": "email-drafter",
+      "status": "breach",
+      "read_only": true,
+      "allowed_tools": null,
+      "allowed_models": null,
+      "max_tool_calls_per_run": null,
+      "max_cost_per_run_usd": null,
+      "total_calls": 15000,
+      "total_cost": 4.33,
+      "tracked_tool_calls": 120,
+      "runs_seen": 0,
+      "observed_tools": ["send_email"],
+      "observed_models": ["gpt-4o"],
+      "tool_usage": [
+        { "tool_name": "send_email", "calls": 120, "last_seen": "2026-09-01T18:44:03Z", "access": "write", "breach_kind": "write_in_readonly" }
+      ],
+      "model_usage": [
+        { "model": "gpt-4o", "calls": 15000, "cost": 4.33, "permitted": true }
+      ],
+      "run_stats": null,
+      "breach_series": [
+        { "day": "2026-09-01", "count": 120 }
+      ],
+      "breaches": [
+        {
+          "kind": "write_in_readonly",
+          "subject": "send_email",
+          "count": 120,
+          "limit": null,
+          "observed": null,
+          "last_seen": "2026-09-01T18:44:03Z"
+        }
+      ],
+      "unknown_access_tools": []
+    },
+    {
+      "agent_name": "research-agent",
+      "status": "breach",
+      "read_only": true,
+      "allowed_tools": ["web_search"],
+      "allowed_models": null,
+      "max_tool_calls_per_run": 8,
+      "max_cost_per_run_usd": null,
+      "total_calls": 2600,
+      "total_cost": 137.92,
+      "tracked_tool_calls": 2210,
+      "runs_seen": 442,
+      "observed_tools": ["web_search"],
+      "observed_models": ["claude-sonnet-4"],
+      "tool_usage": [
+        { "tool_name": "web_search", "calls": 2210, "last_seen": "2026-09-01T09:02:41Z", "access": "read", "breach_kind": null }
+      ],
+      "model_usage": [
+        { "model": "claude-sonnet-4", "calls": 2600, "cost": 137.92, "permitted": true }
+      ],
+      "run_stats": {
+        "runs": 442, "p50_tool_calls": 5, "p95_tool_calls": 11, "max_tool_calls": 14,
+        "p50_cost": 0.27, "p95_cost": 0.59, "max_cost": 0.76
+      },
+      "breach_series": [
+        { "day": "2026-08-30", "count": 9 },
+        { "day": "2026-09-01", "count": 15 }
+      ],
+      "breaches": [
+        {
+          "kind": "tool_calls_over_limit",
+          "subject": "7c1e4b0a9d2f48e6b3a5c7d9e1f2a3b4",
+          "count": 24,
+          "limit": 8,
+          "observed": 14,
+          "last_seen": "2026-09-01T09:02:41Z"
+        }
+      ],
+      "unknown_access_tools": []
+    }
+  ],
+  "tool_tags": [
+    { "tool_name": "send_email", "access": "write" },
+    { "tool_name": "web_search", "access": "read" }
+  ],
+  "start_time": "2026-08-26T00:00:00Z",
+  "end_time": "2026-09-02T00:00:00Z",
+  "total_calls": 98400,
+  "tool_tracked_calls": 26100
+}`}
+            />
+          </Endpoint>
+
+          <Callout title="Breaches are alerted at ingest">
+            <p>
+              When a batch contains a breaching tool call, owners and admins
+              receive an in-app notification and the project webhook (if
+              configured) receives a <code>guardrail.breach</code> event
+              signed like budget alerts. One alert per agent, subject and kind
+              per hour. Per-run limits are judged on the run&apos;s stored totals,
+              so a run that crosses its limit across several batches still
+              alerts.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "project_id": "6f0e2a44-9c1b-4d2f-8a3e-1b2c3d4e5f60",
+  "agent_name": "email-drafter",
+  "kind": "write_in_readonly",
+  "subject": "send_email",
+  "count": 3,
+  "limit": null,
+  "observed": null,
+  "observed_at": "2026-09-02T18:44:03Z"
+}`}
+            />
+          </Callout>
+
+          <Endpoint
+            method="PUT"
+            path="/v1/projects/{project_id}/guardrails"
+            description="Create or replace the guardrail for one agent (member session, EDIT_PROJECT)"
+          >
+            <p>
+              Every field is optional and <code>null</code> means unbounded.{" "}
+              <code>allowed_tools</code> and <code>allowed_models</code>:{" "}
+              <code>null</code> permits any, <code>[]</code> permits none.{" "}
+              <code>max_tool_calls_per_run</code> (integer, at least 1) and{" "}
+              <code>max_cost_per_run_usd</code> (positive) are judged over calls
+              that share a <code>trace_id</code>. The SDK&apos;s project API key
+              cannot call this — the credential being judged must not be able to
+              rewrite the policy it is judged against.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "agent_name": "research-agent",
+  "allowed_tools": ["web_search"],
+  "read_only": true,
+  "allowed_models": ["claude-sonnet-4"],
+  "max_tool_calls_per_run": 8,
+  "max_cost_per_run_usd": 0.25,
+  "enabled": true
+}`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="DELETE"
+            path="/v1/projects/{project_id}/guardrails/{agent_name}"
+            description="Remove the guardrail for one agent (member session, EDIT_PROJECT)"
+          />
+
+          <Endpoint
+            method="PUT"
+            path="/v1/projects/{project_id}/guardrails/tool-tags"
+            description="Tag a tool name as read or write (member session, EDIT_PROJECT)"
+          >
+            <CodeBlock
+              language="json"
+              code={`{ "tool_name": "send_email", "access": "write" }`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="DELETE"
+            path="/v1/projects/{project_id}/guardrails/tool-tags/{tool_name}"
+            description="Remove a tool's read/write tag (member session, EDIT_PROJECT)"
+          />
+        </Section>
+
         {/* Optimizations */}
-        <Section id="optimizations" title="Optimizations" icon={Zap}>
+        <Section id="optimizations" title="Optimizations">
           <Endpoint
             method="GET"
             path="/v1/optimizations"
             description="Get AI-powered cost optimization suggestions"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`[
@@ -1522,7 +1528,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/optimizations/summary"
             description="Get summary of potential savings"
           >
-            <p className="text-sm text-neutral-400 mb-2">Response:</p>
+            <p>Response:</p>
             <CodeBlock
               language="json"
               code={`{
@@ -1536,8 +1542,8 @@ curl -H "Authorization: Bearer your_jwt_token" \\
         </Section>
 
         {/* Error Handling */}
-        <Section id="errors" title="Error Handling" icon={Shield}>
-          <p className="text-neutral-300 mb-4">
+        <Section id="errors" title="Error Handling">
+          <p>
             The API uses standard HTTP status codes. Error responses include a
             message explaining what went wrong:
           </p>
@@ -1548,51 +1554,51 @@ curl -H "Authorization: Bearer your_jwt_token" \\
 }`}
           />
           <div className="overflow-x-auto max-w-full mt-4">
-            <table className="w-full min-w-100 text-sm">
+            <table className="min-w-100">
               <thead>
-                <tr className="border-b border-neutral-700">
-                  <th className="text-left py-3 px-4 text-neutral-400 font-medium">
+                <tr>
+                  <th className="font-medium">
                     Status Code
                   </th>
-                  <th className="text-left py-3 px-4 text-neutral-400 font-medium">
+                  <th className="font-medium">
                     Description
                   </th>
                 </tr>
               </thead>
-              <tbody className="text-neutral-300">
-                <tr className="border-b border-neutral-800">
-                  <td className="py-3 px-4 font-mono text-green-400">200</td>
-                  <td className="py-3 px-4">Success</td>
+              <tbody>
+                <tr>
+                  <td className="font-mono">200</td>
+                  <td>Success</td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-3 px-4 font-mono text-green-400">201</td>
-                  <td className="py-3 px-4">Created</td>
+                <tr>
+                  <td className="font-mono">201</td>
+                  <td>Created</td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-3 px-4 font-mono text-yellow-400">400</td>
-                  <td className="py-3 px-4">Bad Request - Invalid input</td>
+                <tr>
+                  <td className="font-mono">400</td>
+                  <td>Bad Request - Invalid input</td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-3 px-4 font-mono text-yellow-400">401</td>
-                  <td className="py-3 px-4">
+                <tr>
+                  <td className="font-mono">401</td>
+                  <td>
                     Unauthorized - Invalid or missing API key
                   </td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-3 px-4 font-mono text-yellow-400">404</td>
-                  <td className="py-3 px-4">
+                <tr>
+                  <td className="font-mono">404</td>
+                  <td>
                     Not Found - Resource does not exist
                   </td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-3 px-4 font-mono text-orange-400">429</td>
-                  <td className="py-3 px-4">
+                <tr>
+                  <td className="font-mono text-orange-400">429</td>
+                  <td>
                     Too Many Requests - Rate limit exceeded
                   </td>
                 </tr>
-                <tr className="border-b border-neutral-800">
-                  <td className="py-3 px-4 font-mono text-red-400">500</td>
-                  <td className="py-3 px-4">Internal Server Error</td>
+                <tr>
+                  <td className="font-mono">500</td>
+                  <td>Internal Server Error</td>
                 </tr>
               </tbody>
             </table>
@@ -1600,18 +1606,18 @@ curl -H "Authorization: Bearer your_jwt_token" \\
         </Section>
 
         {/* Rate Limiting */}
-        <Section id="rate-limiting" title="Rate Limiting" icon={Shield}>
-          <p className="text-neutral-300 mb-4">
+        <Section id="rate-limiting" title="Rate Limiting">
+          <p>
             The API enforces rate limiting to ensure fair usage and protect the
             service. Rate limits are applied per API key or IP address.
           </p>
-          <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-4 mb-4">
-            <p className="text-neutral-300">
+          <div className="docs-panel mb-4">
+            <p>
               <strong className="text-white">Default limits:</strong> 100
               requests per minute
             </p>
           </div>
-          <p className="text-neutral-300 mb-4">
+          <p>
             Rate limit headers are included in all API responses:
           </p>
           <CodeBlock
@@ -1620,7 +1626,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
 X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 45`}
           />
-          <p className="text-neutral-300 mt-4 mb-4">
+          <p>
             When rate limited, you&apos;ll receive a 429 response:
           </p>
           <CodeBlock
@@ -1632,8 +1638,8 @@ X-RateLimit-Reset: 45`}
   "period": "60 seconds"
 }`}
           />
-          <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-4 mt-4">
-            <p className="text-blue-300 text-sm">
+          <div className="docs-panel mt-4">
+            <p>
               <strong>Tip:</strong> The SDK automatically handles rate limiting
               with built-in batching and retry logic. You typically don&apos;t
               need to worry about rate limits when using the SDK.
@@ -1642,36 +1648,27 @@ X-RateLimit-Reset: 45`}
         </Section>
 
         {/* SDKs & Libraries */}
-        <Section id="sdks" title="SDKs & Libraries" icon={Code}>
-          <p className="text-neutral-300 mb-4">
+        <Section id="sdks" title="SDKs & Libraries">
+          <p>
             Official SDK for integrating AgentCost into your applications:
           </p>
-          <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-900/30 text-blue-400">
-                <Code size={20} />
-              </div>
-              <div>
-                <h4 className="font-medium text-white">Python SDK</h4>
-                <p className="text-xs text-neutral-500">
-                  For OpenAI, Anthropic, Gemini, and LangChain applications
-                </p>
-              </div>
-            </div>
+          <div className="docs-panel">
+            <p className="font-medium text-neutral-200">Python SDK</p>
+            <p>For OpenAI, Anthropic, Gemini, and LangChain applications</p>
             <CodeBlock language="bash" code="pip install agentcost" />
             <div className="mt-4">
               <a
                 href="/docs/sdk"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-400 hover:text-primary-300 text-sm"
+               
               >
                 View SDK Documentation →
               </a>
             </div>
           </div>
-          <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/50 p-4 mt-4">
-            <p className="text-yellow-300 text-sm">
+          <div className="docs-panel docs-panel--warning mt-4">
+            <p>
               <strong>Coming Soon:</strong> JavaScript/TypeScript SDK, Go SDK,
               and REST client libraries for other languages.
             </p>
@@ -1679,12 +1676,12 @@ X-RateLimit-Reset: 45`}
         </Section>
 
         {/* Webhooks (Coming Soon) */}
-        <Section id="webhooks" title="Webhooks" icon={Zap}>
-          <p className="text-neutral-300 mb-4">
+        <Section id="webhooks" title="Webhooks">
+          <p>
             Budget threshold crossings are pushed to your endpoint as they
             happen, signed so the receiver can verify origin and freshness.
             Delivery is best-effort and never delays event ingestion — poll{" "}
-            <a href="#egress" className="text-primary-400 underline">
+            <a href="#egress">
               budget-state
             </a>{" "}
             as the reliable channel.
@@ -1699,9 +1696,9 @@ X-RateLimit-Reset: 45`}
               language="json"
               code={`{"url": "https://your-endpoint.example/agentcost", "secret": "whsec_..."}`}
             />
-            <div className="rounded-lg bg-blue-900/20 border border-blue-700/50 p-3 mt-3">
-              <p className="text-blue-300 text-sm">
-                HTTPS required. <code className="bg-blue-900/30 px-1 rounded">{`{"url": null}`}</code>{" "}
+            <div className="docs-panel mt-3">
+              <p>
+                HTTPS required. <code>{`{"url": null}`}</code>{" "}
                 disables the hook and clears the secret. When rotating a
                 secret, restate the URL — a secret without a URL is rejected.
                 The secret is write-only: GET on the same path returns the URL
@@ -1715,21 +1712,21 @@ X-RateLimit-Reset: 45`}
             path="/v1/projects/{project_id}/webhook/test"
             description="Send a signed sample delivery to verify the wiring"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Same payload shape and signature scheme as a live delivery; the
-              event type is <code className="text-primary-400">webhook.test</code>.
+              event type is <code>webhook.test</code>.
               Returns whether the endpoint accepted it and the status code.
             </p>
           </Endpoint>
 
-          <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-4">
-            <h4 className="font-medium text-white mb-2">Verifying a delivery</h4>
-            <p className="text-neutral-400 text-sm mb-3">
-              Each POST carries <code className="text-primary-400">X-AgentCost-Signature</code>{" "}
+          <div className="docs-panel">
+            <h4 className="text-white">Verifying a delivery</h4>
+            <p>
+              Each POST carries <code>X-AgentCost-Signature</code>{" "}
               = HMAC-SHA256 over{" "}
-              <code className="text-primary-400">{"{timestamp}.{body}"}</code>{" "}
+              <code>{"{timestamp}.{body}"}</code>{" "}
               with your secret, and{" "}
-              <code className="text-primary-400">X-AgentCost-Timestamp</code>.
+              <code>X-AgentCost-Timestamp</code>.
               Reject stale timestamps before comparing digests — the timestamp
               is inside the signed string, so a captured delivery cannot be
               replayed with a fresh header.
@@ -1744,27 +1741,27 @@ def verify(secret: str, timestamp: str, body: str, signature: str) -> bool:
     ).hexdigest()
     return hmac.compare_digest(expected, signature)`}
             />
-            <p className="text-neutral-500 text-sm mt-3">
+            <p>
               Delivery rules: only a 2xx counts as delivered; redirects are not
               followed; non-public destination addresses are refused
               (self-hosted installs posting to internal listeners set{" "}
-              <code className="text-primary-400">WEBHOOK_ALLOW_PRIVATE_URLS=true</code>).
+              <code>WEBHOOK_ALLOW_PRIVATE_URLS=true</code>).
             </p>
           </div>
         </Section>
 
         {/* Budget state & Prometheus */}
-        <Section id="egress" title="Budget State &amp; Metrics" icon={Server}>
+        <Section id="egress" title="Budget State &amp; Metrics">
           <Endpoint
             method="GET"
             path="/v1/projects/{project_id}/budget-state"
             description="Compact budget position for machine consumers (project API key auth)"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Side-effect-free and shaped for polling: an enforcement point
               reads it every 15–60s and holds the answer as cached state.{" "}
-              <code className="text-primary-400">as_of</code> and{" "}
-              <code className="text-primary-400">period_ends_at</code> let a
+              <code>as_of</code> and{" "}
+              <code>period_ends_at</code> let a
               consumer reason about staleness and time remaining.
             </p>
             <CodeBlock
@@ -1791,15 +1788,15 @@ def verify(secret: str, timestamp: str, body: str, signature: str) -> bool:
             path="/v1/metrics"
             description="Prometheus exposition of the project's cost metrics"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               Windowed gauges (not monotonic counters — use{" "}
-              <code className="text-primary-400">max_over_time</code>, not{" "}
-              <code className="text-primary-400">rate()</code>):{" "}
-              <code className="text-primary-400">agentcost_calls</code>,{" "}
-              <code className="text-primary-400">agentcost_cost_usd</code>,{" "}
-              <code className="text-primary-400">agentcost_tokens</code>,{" "}
-              <code className="text-primary-400">agentcost_cached_tokens</code>,{" "}
-              <code className="text-primary-400">agentcost_errors</code>, per-model
+              <code>max_over_time</code>, not{" "}
+              <code>rate()</code>):{" "}
+              <code>agentcost_calls</code>,{" "}
+              <code>agentcost_cost_usd</code>,{" "}
+              <code>agentcost_tokens</code>,{" "}
+              <code>agentcost_cached_tokens</code>,{" "}
+              <code>agentcost_errors</code>, per-model
               and per-agent cost, plus budget utilization and remaining when a
               budget is set.
             </p>
@@ -1820,9 +1817,9 @@ def verify(secret: str, timestamp: str, body: str, signature: str) -> bool:
             path="/v1/pricing/import"
             description="Load the pricing catalogue from an uploaded LiteLLM bundle (admin only)"
           >
-            <p className="text-sm text-neutral-400 mb-2">
+            <p>
               For air-gapped and egress-restricted deployments: fetch{" "}
-              <code className="text-primary-400">
+              <code>
                 model_prices_and_context_window.json
               </code>{" "}
               on a connected machine, review it, and upload it verbatim. Same
@@ -1832,39 +1829,39 @@ def verify(secret: str, timestamp: str, body: str, signature: str) -> bool:
         </Section>
 
         {/* Versioning */}
-        <Section id="versioning" title="API Versioning" icon={Database}>
-          <p className="text-neutral-300 mb-4">
+        <Section id="versioning" title="API Versioning">
+          <p>
             The API uses URL path versioning. The current version is{" "}
-            <code className="text-primary-400 bg-neutral-800 px-1 rounded">
+            <code>
               v1
             </code>
             .
           </p>
-          <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-4">
-            <div className="overflow-x-auto max-w-full">
-              <table className="w-full min-w-105 text-sm">
+          <div className="docs-panel">
+            <div className="docs-table-wrap">
+              <table className="min-w-105">
               <thead>
-                <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-4 text-neutral-400 font-medium">
+                <tr>
+                  <th className="font-medium">
                     Version
                   </th>
-                  <th className="text-left py-2 px-4 text-neutral-400 font-medium">
+                  <th className="font-medium">
                     Status
                   </th>
-                  <th className="text-left py-2 px-4 text-neutral-400 font-medium">
+                  <th className="font-medium">
                     Notes
                   </th>
                 </tr>
               </thead>
-              <tbody className="text-neutral-300">
+              <tbody>
                 <tr>
-                  <td className="py-2 px-4 font-mono text-primary-400">v1</td>
-                  <td className="py-2 px-4">
-                    <span className="px-2 py-0.5 rounded text-xs bg-green-900/30 text-green-400 border border-green-700/50">
+                  <td className="font-mono">v1</td>
+                  <td>
+                    <span className="px-2 py-0.5 rounded text-xs bg-emerald-900/30 text-emerald-400 border border-emerald-700/50">
                       Current
                     </span>
                   </td>
-                  <td className="py-2 px-4">
+                  <td>
                     Stable, recommended for production
                   </td>
                 </tr>
@@ -1872,7 +1869,7 @@ def verify(secret: str, timestamp: str, body: str, signature: str) -> bool:
               </table>
             </div>
           </div>
-          <p className="text-neutral-400 text-sm mt-4">
+          <p>
             We follow semantic versioning. Breaking changes will result in a new
             major version. Deprecated endpoints will be announced at least 6
             months before removal.
@@ -1884,27 +1881,26 @@ def verify(secret: str, timestamp: str, body: str, signature: str) -> bool:
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <a
               href="/docs/sdk"
-              className="text-neutral-400 hover:text-white transition-colors"
+             
             >
               ← SDK Documentation
             </a>
             <div className="flex items-center gap-4">
               <Link
                 href="/"
-                className="text-neutral-400 hover:text-white transition-colors"
+               
               >
                 Home
               </Link>
               <Link
                 href="/auth/register"
-                className="text-primary-400 hover:text-primary-300 transition-colors"
+               
               >
                 Get started free
               </Link>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </>
   );
 }

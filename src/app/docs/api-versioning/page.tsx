@@ -8,6 +8,7 @@ import {
   POLICY_URL,
 } from "@/lib/http/deprecation";
 import { breadcrumbList, jsonLd } from "@/lib/structured-data";
+import { PageHeader, Section } from "@/components/docs/primitives";
 
 export const metadata: Metadata = {
   title: "AgentCost API Versioning & Deprecation Policy",
@@ -18,8 +19,7 @@ export const metadata: Metadata = {
 
 export default function ApiVersioningPage() {
   return (
-    <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-4xl px-4 py-8 pt-4 sm:px-6 lg:px-8">
+    <>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={jsonLd(
@@ -31,31 +31,25 @@ export default function ApiVersioningPage() {
           )}
         />
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">
-            API Versioning &amp; Deprecation
-          </h1>
-          <p className="mt-2 text-neutral-400">
-            An agent should not integrate against a surface that can change
+        <PageHeader eyebrow="Policy" title={<>API Versioning &amp; Deprecation</>}>
+        <p>An agent should not integrate against a surface that can change
             without warning. This is what we promise about changes, and how you
-            find out about them in the response itself rather than from a blog.
-          </p>
-        </div>
+            find out about them in the response itself rather than from a blog.</p>
+      </PageHeader>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">Versioning</h2>
-          <div className="space-y-4 text-sm leading-relaxed text-neutral-400">
+        <Section id="versioning" title="Versioning">
+          <div className="space-y-4">
             <p>
               The API is versioned in the URL path. Every endpoint lives under{" "}
-              <code className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-[13px] text-neutral-200">
+              <code>
                 /v1/
               </code>
               , on both{" "}
-              <code className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-[13px] text-neutral-200">
+              <code>
                 https://api.agentcost.tech/v1/…
               </code>{" "}
               and the cached mirror at{" "}
-              <code className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-[13px] text-neutral-200">
+              <code>
                 {SITE_URL}/api/v1/…
               </code>
               .
@@ -72,18 +66,15 @@ export default function ApiVersioningPage() {
               errors. Your client should ignore fields it does not recognise.
             </p>
           </div>
-        </section>
+        </Section>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">
-            How a deprecation is signalled
-          </h2>
-          <div className="space-y-4 text-sm leading-relaxed text-neutral-400">
+        <Section id="how-a-deprecation-is-signalled" title="How a deprecation is signalled">
+          <div className="space-y-4">
             <p>
               Every API response carries a link to this page, so a client can
               find the policy without knowing where to look:
             </p>
-            <pre className="overflow-x-auto rounded-lg border border-neutral-700/50 bg-neutral-950 p-4 font-mono text-[13px] leading-relaxed text-neutral-200">
+            <pre className="overflow-x-auto rounded-lg border border-white/8 bg-[#0c0c0e] p-4 font-mono text-[13px] leading-6 text-neutral-200">
 {`Link: <${POLICY_URL}>; rel="deprecation"; type="text/html"`}
             </pre>
             <p>
@@ -92,24 +83,24 @@ export default function ApiVersioningPage() {
               deprecated — it points at the policy. When an endpoint is actually
               retiring, two more headers appear on its responses:
             </p>
-            <pre className="overflow-x-auto rounded-lg border border-neutral-700/50 bg-neutral-950 p-4 font-mono text-[13px] leading-relaxed text-neutral-200">
+            <pre className="overflow-x-auto rounded-lg border border-white/8 bg-[#0c0c0e] p-4 font-mono text-[13px] leading-6 text-neutral-200">
 {`Deprecation: @1782864000
 Sunset: Wed, 01 Jul 2026 00:00:00 GMT
 Link: <${POLICY_URL}>; rel="deprecation"; type="text/html",
       <https://api.agentcost.tech/v2/pricing>; rel="successor-version"`}
             </pre>
-            <ul className="ml-5 list-disc space-y-2">
+            <ul className="ml-5 space-y-2">
               <li>
-                <code className="font-mono text-[13px] text-neutral-200">
+                <code>
                   Deprecation
                 </code>{" "}
                 is a Structured Fields Date — an{" "}
-                <code className="font-mono text-[13px]">@</code> followed by whole
+                <code>@</code> followed by whole
                 seconds since the Unix epoch — marking when the endpoint was
                 announced as deprecated. It keeps working.
               </li>
               <li>
-                <code className="font-mono text-[13px] text-neutral-200">
+                <code>
                   Sunset
                 </code>{" "}
                 (RFC 8594) is an HTTP-date marking when it stops working. It is
@@ -117,7 +108,7 @@ Link: <${POLICY_URL}>; rel="deprecation"; type="text/html",
               </li>
               <li>
                 A{" "}
-                <code className="font-mono text-[13px] text-neutral-200">
+                <code>
                   successor-version
                 </code>{" "}
                 link points at the replacement, when there is one.
@@ -125,65 +116,61 @@ Link: <${POLICY_URL}>; rel="deprecation"; type="text/html",
             </ul>
             <p>
               If your client sees a{" "}
-              <code className="font-mono text-[13px] text-neutral-200">Sunset</code>{" "}
+              <code>Sunset</code>{" "}
               header, you have until that date. Log it, and migrate.
             </p>
           </div>
-        </section>
+        </Section>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">Notice period</h2>
-          <p className="text-sm leading-relaxed text-neutral-400">
+        <Section id="notice-period" title="Notice period">
+          <p>
             At least{" "}
             <strong className="text-neutral-200">{MINIMUM_NOTICE_DAYS} days</strong>{" "}
             between the{" "}
-            <code className="font-mono text-[13px] text-neutral-200">Deprecation</code>{" "}
+            <code>Deprecation</code>{" "}
             date and the{" "}
-            <code className="font-mono text-[13px] text-neutral-200">Sunset</code>{" "}
+            <code>Sunset</code>{" "}
             date on any public endpoint. The headers are the notice — you do not
             have to be subscribed to anything to receive it.
           </p>
-        </section>
+        </Section>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">
-            Currently deprecated
-          </h2>
+        <Section id="currently-deprecated" title="Currently deprecated">
           {DEPRECATIONS.length === 0 ? (
-            <p className="rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-6 text-sm leading-relaxed text-neutral-400">
+            <p>
               Nothing. No endpoint in{" "}
-              <code className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-[13px] text-neutral-200">
+              <code>
                 /v1/
               </code>{" "}
               is deprecated or scheduled for retirement, so no response currently
               carries a{" "}
-              <code className="font-mono text-[13px] text-neutral-200">Deprecation</code>{" "}
+              <code>Deprecation</code>{" "}
               or{" "}
-              <code className="font-mono text-[13px] text-neutral-200">Sunset</code>{" "}
+              <code>Sunset</code>{" "}
               header.
             </p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-neutral-700/50">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-neutral-800/50 text-neutral-400">
+            <div className="docs-table-wrap">
+              <table>
+                <thead>
                   <tr>
-                    <th className="px-4 py-3 font-medium">Endpoint</th>
-                    <th className="px-4 py-3 font-medium">Deprecated</th>
-                    <th className="px-4 py-3 font-medium">Sunset</th>
-                    <th className="px-4 py-3 font-medium">Replacement</th>
+                    <th className="font-medium">Endpoint</th>
+                    <th className="font-medium">Deprecated</th>
+                    <th className="font-medium">Sunset</th>
+                    <th className="font-medium">Replacement</th>
                   </tr>
                 </thead>
                 <tbody>
                   {DEPRECATIONS.map((entry) => (
-                    <tr key={entry.path} className="border-t border-neutral-700/50">
-                      <td className="px-4 py-3 font-mono text-neutral-200">
+                    <tr key={entry.path}>
+                      <td className="font-mono text-neutral-200">
                         {entry.path}
                       </td>
-                      <td className="px-4 py-3 text-neutral-400">
+                      <td>
                         {entry.deprecatedOn}
                       </td>
-                      <td className="px-4 py-3 text-neutral-400">{entry.sunsetOn}</td>
-                      <td className="px-4 py-3 text-neutral-400">
+                      <td>{entry.sunsetOn}</td>
+                      <td>
                         {entry.replacement ?? "—"}
                       </td>
                     </tr>
@@ -192,53 +179,49 @@ Link: <${POLICY_URL}>; rel="deprecation"; type="text/html",
               </table>
             </div>
           )}
-        </section>
+        </Section>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">
-            Model deprecations are a different thing
-          </h2>
-          <p className="text-sm leading-relaxed text-neutral-400">
+        <Section id="model-deprecations-are-a-different-thing" title="Model deprecations are a different thing">
+          <p>
             This page is about the AgentCost API retiring. Providers also retire{" "}
             <em>models</em>, and that is tracked separately — see{" "}
-            <code className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-[13px] text-neutral-200">
+            <code>
               GET /api/v1/pricing/deprecations
             </code>{" "}
             or the{" "}
             <Link
               href="/docs/mcp"
-              className="text-sky-400 transition-colors hover:text-sky-300"
+             
             >
               list_model_deprecations
             </Link>{" "}
             MCP tool.
           </p>
-        </section>
+        </Section>
 
-        <p className="text-sm text-neutral-400">
+        <p>
           Related:{" "}
           <Link
             href="/docs/api"
-            className="text-sky-400 transition-colors hover:text-sky-300"
+           
           >
             REST API reference
           </Link>{" "}
           ·{" "}
           <Link
             href="/docs/mcp"
-            className="text-sky-400 transition-colors hover:text-sky-300"
+           
           >
             MCP server
           </Link>{" "}
           ·{" "}
           <a
             href="/openapi.json"
-            className="text-sky-400 transition-colors hover:text-sky-300"
+           
           >
             OpenAPI spec
           </a>
         </p>
-      </div>
-    </div>
+    </>
   );
 }

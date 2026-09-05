@@ -1,8 +1,27 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import {
+  Code2,
+  Braces,
+  TerminalSquare,
+  Database,
+  Plug,
+  ShieldCheck,
+  GitBranch,
+  FileJson,
+  Bot,
+  Server,
+  Github,
+} from "lucide-react";
 
-import { API_URL, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 import { breadcrumbList, jsonLd } from "@/lib/structured-data";
+import {
+  PageHeader,
+  Section,
+  CodeBlock,
+  Card,
+  CardGrid,
+} from "@/components/docs/primitives";
 
 export const metadata: Metadata = {
   title: "AgentCost Documentation — SDK, REST API, CLI & Model Catalog",
@@ -11,191 +30,109 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/docs` },
 };
 
-const GUIDES = [
-  {
-    href: "/docs/sdk",
-    title: "AgentCost Python SDK",
-    body: "Install, initialise with two lines, and track every OpenAI, Anthropic, Gemini and LangChain call without changing your code. Covers configuration, agent tagging, workflows, streaming, local mode, event structure and troubleshooting.",
-  },
-  {
-    href: "/docs/api",
-    title: "AgentCost REST API reference",
-    body: "Authentication, ingestion, analytics, projects and budgets, endpoint by endpoint — plus the public pricing endpoints that need no credentials and the structured error envelope every failure returns.",
-  },
-  {
-    href: "/docs/cli",
-    title: "AgentCost CLI reference",
-    body: "agentcost analyze estimates the cost risk in a codebase before it ships: oversized prompts, repeated work inside a run, unbounded loops. Flags, output formats and CI usage.",
-  },
-  {
-    href: "/docs/models",
-    title: "AgentCost model catalog",
-    body: "Every model AgentCost can bill, with live per-1,000-token input, output and cached rates across OpenAI, Anthropic, Google, AWS, Azure and 50+ other providers, plus announced retirement dates.",
-  },
-  {
-    href: "/docs/mcp",
-    title: "AgentCost MCP server",
-    body: "Connect any MCP client and give your agent live model pricing, cost estimation and retirement lookups as callable tools. Remote endpoint, no install, no credentials.",
-  },
-  {
-    href: "/docs/api-versioning",
-    title: "AgentCost API versioning & deprecation policy",
-    body: "How the API is versioned, how retirements are signalled with Deprecation and Sunset headers, and the minimum notice before any endpoint stops working.",
-  },
-  {
-    href: "/docs/privacy",
-    title: "AgentCost data & privacy architecture",
-    body: "Field by field: what the SDK transmits, what it never collects, what is hashed, how hosted and local mode differ, how long data is retained, and how to verify all of it yourself.",
-  },
-];
-
-const MACHINE_READABLE = [
-  {
-    href: "/openapi.json",
-    title: "OpenAPI 3.1 specification",
-    body: "The complete AgentCost API surface: every operation typed, with a unique operationId and a description. YAML mirror at /api/openapi.yaml.",
-  },
-  {
-    href: "/api/mcp",
-    title: "MCP endpoint",
-    body: "Streamable HTTP. The same pricing capabilities as typed MCP tools, for any client that speaks the protocol.",
-  },
-  {
-    href: "/api/v1",
-    title: "Public API",
-    body: "Model pricing and cost estimation, cached and always awake. No credentials, no sign-up.",
-  },
-  {
-    href: "/llms.txt",
-    title: "llms.txt",
-    body: "This site indexed for agents, in the llmstxt.org format, including when-to-use guidance. Every page also answers to Accept: text/markdown.",
-  },
-  {
-    href: "/llms-full.txt",
-    title: "llms-full.txt",
-    body: "Every public page concatenated into a single markdown document.",
-  },
-];
-
 export default function DocsIndexPage() {
   return (
-    <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-4xl px-4 py-8 pt-4 sm:px-6 lg:px-8">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={jsonLd(
-            breadcrumbList([
-              { name: "AgentCost", path: "/" },
-              { name: "Documentation", path: "/docs" },
-            ]),
-          )}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLd(
+          breadcrumbList([
+            { name: "AgentCost", path: "/" },
+            { name: "Documentation", path: "/docs" },
+          ]),
+        )}
+      />
+
+      <PageHeader eyebrow="Get started" title="Introduction">
+        <p>AgentCost is cost observability for LLM agents.</p>
+      </PageHeader>
+
+      <p>To get started with AgentCost, you&apos;ll need:</p>
+      <ol>
+        <li>
+          A free account with a project — an API key is created for you at{" "}
+          <a href="/auth/register">sign-up</a>
+        </li>
+        <li>
+          The Python SDK, installed with <code>pip install agentcost</code>
+        </li>
+      </ol>
+      <p>
+        Then every OpenAI, Anthropic, Gemini and LangChain call is priced and
+        attributed to the agent, workflow and step that made it — without
+        changing your code:
+      </p>
+      <ul>
+        <li>
+          <strong>Track:</strong> cost per call, per agent and per run, with
+          token counts and latency
+        </li>
+        <li>
+          <strong>Guard:</strong> monthly budgets, anomaly detection and
+          per-agent tool guardrails
+        </li>
+        <li>
+          <strong>Predict:</strong> price a codebase before it ships with the
+          CLI
+        </li>
+      </ul>
+
+      <Section id="quick-start" title="Quick start">
+        <p>Two lines. Your existing calls are tracked without changes.</p>
+        <CodeBlock
+          language="python"
+          code={`pip install agentcost
+
+from agentcost import track_costs
+track_costs.init(api_key="sk_your_project_key", project_id="your-project-uuid")`}
         />
+      </Section>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Documentation</h1>
-          <p className="mt-2 text-neutral-400">
-            AgentCost tracks what your LLM calls cost and attributes each one to
-            the agent, workflow and project that made it. Start with the SDK if
-            you are instrumenting an application, the REST API if you are
-            integrating directly, or the MCP server if you are an agent.
-          </p>
-        </div>
+      <Section id="guides" title="Guides">
+        <p>Learn how to get AgentCost set up in your project.</p>
+        <CardGrid>
+          <Card href="/docs/sdk" icon={<Code2 size={22} strokeWidth={1.75} />} title="Python SDK" />
+          <Card href="/docs/api" icon={<Braces size={22} strokeWidth={1.75} />} title="REST API reference" />
+          <Card href="/docs/cli" icon={<TerminalSquare size={22} strokeWidth={1.75} />} title="CLI reference" />
+          <Card href="/docs/models" icon={<Database size={22} strokeWidth={1.75} />} title="Model catalog" />
+          <Card href="/docs/mcp" icon={<Plug size={22} strokeWidth={1.75} />} title="MCP server" />
+          <Card href="/docs/privacy" icon={<ShieldCheck size={22} strokeWidth={1.75} />} title="Data & privacy" />
+          <Card href="/docs/api-versioning" icon={<GitBranch size={22} strokeWidth={1.75} />} title="API versioning" />
+        </CardGrid>
+      </Section>
 
-        <div className="mb-12 rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-6">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-400">
-            Quick start
-          </h3>
-          <pre className="overflow-x-auto font-mono text-[13px] leading-relaxed text-neutral-200">
-{`pip install agentcost
+      <Section id="machine-readable" title="Machine-readable resources">
+        <p>The same surface for agents and tooling.</p>
+        <CardGrid>
+          <Card href="/openapi.json" icon={<FileJson size={22} strokeWidth={1.75} />} title="OpenAPI 3.1 spec" external>
+            Every operation typed, with a unique operationId. YAML mirror at
+            /api/openapi.yaml.
+          </Card>
+          <Card href="/api/mcp" icon={<Bot size={22} strokeWidth={1.75} />} title="MCP endpoint" external>
+            Streamable HTTP. Pricing capabilities as typed MCP tools for any
+            client that speaks the protocol.
+          </Card>
+          <Card href="/api/v1" icon={<Server size={22} strokeWidth={1.75} />} title="Public API" external>
+            Model pricing and cost estimation, cached and always awake. No
+            credentials.
+          </Card>
+          <Card href="/llms.txt" icon={<FileJson size={22} strokeWidth={1.75} />} title="llms.txt" external>
+            This site indexed for agents. Every page also answers to Accept:
+            text/markdown.
+          </Card>
+        </CardGrid>
+      </Section>
 
-import agentcost
-agentcost.init(api_key="sk_your_project_key")`}
-          </pre>
-        </div>
-
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">Guides</h2>
-          <div className="space-y-4">
-            {GUIDES.map((guide) => (
-              <Link
-                key={guide.href}
-                href={guide.href}
-                className="block rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-6 transition-colors hover:border-neutral-600 hover:bg-neutral-800/60"
-              >
-                <h3 className="font-semibold text-white">{guide.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-neutral-400">
-                  {guide.body}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">
-            Machine-readable resources
-          </h2>
-          <div className="space-y-4">
-            {MACHINE_READABLE.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="block rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-6 transition-colors hover:border-neutral-600 hover:bg-neutral-800/60"
-              >
-                <h3 className="font-semibold text-white">
-                  {item.title}{" "}
-                  <span className="font-mono text-[13px] font-normal text-sky-400">
-                    {item.href}
-                  </span>
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-neutral-400">
-                  {item.body}
-                </p>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="mb-4 text-xl font-semibold text-white">
-            Packages and source
-          </h2>
-          <ul className="space-y-2 text-sm text-neutral-400">
-            <li>
-              Python package:{" "}
-              <a
-                href="https://pypi.org/project/agentcost/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sky-400 transition-colors hover:text-sky-300"
-              >
-                pypi.org/project/agentcost
-              </a>
-            </li>
-            <li>
-              Source (MIT):{" "}
-              <a
-                href="https://github.com/agentcost-ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sky-400 transition-colors hover:text-sky-300"
-              >
-                github.com/agentcost-ai
-              </a>
-            </li>
-            <li>
-              API origin:{" "}
-              <span className="font-mono text-[13px] text-neutral-500">
-                {API_URL}
-              </span>{" "}
-              — sleeps when idle, so prefer{" "}
-              <span className="font-mono text-[13px] text-neutral-500">
-                {SITE_URL}/api/v1
-              </span>
-            </li>
-          </ul>
-        </section>
-      </div>
-    </div>
+      <Section id="source" title="Packages and source">
+        <CardGrid cols={2}>
+          <Card href="https://pypi.org/project/agentcost/" icon={<Code2 size={22} strokeWidth={1.75} />} title="pypi.org/project/agentcost" external>
+            The Python SDK and CLI, MIT licensed.
+          </Card>
+          <Card href="https://github.com/agentcost-ai" icon={<Github size={22} strokeWidth={1.75} />} title="github.com/agentcost-ai" external>
+            SDK, backend and dashboard source.
+          </Card>
+        </CardGrid>
+      </Section>
+    </>
   );
 }

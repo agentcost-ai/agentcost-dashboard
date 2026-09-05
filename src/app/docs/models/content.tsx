@@ -1,20 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import {
-  Search,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Database,
-  Zap,
-  Calendar,
-  CalendarClock,
-  Cpu,
-  Copy,
-  Check,
-  X,
-} from "lucide-react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { Search, ChevronDown, ChevronUp, Loader2, Zap, Calendar, CalendarClock, Cpu, Copy, Check, X } from "lucide-react";
+import { PageHeader } from "@/components/docs/primitives";
+import { FilterMenu } from "@/components/docs/FilterMenu";
 
 interface ModelPricing {
   model_name: string;
@@ -51,29 +40,20 @@ function formatPrice(price: number): string {
   return `$${price.toFixed(2)}`;
 }
 
-function getProviderColor(provider: string): string {
-  const colors: Record<string, string> = {
-    openai: "bg-green-900/30 text-green-400 border-green-700/50",
-    anthropic: "bg-orange-900/30 text-orange-400 border-orange-700/50",
-    google: "bg-blue-900/30 text-blue-400 border-blue-700/50",
-    groq: "bg-purple-900/30 text-purple-400 border-purple-700/50",
-    deepseek: "bg-cyan-900/30 text-cyan-400 border-cyan-700/50",
-    cohere: "bg-red-900/30 text-red-400 border-red-700/50",
-    mistral: "bg-yellow-900/30 text-yellow-400 border-yellow-700/50",
-    together: "bg-pink-900/30 text-pink-400 border-pink-700/50",
-    aws: "bg-amber-900/30 text-amber-400 border-amber-700/50",
-    azure: "bg-sky-900/30 text-sky-400 border-sky-700/50",
-    fireworks: "bg-rose-900/30 text-rose-400 border-rose-700/50",
-    novita: "bg-indigo-900/30 text-indigo-400 border-indigo-700/50",
-    xai: "bg-slate-900/30 text-slate-400 border-slate-700/50",
-    vercel: "bg-zinc-900/30 text-zinc-400 border-zinc-700/50",
-    replicate: "bg-fuchsia-900/30 text-fuchsia-400 border-fuchsia-700/50",
-    perplexity: "bg-teal-900/30 text-teal-400 border-teal-700/50",
-  };
-  return (
-    colors[provider.toLowerCase()] ||
-    "bg-neutral-800/50 text-neutral-400 border-neutral-700/50"
-  );
+
+/** Days from today to an ISO date; negative when it has passed. */
+function daysUntil(isoDate: string): number {
+  const target = new Date(`${isoDate}T00:00:00Z`).getTime();
+  return Math.round((target - Date.now()) / 86_400_000);
+}
+
+function retirementLabel(isoDate: string): string {
+  const d = daysUntil(isoDate);
+  if (d < 0) return "passed";
+  if (d === 0) return "today";
+  if (d < 30) return `in ${d} day${d === 1 ? "" : "s"}`;
+  const months = Math.round(d / 30);
+  return `in ${months} month${months === 1 ? "" : "s"}`;
 }
 
 function formatDate(isoString: string | null): string {
@@ -118,6 +98,8 @@ export default function ModelsPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProvider, setSelectedProvider] = useState("All Providers");
   const [selectedMode, setSelectedMode] = useState("All Types");
+  const [retiringOnly, setRetiringOnly] = useState(false);
+  const catalogRef = useRef<HTMLDivElement>(null);
 
   // Sorting
   const [sortField, setSortField] = useState<SortField>("model_name");
@@ -230,6 +212,11 @@ export default function ModelsPage({
       );
     }
 
+    // Only models with a provider-announced retirement date
+    if (retiringOnly) {
+      result = result.filter((m) => m.deprecation_date);
+    }
+
     // Mode filter ("unknown" groups rows the catalogue has no mode for)
     if (selectedMode !== "All Types") {
       result = result.filter(
@@ -256,6 +243,7 @@ export default function ModelsPage({
     searchQuery,
     selectedProvider,
     selectedMode,
+    retiringOnly,
     sortField,
     sortDirection,
   ]);
@@ -270,7 +258,7 @@ export default function ModelsPage({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedProvider, selectedMode]);
+  }, [searchQuery, selectedProvider, selectedMode, retiringOnly]);
 
   function handleSort(field: SortField) {
     if (sortField === field) {
@@ -328,92 +316,116 @@ export default function ModelsPage({
   );
 
   return (
-    <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pt-4">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Database className="text-primary-400" />
-            Model Catalog
-          </h1>
-          <p className="mt-2 text-neutral-400">
-            Browse and search all supported models with live pricing
-          </p>
-        </div>
+    <>
+        <PageHeader eyebrow="Catalog" title="Model catalog">
+          <p>Every model AgentCost can bill, with live per-token pricing and announced retirement dates.</p>
+        </PageHeader>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="rounded-lg bg-neutral-800/50 border border-neutral-700/50 p-4">
-            <div className="flex items-center gap-2 text-neutral-400 text-sm mb-1">
+        <div className="mb-10 grid grid-cols-2 gap-6 border-t border-white/8 pt-5 md:grid-cols-4">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500 mb-1.5">
               <Cpu size={14} />
               Total Models
             </div>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-xl font-semibold text-white tabular-nums">
               {(syncStatus?.total_models || models.length).toLocaleString()}
             </div>
           </div>
-          <div className="rounded-lg bg-neutral-800/50 border border-neutral-700/50 p-4">
-            <div className="flex items-center gap-2 text-neutral-400 text-sm mb-1">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500 mb-1.5">
               <Zap size={14} />
               Providers
             </div>
-            <div className="text-2xl font-bold text-white">{providerCount}</div>
+            <div className="text-xl font-semibold text-white tabular-nums">{providerCount}</div>
           </div>
-          <div className="rounded-lg bg-neutral-800/50 border border-neutral-700/50 p-4">
-            <div className="flex items-center gap-2 text-neutral-400 text-sm mb-1">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500 mb-1.5">
               <CalendarClock size={14} />
               Announced Retirements
             </div>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-xl font-semibold text-white tabular-nums">
               {upcomingRetirements.length.toLocaleString()}
             </div>
           </div>
-          <div className="rounded-lg bg-neutral-800/50 border border-neutral-700/50 p-4">
-            <div className="flex items-center gap-2 text-neutral-400 text-sm mb-1">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500 mb-1.5">
               <Calendar size={14} />
               Last Updated
             </div>
-            <div className="text-lg font-bold text-white">
+            <div className="text-xl font-semibold text-white tabular-nums">
               {formatDate(syncStatus?.last_updated || null)}
             </div>
           </div>
         </div>
 
-        {/* Upcoming retirements — deprecation dates synced from LiteLLM */}
+        {/* Announced retirements — dates synced from providers via LiteLLM */}
         {upcomingRetirements.length > 0 && (
-          <div className="rounded-lg bg-amber-950/20 border border-amber-800/30 p-4 mb-8">
-            <div className="flex items-center gap-2 text-amber-400 text-sm font-medium mb-3">
-              <CalendarClock size={14} />
-              Upcoming model retirements
-              <span className="text-amber-500/60 font-normal">
-                — dates announced by providers
-              </span>
+          <section className="mb-10">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <h2 className="text-[17px] font-semibold text-white">Announced retirements</h2>
+                <p className="mt-1 text-sm text-neutral-500">
+                  Dates published by the providers, earliest first. Plan migrations before a model
+                  disappears from your bill.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setRetiringOnly(true);
+                  setSelectedProvider("All Providers");
+                  setSearchQuery("");
+                  requestAnimationFrame(() =>
+                    catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                  );
+                }}
+                className="cursor-pointer rounded-md border border-white/10 px-3 py-1.5 text-[13px] text-neutral-200 transition-colors hover:border-white/30 hover:text-white"
+              >
+                Filter the catalog to all {upcomingRetirements.length.toLocaleString()} &darr;
+              </button>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {upcomingRetirements.slice(0, 8).map((m) => (
-                <button
-                  key={m.model_name}
-                  onClick={() => setSearchQuery(m.model_name)}
-                  title="Show in table"
-                  className="shrink-0 rounded-full border border-amber-700/40 bg-amber-900/20 px-3 py-1.5 text-xs text-amber-200/90 hover:border-amber-500/60 hover:text-amber-100 transition-colors"
-                >
-                  <code className="font-mono">{m.model_name}</code>
-                  <span className="ml-2 text-amber-500/80">
-                    {formatDate(m.deprecation_date)}
-                  </span>
-                </button>
-              ))}
-              {upcomingRetirements.length > 8 && (
-                <span className="shrink-0 self-center px-2 text-xs text-amber-500/70">
-                  +{upcomingRetirements.length - 8} more
-                </span>
-              )}
+            <div className="docs-table-wrap border-t border-white/8">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Provider</th>
+                    <th>Retires on</th>
+                    <th className="text-right">When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {upcomingRetirements
+                    .filter((m) => daysUntil(m.deprecation_date as string) >= 0)
+                    .slice(0, 6)
+                    .map((m) => (
+                      <tr key={m.model_name}>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => setSearchQuery(m.model_name)}
+                            className="cursor-pointer font-mono text-[13px] text-neutral-100 hover:underline"
+                            title="Show in the catalog"
+                          >
+                            {m.model_name}
+                          </button>
+                        </td>
+                        <td className="text-neutral-400">{m.provider}</td>
+                        <td className="tabular-nums text-neutral-200">{formatDate(m.deprecation_date)}</td>
+                        <td className="text-right tabular-nums text-neutral-400">
+                          {retirementLabel(m.deprecation_date as string)}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
-          </div>
+          </section>
         )}
 
         {/* Filters */}
-        <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 p-4 mb-6">
+        <div ref={catalogRef} className="mb-6 scroll-mt-24">
           <div className="flex flex-wrap items-center gap-4">
             {/* Search */}
             <div className="flex-1 min-w-62.5">
@@ -427,7 +439,7 @@ export default function ModelsPage({
                   placeholder="Search by model name or provider (e.g., gpt-4, claude, anthropic)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 rounded-lg bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-md bg-white/3 border border-white/8 text-white placeholder-neutral-600 focus:outline-none focus:border-white/25"
                 />
                 {searchQuery && (
                   <button
@@ -440,66 +452,70 @@ export default function ModelsPage({
               </div>
             </div>
 
-            {/* Provider dropdown - now dynamic */}
-            <div className="relative">
-              <select
-                value={selectedProvider}
-                onChange={(e) => setSelectedProvider(e.target.value)}
-                className="pl-4 pr-8 py-2.5 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-primary-500 appearance-none cursor-pointer min-w-40"
-              >
-                {providers.map((p) => (
-                  <option key={p} value={p}>
-                    {p === "All Providers"
-                      ? p
-                      : p.charAt(0).toUpperCase() + p.slice(1)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                size={14}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none"
-              />
-            </div>
+            <FilterMenu
+              label="Provider"
+              value={selectedProvider}
+              options={providers}
+              onChange={setSelectedProvider}
+              format={(p) => (p === "All Providers" ? p : p.charAt(0).toUpperCase() + p.slice(1))}
+              searchable
+              className="w-44"
+            />
 
-            {/* Type (mode) dropdown — from LiteLLM's `mode` field; hidden
-                until the catalogue carries mode data */}
+            <button
+              type="button"
+              onClick={() => setRetiringOnly((v) => !v)}
+              aria-pressed={retiringOnly}
+              className={`cursor-pointer rounded-md border px-3.5 py-2.5 text-[14px] transition-colors ${
+                retiringOnly
+                  ? "border-white bg-white text-neutral-950"
+                  : "border-white/8 bg-white/3 text-neutral-300 hover:border-white/25"
+              }`}
+              title="Only models with an announced retirement date"
+            >
+              Retiring
+            </button>
+
+            {/* Type (mode): from the catalogue mode field; hidden until the
+                catalogue carries mode data */}
             {modes.length > 0 && (
-              <div className="relative">
-                <select
-                  value={selectedMode}
-                  onChange={(e) => setSelectedMode(e.target.value)}
-                  className="pl-4 pr-8 py-2.5 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:border-primary-500 appearance-none cursor-pointer min-w-36"
-                >
-                  {modes.map((m) => (
-                    <option key={m} value={m}>
-                      {m === "All Types"
-                        ? m
-                        : m.charAt(0).toUpperCase() +
-                          m.slice(1).replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={14}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none"
-                />
-              </div>
+              <FilterMenu
+                label="Type"
+                value={selectedMode}
+                options={modes}
+                onChange={setSelectedMode}
+                format={(m) => (m === "All Types" ? m : m.charAt(0).toUpperCase() + m.slice(1).replace(/_/g, " "))}
+                className="w-40"
+              />
             )}
           </div>
 
-          <div className="mt-3 text-sm text-neutral-500">
-            Showing {filteredModels.length.toLocaleString()} of{" "}
-            {models.length.toLocaleString()} models
-            {(selectedProvider !== "All Providers" ||
-              selectedMode !== "All Types") && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-500">
+            <span>
+              Showing <span className="text-neutral-200">{filteredModels.length.toLocaleString()}</span>
+              {retiringOnly && " retiring"} of {models.length.toLocaleString()} models
+              {selectedProvider !== "All Providers" && (
+                <> from <span className="text-neutral-200">{selectedProvider}</span></>
+              )}
+              {selectedMode !== "All Types" && (
+                <> &middot; <span className="text-neutral-200">{selectedMode.replace(/_/g, " ")}</span></>
+              )}
+              {searchQuery && (
+                <> matching &ldquo;<span className="text-neutral-200">{searchQuery}</span>&rdquo;</>
+              )}
+            </span>
+            {(selectedProvider !== "All Providers" || selectedMode !== "All Types" || retiringOnly || searchQuery) && (
               <button
+                type="button"
                 onClick={() => {
                   setSelectedProvider("All Providers");
                   setSelectedMode("All Types");
+                  setRetiringOnly(false);
+                  setSearchQuery("");
                 }}
-                className="ml-2 text-primary-400 hover:text-primary-300"
+                className="cursor-pointer text-neutral-300 underline decoration-white/30 underline-offset-2 hover:text-white hover:decoration-white"
               >
-                (clear filters)
+                Clear filters
               </button>
             )}
           </div>
@@ -515,12 +531,12 @@ export default function ModelsPage({
         {/* Loading state */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={32} className="animate-spin text-primary-400" />
+            <Loader2 size={32} className="animate-spin text-neutral-400" />
           </div>
         ) : (
           <>
             {/* Models Table */}
-            <div className="rounded-lg bg-neutral-800/30 border border-neutral-700/50 overflow-hidden">
+            <div className="border-t border-white/8">
               {paginatedModels.length === 0 ? (
                 /* Empty state lives outside the scrollable table so it centers
                    in the visible viewport on mobile instead of the table's
@@ -536,7 +552,7 @@ export default function ModelsPage({
                           setSearchQuery("");
                           setSelectedProvider("All Providers");
                         }}
-                        className="text-primary-400 hover:text-primary-300"
+                        className="text-white underline decoration-white/30 underline-offset-2 hover:decoration-white"
                       >
                         clear all filters
                       </button>
@@ -547,7 +563,7 @@ export default function ModelsPage({
               <div className="overflow-x-auto max-w-full">
                 <table className="w-full min-w-190 text-sm">
                   <thead>
-                    <tr className="border-b border-neutral-700 bg-neutral-800/50">
+                    <tr className="border-b border-white/10">
                       <th
                         className="text-left py-3 px-4 text-neutral-400 font-medium cursor-pointer hover:text-neutral-200"
                         onClick={() => handleSort("model_name")}
@@ -595,16 +611,16 @@ export default function ModelsPage({
                     {paginatedModels.map((model) => (
                       <tr
                         key={model.model_name}
-                        className="border-b border-neutral-800/50 hover:bg-neutral-800/30 transition-colors group"
+                        className="border-b border-white/6 transition-colors hover:bg-white/2 group"
                       >
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
-                            <code className="font-mono text-sm text-white bg-neutral-800 px-2 py-0.5 rounded">
+                            <code className="font-mono text-[13px] text-neutral-100">
                               {model.model_name}
                             </code>
                             {model.deprecation_date && (
                               <span
-                                className="shrink-0 rounded-full border border-amber-700/40 bg-amber-900/20 px-2 py-0.5 text-[11px] text-amber-300/90"
+                                className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-400"
                                 title="Provider-announced retirement date"
                               >
                                 retires {formatDate(model.deprecation_date)}
@@ -616,7 +632,7 @@ export default function ModelsPage({
                               title="Copy model name"
                             >
                               {copiedModel === model.model_name ? (
-                                <Check size={14} className="text-green-400" />
+                                <Check size={14} className="text-neutral-200" />
                               ) : (
                                 <Copy size={14} />
                               )}
@@ -626,21 +642,19 @@ export default function ModelsPage({
                         <td className="py-3 px-4">
                           <button
                             onClick={() => setSelectedProvider(model.provider)}
-                            className={`inline-block px-2 py-1 rounded text-xs font-medium border hover:opacity-80 transition-opacity ${getProviderColor(
-                              model.provider,
-                            )}`}
+                            className={`inline-block px-2 py-1 rounded text-xs font-medium border hover:opacity-80 transition-opacity ${"border-white/10 text-neutral-300"}`}
                             title={`Filter by ${model.provider}`}
                           >
                             {model.provider}
                           </button>
                         </td>
-                        <td className="py-3 px-4 text-right font-mono text-green-400">
+                        <td className="py-3 px-4 text-right font-mono text-neutral-200">
                           {formatPrice(model.input)}
                         </td>
                         <td className="py-3 px-4 text-right font-mono text-blue-400">
                           {formatPrice(model.output)}
                         </td>
-                        <td className="py-3 px-4 text-right font-mono text-sky-400/90">
+                        <td className="py-3 px-4 text-right font-mono text-neutral-300">
                           {model.cached_input != null ? (
                             formatPrice(model.cached_input)
                           ) : (
@@ -650,7 +664,7 @@ export default function ModelsPage({
                         {modes.length > 0 && (
                           <td className="py-3 px-4">
                             {model.mode ? (
-                              <span className="inline-block rounded px-2 py-1 text-xs text-neutral-400 border border-neutral-700/60 bg-neutral-800/40">
+                              <span className="inline-block rounded border border-white/10 px-2 py-0.5 text-xs text-neutral-400">
                                 {model.mode.replace(/_/g, " ")}
                               </span>
                             ) : (
@@ -677,14 +691,14 @@ export default function ModelsPage({
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 rounded bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-md border border-white/10 px-3 py-1 text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     First
                   </button>
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 rounded bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-md border border-white/10 px-3 py-1 text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Previous
                   </button>
@@ -696,14 +710,14 @@ export default function ModelsPage({
                       setCurrentPage((p) => Math.min(totalPages, p + 1))
                     }
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 rounded bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-md border border-white/10 px-3 py-1 text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Next
                   </button>
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 rounded bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-md border border-white/10 px-3 py-1 text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Last
                   </button>
@@ -714,21 +728,20 @@ export default function ModelsPage({
         )}
 
         {/* Footer Attribution */}
-        <div className="mt-8 pt-6 border-t border-neutral-800 text-center text-sm text-neutral-500">
+        <div className="mt-8 border-t border-white/8 pt-6 text-center text-sm text-neutral-500">
           <p>
             Pricing data sourced from{" "}
             <a
               href="https://github.com/BerriAI/litellm"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary-400 hover:underline"
+              className="text-white underline decoration-white/30 underline-offset-2 hover:decoration-white"
             >
               LiteLLM
             </a>
             . Prices are per 1,000 tokens in USD.
           </p>
         </div>
-      </div>
-    </div>
+    </>
   );
 }

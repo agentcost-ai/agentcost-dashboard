@@ -5,6 +5,7 @@ import { SITE_URL } from "@/lib/site";
 import { TOOLS } from "@/lib/mcp/tools";
 import { SUPPORTED_VERSIONS } from "@/lib/mcp/protocol";
 import { breadcrumbList, jsonLd } from "@/lib/structured-data";
+import { PageHeader, Section } from "@/components/docs/primitives";
 
 export const metadata: Metadata = {
   title: "AgentCost MCP Server — Model Pricing Tools for AI Agents",
@@ -42,8 +43,7 @@ const CLIENTS = [
 
 export default function McpDocsPage() {
   return (
-    <div className="min-h-screen bg-neutral-900">
-      <div className="mx-auto max-w-4xl px-4 py-8 pt-4 sm:px-6 lg:px-8">
+    <>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={jsonLd(
@@ -55,49 +55,44 @@ export default function McpDocsPage() {
           )}
         />
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">MCP Server</h1>
-          <p className="mt-2 text-neutral-400">
-            Give your agent live LLM pricing as callable tools — look up what a
+        <PageHeader eyebrow="MCP server" title={<>MCP Server</>}>
+        <p>Give your agent live LLM pricing as callable tools — look up what a
             model costs, compare models to find a cheaper one, estimate a job
-            before running it, and check what is being retired.
-          </p>
-        </div>
+            before running it, and check what is being retired.</p>
+      </PageHeader>
 
-        <div className="mb-12 rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-6">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-400">
+        <div className="docs-panel mb-12">
+          <h3>
             Endpoint
           </h3>
-          <p className="font-mono text-[15px] text-sky-400">{ENDPOINT}</p>
-          <p className="mt-3 text-sm leading-relaxed text-neutral-400">
+          <p className="font-mono">{ENDPOINT}</p>
+          <p>
             Streamable HTTP. Public — no credentials, no sign-up. Protocol
             revisions {SUPPORTED_VERSIONS.join(", ")}, so both the current
             stateless revision and the older handshake era work.
           </p>
         </div>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">Connect</h2>
+        <Section id="connect" title="Connect">
           <div className="space-y-4">
             {CLIENTS.map((client) => (
               <div
                 key={client.name}
-                className="rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-6"
+                className="border-t border-white/8 pt-5"
               >
-                <h3 className="font-semibold text-white">{client.name}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-neutral-400">
+                <h3 className="text-white">{client.name}</h3>
+                <p>
                   {client.body}
                 </p>
-                <pre className="mt-4 overflow-x-auto rounded-lg border border-neutral-700/50 bg-neutral-950 p-4 font-mono text-[13px] leading-relaxed text-neutral-200">
+                <pre className="mt-4 overflow-x-auto rounded-lg border border-white/8 bg-[#0c0c0e] p-4 font-mono text-[13px] leading-6 text-neutral-200">
 {client.code}
                 </pre>
               </div>
             ))}
           </div>
-        </section>
+        </Section>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">Tools</h2>
+        <Section id="tools" title="Tools">
           <div className="space-y-4">
             {TOOLS.map((tool) => {
               const schema = tool.inputSchema as {
@@ -108,24 +103,24 @@ export default function McpDocsPage() {
               return (
                 <div
                   key={tool.name}
-                  className="rounded-lg border border-neutral-700/50 bg-neutral-800/30 p-6"
+                  className="border-t border-white/8 pt-5"
                 >
-                  <h3 className="font-mono text-[15px] font-semibold text-sky-400">
+                  <h3 className="font-mono">
                     {tool.name}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-neutral-400">
+                  <p>
                     {tool.description}
                   </p>
-                  <dl className="mt-4 space-y-2 border-t border-neutral-700/50 pt-4">
+                  <dl className="space-y-2 pt-4">
                     {Object.entries(schema.properties ?? {}).map(([key, value]) => (
                       <div key={key} className="flex flex-wrap gap-x-3 text-[13px]">
-                        <dt className="font-mono text-neutral-300">
+                        <dt className="font-mono">
                           {key}
                           {required.has(key) ? (
                             <span className="text-sky-400/70">*</span>
                           ) : null}
                         </dt>
-                        <dd className="flex-1 text-neutral-500">{value.description}</dd>
+                        <dd className="flex-1">{value.description}</dd>
                       </div>
                     ))}
                   </dl>
@@ -133,65 +128,60 @@ export default function McpDocsPage() {
               );
             })}
           </div>
-          <p className="mt-3 text-[13px] text-neutral-500">
+          <p>
             <span className="text-sky-400/70">*</span> required
           </p>
-        </section>
+        </Section>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">
-            What it does not do
-          </h2>
-          <p className="text-sm leading-relaxed text-neutral-400">
+        <Section id="what-it-does-not-do" title="What it does not do">
+          <p>
             These tools read the public pricing catalogue only. They cannot see
             your own spend, projects or budgets — that needs an authenticated
             account and the{" "}
             <Link
               href="/docs/api"
-              className="text-sky-400 transition-colors hover:text-sky-300"
+             
             >
               REST API
             </Link>
             . Nothing here writes anything, so every tool is safe to call
             speculatively.
           </p>
-        </section>
+        </Section>
 
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-white">Verify it</h2>
-          <pre className="overflow-x-auto rounded-lg border border-neutral-700/50 bg-neutral-950 p-4 font-mono text-[13px] leading-relaxed text-neutral-200">
+        <Section id="verify-it" title="Verify it">
+          <pre className="overflow-x-auto rounded-lg border border-white/8 bg-[#0c0c0e] p-4 font-mono text-[13px] leading-6 text-neutral-200">
 {`curl -sX POST ${ENDPOINT} \\
   -H "Content-Type: application/json" \\
   -H "MCP-Protocol-Version: 2026-07-28" \\
   -H "Mcp-Method: tools/list" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'`}
           </pre>
-        </section>
+        </Section>
 
-        <p className="text-sm text-neutral-400">
+        <p>
           Related:{" "}
           <Link
             href="/docs/api"
-            className="text-sky-400 transition-colors hover:text-sky-300"
+           
           >
             REST API reference
           </Link>{" "}
           ·{" "}
           <Link
             href="/docs/api-versioning"
-            className="text-sky-400 transition-colors hover:text-sky-300"
+           
           >
             Versioning &amp; deprecation policy
           </Link>{" "}
           ·{" "}
           <a
             href="/openapi.json"
-            className="text-sky-400 transition-colors hover:text-sky-300"
+           
           >
             OpenAPI spec
           </a>
         </p>
-      </div>
-    </div>
+    </>
   );
 }
