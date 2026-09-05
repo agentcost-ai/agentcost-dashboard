@@ -66,6 +66,24 @@ export const blogPosts: BlogPost[] = [
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "v1.12.0",
+    date: "2026-09-05",
+    summary:
+      "Guardrail compliance, a redesigned documentation site, a colour-blind-safe chart palette, and a rebuilt landing page",
+    changes: [
+      "New Guardrails page: declare a boundary per agent — which tools it may call, whether it is read-only, which models it may use, and how many tool calls or how much cost a single run may reach — and see per agent whether observed usage stayed inside it: every breach, the tool, model or run that crossed the line, and how much of the agent's work it represents. Opening an agent shows what it actually used — every tool with call counts, every model with cost, and the p50, p95 and max tool calls and cost per run — so a limit can be set from observed behaviour with one click. Kept separate from success rate on purpose: that measures whether calls raised, this measures whether agents stayed inside the line you drew.",
+      "Breach alerts: a breach raises a notification for the project owner and admins and fires a signed guardrail.breach webhook where one is configured, with repeats of the same breach suppressed for an hour so a looping agent produces one alert, not thousands. Per-run limits are judged on the run's running total, so a run that crosses the line across several batches still alerts.",
+      "Agents and Settings pages rebuilt in one quieter vocabulary — a single stat band instead of icon cards, hairline tables, and settings laid out as labelled rows — and the Agents table now shows each agent's guardrail status.",
+      "Landing page: the hero now puts the release announcement beside the headline instead of above it, and the five sourced cost stories are shown as one strip with the figure first.",
+      "SDK 0.2.2: track_costs.tool() now records the tool name outside a workflow() too, so tool boundaries are visible without declaring a run. Inside a workflow nothing changes.",
+      "Documentation rebuilt as a three-column site: persistent navigation, Ctrl+K search across every page and endpoint, an on-this-page outline, a copy-page button, previous/next paging and a per-page helpfulness vote. Every page moved onto shared components so headings, code blocks, callouts and endpoint entries look the same everywhere.",
+      "Model catalogue page: announced retirements are listed with days remaining, a one-click filter narrows the catalogue to every retiring model, and the provider and type filters are now proper dark menus with type-to-filter.",
+      "Charts and reports share one colour-blind-safe palette — cost, calls and tokens keep the same colour on every chart, in the PDF report and in the OpenAI import — and the accent colour reverted from blue to neutral throughout the app.",
+      "Landing page: a capability walkthrough that shows the product itself in miniature for each feature, and a privacy section that plays the exact fields an event carries, each opening into where its value comes from and what it can reveal, with the list of everything that never leaves your process.",
+      "API Reference and the published OpenAPI specification cover the guardrail endpoints and the docs-feedback endpoint; the Data & Privacy page notes that tool() outside a workflow sends the tool name alone.",
+    ],
+  },
+  {
     version: "v1.11.0",
     date: "2026-08-11",
     summary:

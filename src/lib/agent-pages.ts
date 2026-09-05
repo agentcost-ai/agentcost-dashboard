@@ -50,6 +50,7 @@ agentcost.init(api_key="sk_your_project_key")
 - **Per-agent attribution** — wrap a block with \`track_costs.agent("planner")\` and every call inside it is billed to that agent.
 - **Workflow and trace analysis** — step costs, repeated work and per-run totals across multi-step agents.
 - **Budget guardrails** — monthly project budgets with threshold alerts, and an optional hard cap that rejects ingestion with a 429 once the budget is reached.
+- **Guardrail compliance** — declare per agent whether it is read-only and which tools it may call; the dashboard reports breaches per agent from observed tool usage and alerts on them, kept separate from success rate.
 - **Optimization recommendations** — cheaper-model suggestions and caching opportunities derived from your own traffic, with effectiveness tracked after you apply them.
 - **Executive reports** — a board-ready PDF or CSV over any date range.
 - **A public model catalogue** — 3,500+ models across 50+ providers with per-1k input, output and cached rates, synced from LiteLLM.

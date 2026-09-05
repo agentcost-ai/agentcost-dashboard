@@ -32,7 +32,7 @@ const WHAT_WE_BUILD = [
   {
     name: "The dashboard",
     href: "/pricing",
-    body: "Spend broken down by agent, workflow, project and model. Budget guardrails with threshold alerts and an optional hard cap that rejects ingestion once a monthly budget is reached. Optimization recommendations derived from your own traffic, with effectiveness tracked after you apply them. Executive reports exportable as PDF or CSV over any date range.",
+    body: "Spend broken down by agent, workflow, project and model. Budget guardrails with threshold alerts and an optional hard cap that rejects ingestion once a monthly budget is reached. Guardrail compliance: declare an agent read-only or limit it to named tools, and see per agent whether its observed tool calls stayed inside that boundary. Optimization recommendations derived from your own traffic, with effectiveness tracked after you apply them. Executive reports exportable as PDF or CSV over any date range.",
   },
   {
     name: "The CLI",
