@@ -310,7 +310,7 @@ export default function FileUpload({
               ) : p.status === "error" ? (
                 <AlertCircle size={16} className="shrink-0 text-red-400" />
               ) : (
-                <Paperclip size={16} className="shrink-0 text-green-400" />
+                <Paperclip size={16} className="shrink-0 text-emerald-400" />
               )}
               <span className="min-w-0 flex-1 truncate text-sm text-neutral-300">
                 {p.file.name}

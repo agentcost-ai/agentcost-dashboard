@@ -14,6 +14,7 @@ import {
 import { format } from "date-fns";
 import { formatCurrency, formatNumber, cn, dayBucketDate } from "@/lib/utils";
 import type { TimeSeriesPoint } from "@/lib/api";
+import { METRIC_COLORS, CHART_CHROME } from "@/lib/palette";
 
 type Metric = "cost" | "calls" | "tokens";
 
@@ -23,9 +24,9 @@ const METRICS: {
   color: string;
   format: (v: number) => string;
 }[] = [
-  { key: "cost", label: "Spend", color: "#38bdf8", format: formatCurrency },
-  { key: "calls", label: "Calls", color: "#a78bfa", format: formatNumber },
-  { key: "tokens", label: "Tokens", color: "#fbbf24", format: formatNumber },
+  { key: "cost", label: "Spend", color: METRIC_COLORS.cost, format: formatCurrency },
+  { key: "calls", label: "Calls", color: METRIC_COLORS.calls, format: formatNumber },
+  { key: "tokens", label: "Tokens", color: METRIC_COLORS.tokens, format: formatNumber },
 ];
 
 function axisTickFormat(metric: Metric, value: number): string {
@@ -54,7 +55,7 @@ function ChartTooltip({
   if (!active || !payload?.length || !payload[0].payload) return null;
   const point = payload[0].payload;
   return (
-    <div className="rounded-xl border border-white/10 bg-[#101016]/95 backdrop-blur-md px-4 py-3 shadow-2xl">
+    <div className="rounded-xl border border-neutral-700 bg-neutral-900/95 backdrop-blur-md px-4 py-3 shadow-2xl">
       <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-500 mb-2">
         {point.label}
       </p>
@@ -140,7 +141,7 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
         <div className="flex items-center gap-2 text-[12px] text-neutral-500">
           <span
             className="inline-block h-0 w-5 border-t border-dashed"
-            style={{ borderColor: "#525252" }}
+            style={{ borderColor: CHART_CHROME.referenceLine }}
           />
           period average
         </div>
@@ -161,21 +162,21 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.05)"
+              stroke={CHART_CHROME.grid}
               vertical={false}
             />
             <XAxis
               dataKey="tick"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#737373", fontSize: 11 }}
+              tick={{ fill: CHART_CHROME.axisTick, fontSize: 11 }}
               dy={10}
               minTickGap={32}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#737373", fontSize: 11 }}
+              tick={{ fill: CHART_CHROME.axisTick, fontSize: 11 }}
               domain={[0, maxValue > 0 ? maxValue * 1.12 : 1]}
               tickFormatter={(v) => axisTickFormat(metric, v as number)}
               width={56}
@@ -184,13 +185,13 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
             <Tooltip
               content={<ChartTooltip />}
               cursor={{
-                stroke: "rgba(255,255,255,0.15)",
+                stroke: CHART_CHROME.cursorStroke,
                 strokeDasharray: "4 4",
               }}
             />
             <ReferenceLine
               y={average}
-              stroke="#525252"
+              stroke={CHART_CHROME.referenceLine}
               strokeDasharray="5 5"
               strokeWidth={1}
             />
@@ -203,7 +204,7 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
               activeDot={{
                 r: 4,
                 fill: active.color,
-                stroke: "#0a0a0b",
+                stroke: CHART_CHROME.dotStroke,
                 strokeWidth: 2,
               }}
             />

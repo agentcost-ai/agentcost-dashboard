@@ -12,7 +12,7 @@ export default function AuthLayout({
   return (
     <main className="relative min-h-screen md:h-screen md:overflow-hidden lg:grid lg:grid-cols-2">
       {/* Left Panel - Branding & Testimonial */}
-      <div className="bg-[#0d0d0f] relative hidden h-full flex-col border-r border-gray-800/50 p-10 lg:flex">
+      <div className="bg-[#0d0d0f] relative hidden h-full flex-col border-r border-neutral-800/50 p-10 lg:flex">
         <div className="from-background absolute inset-0 z-10 bg-linear-to-t to-transparent" />
 
         {/* Logo */}
@@ -58,24 +58,24 @@ export default function AuthLayout({
 
         {/* Footer Links */}
         <div className="py-6 w-full">
-          <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+          <div className="flex items-center justify-center gap-6 text-sm text-neutral-500">
             <Link
               href="/terms"
-              className="hover:text-gray-400 transition-colors"
+              className="hover:text-neutral-400 transition-colors"
             >
               Terms
             </Link>
-            <span className="w-1 h-1 rounded-full bg-gray-700" />
+            <span className="w-1 h-1 rounded-full bg-neutral-700" />
             <Link
               href="/privacy"
-              className="hover:text-gray-400 transition-colors"
+              className="hover:text-neutral-400 transition-colors"
             >
               Privacy
             </Link>
-            <span className="w-1 h-1 rounded-full bg-gray-700" />
+            <span className="w-1 h-1 rounded-full bg-neutral-700" />
             <Link
               href="/docs/api"
-              className="hover:text-gray-400 transition-colors"
+              className="hover:text-neutral-400 transition-colors"
             >
               Docs
             </Link>

@@ -142,7 +142,7 @@ export default function EventsPage() {
             <Filter size={16} />
             Filters
             {hasActiveFilters && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs text-white">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-semibold text-neutral-900">
                 {(agentFilter ? 1 : 0) + (modelFilter ? 1 : 0)}
               </span>
             )}
@@ -314,11 +314,11 @@ export default function EventsPage() {
                         className="font-mono text-sm"
                         title={`Input: ${event.input_tokens} tokens, Output: ${event.output_tokens} tokens`}
                       >
-                        <span className="text-blue-400">
+                        <span className="text-sky-400">
                           {formatNumber(event.input_tokens)}
                         </span>
                         <span className="text-neutral-600 mx-1">/</span>
-                        <span className="text-green-400">
+                        <span className="text-emerald-400">
                           {formatNumber(event.output_tokens)}
                         </span>
                       </div>

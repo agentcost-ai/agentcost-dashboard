@@ -19,6 +19,7 @@ import {
 } from "@/lib/integrations";
 import { formatCurrency } from "@/lib/utils";
 import { track } from "@/lib/analytics";
+import { METRIC_COLORS } from "@/lib/palette";
 
 interface OpenAIImportModalProps {
   isOpen: boolean;
@@ -26,7 +27,7 @@ interface OpenAIImportModalProps {
 }
 
 // Same series color the dashboard uses for spend (flat fill, no gradients).
-const SPEND_COLOR = "#38bdf8";
+const SPEND_COLOR = METRIC_COLORS.cost;
 
 function dayLabel(date: string): string {
   try {
@@ -213,7 +214,7 @@ export function OpenAIImportModal({ isOpen, onClose }: OpenAIImportModalProps) {
                   <button
                     type="submit"
                     disabled={isLoading || !apiKey.trim()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-500 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-neutral-900 text-sm font-medium hover:bg-neutral-200 transition-colors disabled:opacity-50"
                   >
                     {isLoading && (
                       <Loader2 size={14} className="animate-spin" />

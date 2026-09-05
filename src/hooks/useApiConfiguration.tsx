@@ -85,7 +85,7 @@ function CopyButton({
       title="Copy to clipboard"
     >
       {copied ? (
-        <Check size={12} className="text-green-400" />
+        <Check size={12} className="text-emerald-400" />
       ) : (
         <Copy size={12} />
       )}
@@ -204,19 +204,19 @@ export function OnboardingScreen() {
               </div>
               <pre className="p-3 text-sm overflow-x-auto">
                 <code className="text-neutral-300">
-                  <span className="text-purple-400">from</span>{" "}
-                  <span className="text-blue-400">agentcost</span>{" "}
-                  <span className="text-purple-400">import</span> track_costs
+                  <span className="text-violet-400">from</span>{" "}
+                  <span className="text-sky-400">agentcost</span>{" "}
+                  <span className="text-violet-400">import</span> track_costs
                   {"\n\n"}
-                  track_costs.<span className="text-yellow-300">init</span>(
+                  track_costs.<span className="text-amber-300">init</span>(
                   {"\n"}
                   {"    "}api_key=
-                  <span className="text-green-400 break-all">
+                  <span className="text-emerald-400 break-all">
                     &quot;{credentials.apiKey || "your_api_key"}&quot;
                   </span>
                   ,{"\n"}
                   {"    "}project_id=
-                  <span className="text-green-400 break-all">
+                  <span className="text-emerald-400 break-all">
                     &quot;{credentials.projectId || "your_project_uuid"}&quot;
                   </span>
                   {"\n"})
@@ -262,7 +262,7 @@ export function OnboardingScreen() {
             <button
               type="button"
               onClick={() => setImportOpen(true)}
-              className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 hover:bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors"
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-white hover:bg-neutral-200 px-4 py-2.5 text-sm font-semibold text-neutral-900 transition-colors"
             >
               Import spend
               <ArrowRight size={15} />

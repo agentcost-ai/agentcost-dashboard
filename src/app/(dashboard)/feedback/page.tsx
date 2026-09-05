@@ -58,7 +58,7 @@ const TYPE_META: Record<
     color: "text-amber-400",
   },
   bug_report: { label: "Bug report", icon: Bug, color: "text-red-400" },
-  model_request: { label: "Model request", icon: Cpu, color: "text-cyan-400" },
+  model_request: { label: "Model request", icon: Cpu, color: "text-sky-400" },
   general: {
     label: "General feedback",
     icon: HelpCircle,
@@ -72,7 +72,7 @@ const TYPE_META: Record<
   performance_issue: {
     label: "Performance issue",
     icon: Gauge,
-    color: "text-purple-400",
+    color: "text-violet-400",
   },
 };
 
@@ -999,7 +999,7 @@ function FeedbackCard({
             {/* Model info chip */}
             {item.model_name && (
               <div className="inline-flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2 text-xs">
-                <Cpu size={14} className="shrink-0 text-cyan-500" />
+                <Cpu size={14} className="shrink-0 text-sky-500" />
                 <div>
                   <span className="font-medium text-white">
                     {item.model_name}

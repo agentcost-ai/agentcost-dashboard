@@ -23,7 +23,7 @@ const LINE: [number, number, number] = [233, 237, 243];
 const GREEN: [number, number, number] = [22, 163, 74];
 const RED: [number, number, number] = [220, 38, 38];
 const AMBER: [number, number, number] = [180, 83, 9];
-const VIOLET: [number, number, number] = [124, 92, 246];
+const EMERALD: [number, number, number] = [5, 150, 105]; // METRIC_COLORS.calls (#059669)
 const FILL: [number, number, number] = [252, 253, 254];
 
 // ── page geometry (A4, mm) ──
@@ -563,7 +563,7 @@ function drawBarChart(doc: jsPDF, buckets: CadenceBucket[], x: number, y: number
   const n = buckets.length;
   const g = 0.9;
   const bw = (w - g * (n - 1)) / n;
-  doc.setFillColor(VIOLET[0], VIOLET[1], VIOLET[2]);
+  doc.setFillColor(EMERALD[0], EMERALD[1], EMERALD[2]);
   buckets.forEach((b, i) => {
     const bh = Math.max((b.calls / max) * h, 0.2);
     doc.roundedRect(x + i * (bw + g), y + h - bh, bw, bh, 0.4, 0.4, "F");

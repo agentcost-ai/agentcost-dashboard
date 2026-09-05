@@ -104,19 +104,19 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="w-full max-w-sm px-4 py-8 text-center">
-        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
-          <Check className="w-8 h-8 text-green-500" />
+        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-emerald-500/20">
+          <Check className="w-8 h-8 text-emerald-500" />
         </div>
         <h1 className="text-2xl font-semibold text-white mb-2">
           Password reset successful
         </h1>
-        <p className="text-gray-400 mb-8">
+        <p className="text-neutral-400 mb-8">
           Your password has been reset. You can now log in with your new
           password.
         </p>
         <Link
           href="/auth/login?password_reset=true"
-          className="inline-flex items-center justify-center bg-white hover:bg-gray-100 text-slate-900 font-medium py-3 px-8 rounded-xl transition-colors shadow-lg shadow-white/10"
+          className="inline-flex items-center justify-center bg-white hover:bg-neutral-100 text-neutral-900 font-medium py-3 px-8 rounded-xl transition-colors shadow-lg shadow-white/10"
         >
           Go to Login
         </Link>
@@ -131,7 +131,7 @@ function ResetPasswordForm() {
         <h1 className="text-2xl font-semibold text-white mb-2">
           Reset your password
         </h1>
-        <p className="text-gray-400 text-sm">
+        <p className="text-neutral-400 text-sm">
           Create a new secure password for your account
         </p>
       </div>
@@ -151,18 +151,18 @@ function ResetPasswordForm() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className="block text-sm font-medium text-neutral-300 mb-2"
           >
             New Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
             <input
               id="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#0a0a0b] border border-gray-700/80 rounded-xl pl-11 pr-12 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500 transition-colors"
+              className="w-full bg-[#0a0a0b] border border-neutral-700/80 rounded-xl pl-11 pr-12 py-3 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-colors"
               placeholder="Enter new password"
               required
               disabled={!token}
@@ -171,7 +171,7 @@ function ResetPasswordForm() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-gray-500 hover:text-gray-400 transition-colors"
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-neutral-500 hover:text-neutral-400 transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />
@@ -189,11 +189,11 @@ function ResetPasswordForm() {
                 return (
                   <div key={index} className="flex items-center gap-2 text-xs">
                     {met ? (
-                      <Check className="w-3.5 h-3.5 text-green-500" />
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
                     ) : (
-                      <X className="w-3.5 h-3.5 text-gray-500" />
+                      <X className="w-3.5 h-3.5 text-neutral-500" />
                     )}
-                    <span className={met ? "text-green-500" : "text-gray-500"}>
+                    <span className={met ? "text-emerald-500" : "text-neutral-500"}>
                       {req.label}
                     </span>
                   </div>
@@ -207,23 +207,23 @@ function ResetPasswordForm() {
         <div>
           <label
             htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className="block text-sm font-medium text-neutral-300 mb-2"
           >
             Confirm New Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
             <input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`w-full bg-[#0a0a0b] border rounded-xl pl-11 pr-12 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-colors ${
+              className={`w-full bg-[#0a0a0b] border rounded-xl pl-11 pr-12 py-3 text-white placeholder-neutral-500 focus:outline-none focus:ring-1 transition-colors ${
                 confirmPassword.length > 0
                   ? passwordsMatch
-                    ? "border-green-500/50 focus:border-green-500 focus:ring-green-500"
+                    ? "border-emerald-500/50 focus:border-emerald-500 focus:ring-emerald-500"
                     : "border-red-500/50 focus:border-red-500 focus:ring-red-500"
-                  : "border-gray-700/80 focus:border-gray-500 focus:ring-gray-500"
+                  : "border-neutral-700/80 focus:border-neutral-500 focus:ring-neutral-500"
               }`}
               placeholder="Confirm new password"
               required
@@ -235,7 +235,7 @@ function ResetPasswordForm() {
               aria-label={
                 showConfirmPassword ? "Hide password" : "Show password"
               }
-              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-gray-500 hover:text-gray-400 transition-colors"
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 p-3 text-neutral-500 hover:text-neutral-400 transition-colors"
             >
               {showConfirmPassword ? (
                 <EyeOff className="w-5 h-5" />
@@ -255,7 +255,7 @@ function ResetPasswordForm() {
           disabled={
             isLoading || !token || !allRequirementsMet || !passwordsMatch
           }
-          className="w-full bg-white hover:bg-gray-100 disabled:bg-white/40 disabled:cursor-not-allowed text-slate-900 font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/10"
+          className="w-full bg-white hover:bg-neutral-100 disabled:bg-white/40 disabled:cursor-not-allowed text-neutral-900 font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/10"
         >
           {isLoading ? (
             <>
@@ -272,7 +272,7 @@ function ResetPasswordForm() {
       <div className="mt-8 text-center">
         <Link
           href="/auth/login"
-          className="text-gray-400 hover:text-white text-sm transition-colors"
+          className="text-neutral-400 hover:text-white text-sm transition-colors"
         >
           Back to Login
         </Link>

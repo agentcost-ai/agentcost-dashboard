@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { formatCurrency } from "@/lib/utils";
+import { CATEGORICAL, TOOLTIP_CONTENT_STYLE } from "@/lib/palette";
 
 interface ModelChartProps {
   data: Array<{
@@ -10,17 +11,6 @@ interface ModelChartProps {
     total_calls: number;
   }>;
 }
-
-const COLORS = [
-  "#0ea5e9",
-  "#8b5cf6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#6366f1",
-  "#ec4899",
-  "#14b8a6",
-];
 
 export function ModelChart({ data }: ModelChartProps) {
   const sortedData = [...data]
@@ -45,15 +35,11 @@ export function ModelChart({ data }: ModelChartProps) {
               paddingAngle={2}
             >
               {sortedData.map((_, index) => (
-                <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                <Cell key={index} fill={CATEGORICAL[index]} />
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{
-                backgroundColor: "#1f2937",
-                border: "1px solid #374151",
-                borderRadius: "8px",
-              }}
+              contentStyle={TOOLTIP_CONTENT_STYLE}
               formatter={(value) => [formatCurrency(value as number), "Cost"]}
             />
           </PieChart>
@@ -68,7 +54,7 @@ export function ModelChart({ data }: ModelChartProps) {
             <div className="flex min-w-0 items-center gap-2">
               <div
                 className="h-3 w-3 shrink-0 rounded-full"
-                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                style={{ backgroundColor: CATEGORICAL[index] }}
               />
               <span className="truncate text-sm text-neutral-300 sm:max-w-30">
                 {item.model}

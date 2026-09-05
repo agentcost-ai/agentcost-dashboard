@@ -30,7 +30,7 @@ interface User {
 // Synthetic user for demo mode — no token, no backend session.
 const DEMO_USER: User = {
   id: "demo-user",
-  email: "demo@agentcost.dev",
+  email: "demo@agentcost.tech",
   name: "Demo Explorer",
   avatar_url: null,
   email_verified: true,
@@ -662,7 +662,7 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
     if (isLoading) {
       return (
         <div className="min-h-screen bg-[#0d0d0f] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500"></div>
         </div>
       );
     }

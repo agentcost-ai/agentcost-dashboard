@@ -44,7 +44,7 @@ const ROLE_CONFIG: Record<
   member: {
     label: "Member",
     icon: Edit,
-    color: "text-blue-400 bg-blue-900/30",
+    color: "text-sky-400 bg-sky-900/30",
     description: "Can view analytics and create events",
   },
   viewer: {
@@ -71,7 +71,7 @@ function RoleBadge({ role }: { role: Role }) {
 function StatusBadge({ isPending }: { isPending: boolean }) {
   if (isPending) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-yellow-900/30 text-yellow-400">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-amber-900/30 text-amber-400">
         <Clock size={10} />
         Pending
       </span>
@@ -434,7 +434,7 @@ export default function TeamPage() {
         {canManageMembers && (
           <button
             onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-neutral-900 font-medium transition-colors"
           >
             <UserPlus size={18} />
             Invite Member
@@ -475,7 +475,7 @@ export default function TeamPage() {
                 <button
                   type="button"
                   onClick={handleClearStaleConfig}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-200 transition-colors"
                 >
                   Clear saved API key &amp; go to Settings
                 </button>
@@ -506,7 +506,7 @@ export default function TeamPage() {
       {pendingInvitations.length > 0 && (
         <Card>
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-yellow-900/30 text-yellow-400">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-900/30 text-amber-400">
               <Mail size={24} />
             </div>
             <div className="min-w-0 flex-1">
@@ -606,7 +606,7 @@ export default function TeamPage() {
                             </span>
                           )}
                           {member.is_owner && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-900/30 text-purple-400">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-violet-900/30 text-violet-400">
                               <Crown size={10} />
                               Project Owner
                             </span>
@@ -722,7 +722,7 @@ export default function TeamPage() {
       {/* Role Permissions Info */}
       <Card>
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-purple-900/30 text-purple-400">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-violet-900/30 text-violet-400">
             <Shield size={24} />
           </div>
           <div className="min-w-0 flex-1">
@@ -821,7 +821,7 @@ export default function TeamPage() {
                 <button
                   onClick={handleInvite}
                   disabled={isInviting || !inviteEmail.trim()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white font-medium disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-neutral-900 font-medium disabled:opacity-50 transition-colors"
                 >
                   {isInviting ? (
                     <RefreshCw size={16} className="animate-spin" />

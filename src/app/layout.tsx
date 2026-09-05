@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Sora, Caveat } from "next/font/google";
+import { Inter, JetBrains_Mono, Caveat } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -14,12 +14,6 @@ const inter = Inter({
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
   subsets: ["latin"],
-});
-
-const sora = Sora({
-  variable: "--font-sora",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
 // Used only for hand-drawn feature annotations (our signature flourish).
@@ -94,7 +88,7 @@ export default function RootLayout({
         ></script>
       </head>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} ${sora.variable} ${caveat.variable} antialiased bg-neutral-950 text-neutral-100`}
+        className={`${inter.variable} ${jetbrainsMono.variable} ${caveat.variable} antialiased bg-neutral-950 text-neutral-100`}
         suppressHydrationWarning={true}
       >
         {/* Site-wide structured data. Defined in lib/structured-data.ts so the

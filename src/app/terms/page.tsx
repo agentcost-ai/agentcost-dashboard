@@ -15,12 +15,12 @@ export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-[#0a0a0b]">
       {/* Header */}
-      <header className="border-b border-gray-800/50 bg-[#0a0a0b]/95 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-neutral-800/50 bg-[#0a0a0b]/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/"
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
             >
               <ArrowLeft size={18} />
               <span className="text-sm">Home</span>
@@ -38,14 +38,14 @@ export default function TermsOfServicePage() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
         <article className="prose prose-invert prose-lg max-w-none">
           {/* Title */}
-          <div className="mb-12 pb-8 border-b border-gray-800/50">
+          <div className="mb-12 pb-8 border-b border-neutral-800/50">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Terms of Service
             </h1>
-            <p className="text-gray-400 text-base">
+            <p className="text-neutral-400 text-base">
               Last updated: {lastUpdated}
             </p>
-            <p className="text-gray-400 text-base mt-2">Version 1.0</p>
+            <p className="text-neutral-400 text-base mt-2">Version 1.0</p>
           </div>
 
           {/* Section 1 */}
@@ -56,7 +56,7 @@ export default function TermsOfServicePage() {
               </span>
               Acceptance of Terms
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 By accessing or using AgentCost (&quot;the Service&quot;), you
                 agree to be bound by these Terms of Service (&quot;Terms&quot;).
@@ -80,7 +80,7 @@ export default function TermsOfServicePage() {
               </span>
               Description of Service
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 AgentCost is a cost tracking and analytics platform for AI
                 agents and Large Language Model (LLM) applications. The Service
@@ -105,7 +105,7 @@ export default function TermsOfServicePage() {
               </span>
               User Responsibilities
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <p className="mb-4">As a user of the Service, you agree to:</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
@@ -157,7 +157,7 @@ export default function TermsOfServicePage() {
               </span>
               Data Collection and Usage
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-white mb-3">
                   Data We Collect
@@ -187,27 +187,27 @@ export default function TermsOfServicePage() {
                   </li>
                 </ul>
               </div>
-              <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-lg">
-                <h3 className="text-lg font-medium text-green-400 mb-3">
+              <div className="p-4 bg-emerald-900/20 border border-emerald-800/50 rounded-lg">
+                <h3 className="text-lg font-medium text-emerald-400 mb-3">
                   Data We Do NOT Collect
                 </h3>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5 shrink-0" />
                     <span>Your actual prompts or queries sent to LLMs</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5 shrink-0" />
                     <span>LLM responses or generated content</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5 shrink-0" />
                     <span>
                       Personal data beyond account registration information
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5 shrink-0" />
                     <span>
                       Sensitive business data or proprietary information
                     </span>
@@ -225,7 +225,7 @@ export default function TermsOfServicePage() {
               </span>
               Limitations of Liability
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <p className="mb-4">
                 To the maximum extent permitted by applicable law, AgentCost and
                 its officers, directors, employees, and agents shall not be
@@ -273,7 +273,7 @@ export default function TermsOfServicePage() {
               </span>
               Account Termination
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 We reserve the right to suspend or terminate your account and
                 access to the Service at our sole discretion, without prior
@@ -298,7 +298,7 @@ export default function TermsOfServicePage() {
               </span>
               Modifications to Terms
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4 sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed space-y-4 sm:pl-11">
               <p>
                 We reserve the right to modify these Terms at any time. When we
                 make changes, we will update the &quot;Last updated&quot; date
@@ -323,7 +323,7 @@ export default function TermsOfServicePage() {
               </span>
               Governing Law
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <p>
                 These Terms shall be governed by and construed in accordance
                 with applicable laws, without regard to conflict of law
@@ -342,15 +342,15 @@ export default function TermsOfServicePage() {
               </span>
               Contact Information
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <p className="mb-4">
                 For questions, concerns, or requests regarding these Terms of
                 Service, please contact us at:
               </p>
-              <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+              <div className="p-4 bg-neutral-800/50 border border-neutral-700 rounded-lg">
                 <a
                   href="mailto:hello@agentcost.tech"
-                  className="text-white hover:text-gray-300 transition-colors font-medium wrap-break-word"
+                  className="text-white hover:text-neutral-300 transition-colors font-medium wrap-break-word"
                 >
                   hello@agentcost.tech
                 </a>
@@ -359,23 +359,23 @@ export default function TermsOfServicePage() {
           </section>
 
           {/* Footer Links */}
-          <div className="mt-16 pt-8 border-t border-gray-800">
+          <div className="mt-16 pt-8 border-t border-neutral-800">
             <div className="flex flex-wrap gap-6 text-sm">
               <Link
                 href="/privacy"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors"
               >
                 Privacy Policy
               </Link>
               <Link
                 href="/auth/register"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors"
               >
                 Create Account
               </Link>
               <Link
                 href="/auth/login"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors"
               >
                 Sign In
               </Link>

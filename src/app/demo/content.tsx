@@ -8,7 +8,7 @@ import { prewarmBackend } from "@/lib/prewarm";
 import { track } from "@/lib/analytics";
 
 /**
- * Demo entry point — the marketable URL (agentcost.dev/demo).
+ * Demo entry point — the marketable URL (agentcost.tech/demo).
  *
  * Sets demo mode, records the marketing source (?src=hero|navbar|login|...)
  * and hands off to the dashboard with a full navigation so AuthContext

@@ -121,17 +121,17 @@ function ConfidenceBadge({
 // Optimization type icons - expanded to include all types
 function OptimizationTypeIcon({ type }: { type: string }) {
   const icons: Record<string, React.ReactNode> = {
-    model_downgrade: <Cpu size={20} className="text-blue-400" />,
-    caching: <Database size={20} className="text-purple-400" />,
-    prompt_optimization: <Lightbulb size={20} className="text-yellow-400" />,
-    batching: <RefreshCw size={20} className="text-green-400" />,
+    model_downgrade: <Cpu size={20} className="text-sky-400" />,
+    caching: <Database size={20} className="text-violet-400" />,
+    prompt_optimization: <Lightbulb size={20} className="text-pink-400" />,
+    batching: <RefreshCw size={20} className="text-emerald-400" />,
     token_reduction: <TrendingDown size={20} className="text-orange-400" />,
     error_reduction: <XCircle size={20} className="text-red-400" />,
     anomaly_alert: <AlertCircle size={20} className="text-amber-400" />,
-    latency: <Timer size={20} className="text-cyan-400" />,
+    latency: <Timer size={20} className="text-indigo-400" />,
     non_llm_candidate: <Binary size={20} className="text-teal-400" />,
   };
-  return icons[type] || <Zap size={20} className="text-gray-400" />;
+  return icons[type] || <Zap size={20} className="text-neutral-400" />;
 }
 
 // Single optimization card with action buttons
@@ -755,7 +755,7 @@ export default function OptimizationsPage() {
               </div>
               <div>
                 <span className="text-neutral-500">Implementation Rate:</span>{" "}
-                <span className="text-blue-400">
+                <span className="text-sky-400">
                   {formatPercentage(summary.effectiveness.implementation_rate)}
                 </span>
               </div>
@@ -780,13 +780,13 @@ export default function OptimizationsPage() {
         <>
           {/* No Data - No events yet */}
           {summary.empty_reason === "no_data" && (
-            <Card className="border-blue-900/50 bg-blue-950/20">
+            <Card className="border-sky-900/50 bg-sky-950/20">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-900/30">
-                  <Database size={24} className="text-blue-400" />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sky-900/30">
+                  <Database size={24} className="text-sky-400" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-blue-400">
+                  <h3 className="font-medium text-sky-400">
                     No usage data yet
                   </h3>
                   <p className="mt-1 text-sm text-neutral-400">
@@ -805,13 +805,13 @@ export default function OptimizationsPage() {
 
           {/* Insufficient Data - Some events but not enough for analysis */}
           {summary.empty_reason === "insufficient_data" && (
-            <Card className="border-yellow-900/50 bg-yellow-950/20">
+            <Card className="border-amber-900/50 bg-amber-950/20">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-900/30">
-                  <Clock size={24} className="text-yellow-400" />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-900/30">
+                  <Clock size={24} className="text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-yellow-400">
+                  <h3 className="font-medium text-amber-400">
                     Gathering more data
                   </h3>
                   <p className="mt-1 text-sm text-neutral-400">
@@ -829,13 +829,13 @@ export default function OptimizationsPage() {
 
           {/* No Baselines - Has data but baselines couldn't be computed */}
           {summary.empty_reason === "no_baselines" && (
-            <Card className="border-yellow-900/50 bg-yellow-950/20">
+            <Card className="border-amber-900/50 bg-amber-950/20">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-900/30">
-                  <TrendingDown size={24} className="text-yellow-400" />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-900/30">
+                  <TrendingDown size={24} className="text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-yellow-400">
+                  <h3 className="font-medium text-amber-400">
                     Building usage baselines
                   </h3>
                   <p className="mt-1 text-sm text-neutral-400">
@@ -925,7 +925,7 @@ export default function OptimizationsPage() {
       {mediumPriority.length > 0 && (
         <div>
           <h2 className="mb-4 flex items-center gap-2 text-lg font-medium text-white">
-            <Clock size={18} className="text-yellow-400" />
+            <Clock size={18} className="text-amber-400" />
             Medium Priority ({mediumPriority.length})
           </h2>
           <div className="space-y-4">
@@ -947,7 +947,7 @@ export default function OptimizationsPage() {
       {lowPriority.length > 0 && (
         <div>
           <h2 className="mb-4 flex items-center gap-2 text-lg font-medium text-white">
-            <Lightbulb size={18} className="text-green-400" />
+            <Lightbulb size={18} className="text-emerald-400" />
             Low Priority ({lowPriority.length})
           </h2>
           <div className="space-y-4">
@@ -969,11 +969,11 @@ export default function OptimizationsPage() {
       {isDemo && !loading && suggestions.length > 0 && <DemoOptimizationsCTA />}
 
       {/* Info Card */}
-      <Card className="border-blue-900/50 bg-blue-950/10">
+      <Card className="border-sky-900/50 bg-sky-950/10">
         <div className="flex items-start gap-4">
-          <Zap size={20} className="mt-0.5 shrink-0 text-blue-400" />
+          <Zap size={20} className="mt-0.5 shrink-0 text-sky-400" />
           <div>
-            <h3 className="font-medium text-blue-400">
+            <h3 className="font-medium text-sky-400">
               How Optimization Suggestions Work
             </h3>
             <p className="mt-1 text-sm text-neutral-400">
@@ -982,14 +982,14 @@ export default function OptimizationsPage() {
             </p>
             <ul className="mt-3 space-y-1 text-sm text-neutral-400">
               <li className="flex items-center gap-2">
-                <Cpu size={14} className="shrink-0 text-blue-400" />
+                <Cpu size={14} className="shrink-0 text-sky-400" />
                 <span>
                   <strong>Model Downgrades:</strong> Suggests cheaper models for
                   simple tasks
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <Database size={14} className="shrink-0 text-purple-400" />
+                <Database size={14} className="shrink-0 text-violet-400" />
                 <span>
                   <strong>Caching:</strong> Identifies repeated queries that can
                   be cached
@@ -1010,7 +1010,7 @@ export default function OptimizationsPage() {
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <Timer size={14} className="shrink-0 text-cyan-400" />
+                <Timer size={14} className="shrink-0 text-indigo-400" />
                 <span>
                   <strong>Latency Issues:</strong> Flags slow calls that may
                   benefit from optimization
@@ -1020,7 +1020,7 @@ export default function OptimizationsPage() {
             <p className="mt-3 text-sm text-neutral-500 flex items-start gap-2">
               <Lightbulb
                 size={14}
-                className="mt-0.5 shrink-0 text-yellow-400"
+                className="mt-0.5 shrink-0 text-amber-400"
               />
               <span>
                 Your decisions help the system learn and provide better

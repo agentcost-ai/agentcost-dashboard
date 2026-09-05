@@ -14,17 +14,16 @@ import {
 } from "recharts";
 import { formatNumber } from "@/lib/utils";
 import type { RunCostDistribution as Distribution } from "@/lib/api";
+import { CATEGORICAL, CHART_CHROME } from "@/lib/palette";
 
 /**
  * Two colours, both doing a job: one hue for the body of the distribution and
- * a reserved status hue for the tail. Validated against the card surface
- * (#0f0f11) for the dark-mode lightness band, chroma floor, CVD separation
- * (ΔE 23.4 protan / 28.6 tritan), the normal-vision floor (30.6) and 3:1
- * contrast. Do not swap these for lighter steps without re-validating —
- * primary-400 and amber-400 both fail the dark-mode lightness band.
+ * one for the tail. Slots 1 and 4 of the shared categorical palette — the
+ * validated pair this chart shipped with (CVD ΔE 23.4 protan on #0f0f11);
+ * lighter 400-level steps fail the dark-mode lightness band.
  */
-const BODY = "#0284c7";
-const TAIL = "#d97706";
+const BODY = CATEGORICAL[0];
+const TAIL = CATEGORICAL[3];
 
 /** Costs here run from cents to fractions of a cent, so no fixed precision works. */
 function formatCost(value: number): string {
@@ -206,28 +205,28 @@ export function RunCostDistribution({
             <CartesianGrid
               horizontal
               vertical={false}
-              stroke="#262626"
+              stroke={CHART_CHROME.grid}
               strokeWidth={1}
             />
             <XAxis
               dataKey="lower"
               tickFormatter={formatCost}
               interval={tickInterval}
-              tick={{ fill: "#737373", fontSize: 11 }}
-              axisLine={{ stroke: "#262626" }}
+              tick={{ fill: CHART_CHROME.axisTick, fontSize: 11 }}
+              axisLine={{ stroke: CHART_CHROME.axisLine }}
               tickLine={false}
             />
             <YAxis
               allowDecimals={false}
               tickFormatter={formatNumber}
-              tick={{ fill: "#737373", fontSize: 11 }}
+              tick={{ fill: CHART_CHROME.axisTick, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               width={44}
             />
             <Tooltip
               content={<ChartTooltip />}
-              cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              cursor={{ fill: CHART_CHROME.cursorFill }}
             />
             <ReferenceLine
               x={
@@ -237,12 +236,12 @@ export function RunCostDistribution({
                     : best,
                 ).lower
               }
-              stroke="#a3a3a3"
+              stroke={CHART_CHROME.referenceLine}
               strokeWidth={1}
               label={{
                 value: "median",
                 position: "top",
-                fill: "#a3a3a3",
+                fill: CHART_CHROME.referenceLabel,
                 fontSize: 10,
               }}
             />

@@ -264,7 +264,7 @@ export default function AccountPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
+              className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-200 disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>
@@ -332,7 +332,7 @@ export default function AccountPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:opacity-50"
+                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-200 disabled:opacity-50"
               >
                 {saving ? "Changing..." : "Change Password"}
               </button>
@@ -345,7 +345,7 @@ export default function AccountPage() {
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 pb-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-900/30 text-blue-400">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-900/30 text-sky-400">
               <Monitor size={20} />
             </div>
             <div>

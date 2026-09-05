@@ -47,7 +47,7 @@ export function FeedbackDialog({
                 <div className="flex items-center justify-between p-4 border-b border-neutral-800">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800">
-                            <MessageSquare size={18} className="text-blue-400" />
+                            <MessageSquare size={18} className="text-sky-400" />
                         </div>
                         <div>
                             <h3 className="font-medium text-white">Dismiss Recommendation</h3>
@@ -72,7 +72,7 @@ export function FeedbackDialog({
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
                         placeholder="Why doesn't this suggestion work for you? (optional)"
-                        className="w-full rounded-lg bg-neutral-800 border border-neutral-600 p-3 text-white text-sm placeholder-neutral-500 focus:border-blue-500 focus:outline-none resize-none"
+                        className="w-full rounded-lg bg-neutral-800 border border-neutral-600 p-3 text-white text-sm placeholder-neutral-500 focus:border-sky-500 focus:outline-none resize-none"
                         rows={3}
                         disabled={isLoading}
                     />

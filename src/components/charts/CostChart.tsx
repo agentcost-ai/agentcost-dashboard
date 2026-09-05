@@ -11,6 +11,13 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { formatCurrency, dayBucketDate } from "@/lib/utils";
+import {
+  METRIC_COLORS,
+  CHART_CHROME,
+  TOOLTIP_CONTENT_STYLE,
+  TOOLTIP_LABEL_STYLE,
+  TOOLTIP_ITEM_STYLE,
+} from "@/lib/palette";
 
 interface CostChartProps {
   data: Array<{
@@ -40,26 +47,26 @@ export function CostChart({ data }: CostChartProps) {
         >
           <defs>
             <linearGradient id="costGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0} />
+              <stop offset="0%" stopColor={METRIC_COLORS.cost} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={METRIC_COLORS.cost} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#374151"
+            stroke={CHART_CHROME.grid}
             vertical={false}
           />
           <XAxis
             dataKey="date"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#9ca3af", fontSize: 12 }}
+            tick={{ fill: CHART_CHROME.axisTick, fontSize: 12 }}
             dy={10}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#9ca3af", fontSize: 11 }}
+            tick={{ fill: CHART_CHROME.axisTick, fontSize: 11 }}
             domain={yDomain}
             tickFormatter={(value) => {
               if (value === 0) return "$0";
@@ -72,20 +79,15 @@ export function CostChart({ data }: CostChartProps) {
             tickCount={5}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#1f2937",
-              border: "1px solid #374151",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-            }}
-            labelStyle={{ color: "#9ca3af", marginBottom: 4 }}
-            itemStyle={{ color: "#fff" }}
+            contentStyle={TOOLTIP_CONTENT_STYLE}
+            labelStyle={TOOLTIP_LABEL_STYLE}
+            itemStyle={TOOLTIP_ITEM_STYLE}
             formatter={(value) => [formatCurrency(value as number), "Cost"]}
           />
           <Area
             type="monotone"
             dataKey="cost"
-            stroke="#0ea5e9"
+            stroke={METRIC_COLORS.cost}
             strokeWidth={2}
             fill="url(#costGradient)"
           />

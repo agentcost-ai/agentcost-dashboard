@@ -30,7 +30,7 @@ function providerOf(model: string): { name: string; className: string } {
     return { name: "OpenAI", className: "bg-emerald-400" };
   if (m.includes("claude")) return { name: "Anthropic", className: "bg-orange-400" };
   if (m.includes("gemini")) return { name: "Google", className: "bg-sky-400" };
-  if (m.includes("llama")) return { name: "Meta", className: "bg-blue-400" };
+  if (m.includes("llama")) return { name: "Meta", className: "bg-sky-400" };
   if (m.includes("mistral") || m.includes("mixtral"))
     return { name: "Mistral", className: "bg-amber-400" };
   if (m.includes("deepseek")) return { name: "DeepSeek", className: "bg-indigo-400" };

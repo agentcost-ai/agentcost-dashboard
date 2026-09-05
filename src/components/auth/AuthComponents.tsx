@@ -77,7 +77,7 @@ export function FloatingPaths({ position }: { position: number }) {
   return (
     <div className="pointer-events-none absolute inset-0">
       <svg
-        className="h-full w-full text-slate-950 dark:text-white"
+        className="h-full w-full text-neutral-950 dark:text-white"
         viewBox="0 0 696 316"
         fill="none"
       >
@@ -131,14 +131,14 @@ export function Checkbox({
         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 cursor-pointer ${
           checked
             ? "bg-white border-white"
-            : "border-gray-600 hover:border-gray-500 bg-transparent"
+            : "border-neutral-600 hover:border-neutral-500 bg-transparent"
         }`}
       >
         {checked && (
           <motion.svg
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-3 h-3 text-slate-900"
+            className="w-3 h-3 text-neutral-900"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

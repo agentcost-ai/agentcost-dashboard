@@ -36,6 +36,7 @@ import {
   formatPercentage,
   parseApiError,
 } from "@/lib/utils";
+import { METRIC_COLORS } from "@/lib/palette";
 import { useAutoRefresh, formatLastRefresh } from "@/hooks/useAutoRefresh";
 import {
   useApiConfiguration,
@@ -382,7 +383,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setImportOpen(true)}
-                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 hover:bg-primary-500 px-4 py-2 text-sm font-medium text-white transition-colors"
+                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-white hover:bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-900 transition-colors"
               >
                 Import spend
                 <ArrowRight size={14} />
@@ -419,7 +420,7 @@ export default function DashboardPage() {
               upIsBad
               sparkline={{
                 data: timeSeries.map((p) => p.cost),
-                color: "#38bdf8",
+                color: METRIC_COLORS.cost,
               }}
             />
             <HeroStatCard
@@ -427,11 +428,11 @@ export default function DashboardPage() {
               value={formatNumber(overview.total_calls)}
               sub={`${formatNumber(overview.avg_tokens_per_call)} tok / call`}
               icon={<Activity size={15} />}
-              iconClassName="bg-violet-500/10 text-violet-400"
+              iconClassName="bg-emerald-500/10 text-emerald-400"
               delta={seriesDelta(timeSeries, "calls")}
               sparkline={{
                 data: timeSeries.map((p) => p.calls),
-                color: "#a78bfa",
+                color: METRIC_COLORS.calls,
               }}
             />
             <HeroStatCard
@@ -439,11 +440,11 @@ export default function DashboardPage() {
               value={formatNumber(overview.total_tokens)}
               sub={`${formatNumber(overview.total_input_tokens)} in · ${formatNumber(overview.total_output_tokens)} out`}
               icon={<Zap size={15} />}
-              iconClassName="bg-amber-500/10 text-amber-400"
+              iconClassName="bg-violet-500/10 text-violet-400"
               delta={seriesDelta(timeSeries, "tokens")}
               sparkline={{
                 data: timeSeries.map((p) => p.tokens),
-                color: "#fbbf24",
+                color: METRIC_COLORS.tokens,
               }}
             />
             <HeroStatCard

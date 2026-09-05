@@ -4,17 +4,7 @@ import { useMemo, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { formatCurrency, formatNumber, cn } from "@/lib/utils";
 import type { ModelStats } from "@/lib/api";
-
-const COLORS = [
-  "#38bdf8",
-  "#a78bfa",
-  "#34d399",
-  "#fbbf24",
-  "#fb7185",
-  "#818cf8",
-  "#f472b6",
-  "#2dd4bf",
-];
+import { CATEGORICAL } from "@/lib/palette";
 
 interface ModelDonutProps {
   data: ModelStats[];
@@ -61,7 +51,7 @@ export function ModelDonut({ data }: ModelDonutProps) {
               {sorted.map((_, index) => (
                 <Cell
                   key={index}
-                  fill={COLORS[index % COLORS.length]}
+                  fill={CATEGORICAL[index]}
                   opacity={
                     activeIndex === null || activeIndex === index ? 1 : 0.3
                   }
@@ -110,7 +100,7 @@ export function ModelDonut({ data }: ModelDonutProps) {
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
                   className="h-2.5 w-2.5 rounded-[3px] shrink-0"
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  style={{ backgroundColor: CATEGORICAL[index] }}
                 />
                 <div className="min-w-0">
                   <p className="text-[12.5px] font-medium text-neutral-200 font-mono truncate">

@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 const ROLE_BADGE: Record<string, { label: string; color: string }> = {
   admin: { label: "Admin", color: "bg-amber-900/30 text-amber-400" },
-  member: { label: "Member", color: "bg-blue-900/30 text-blue-400" },
+  member: { label: "Member", color: "bg-sky-900/30 text-sky-400" },
   viewer: { label: "Viewer", color: "bg-neutral-700/40 text-neutral-300" },
 };
 
@@ -167,7 +167,7 @@ export function ProjectSwitcher({ collapsed = false }: { collapsed?: boolean }) 
                           </span>
                         )}
                         {p.is_pending && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-900/30 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-900/30 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
                             <Clock size={10} /> Pending invite
                           </span>
                         )}

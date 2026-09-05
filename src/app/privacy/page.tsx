@@ -15,12 +15,12 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0b]">
       {/* Header */}
-      <header className="border-b border-gray-800/50 bg-[#0a0a0b]/95 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-neutral-800/50 bg-[#0a0a0b]/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/"
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
             >
               <ArrowLeft size={18} />
               <span className="text-sm">Home</span>
@@ -38,33 +38,33 @@ export default function PrivacyPolicyPage() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
         <article className="prose prose-invert prose-lg max-w-none">
           {/* Title */}
-          <div className="mb-12 pb-8 border-b border-gray-800/50">
+          <div className="mb-12 pb-8 border-b border-neutral-800/50">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Privacy Policy
             </h1>
-            <p className="text-gray-400 text-base">
+            <p className="text-neutral-400 text-base">
               Last updated: {lastUpdated}
             </p>
-            <p className="text-gray-400 text-base mt-2">Version 1.0</p>
+            <p className="text-neutral-400 text-base mt-2">Version 1.0</p>
           </div>
 
           {/* Introduction */}
           <section className="mb-10">
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-neutral-300 leading-relaxed">
               At AgentCost, we are committed to protecting your privacy and
               ensuring the security of your data. This Privacy Policy explains
               how we collect, use, store, and protect information when you use
               our service.
             </p>
-            <div className="mt-6 rounded-lg border border-gray-800 bg-white/3 p-4">
-              <p className="text-gray-300 text-base leading-relaxed">
+            <div className="mt-6 rounded-lg border border-neutral-800 bg-white/3 p-4">
+              <p className="text-neutral-300 text-base leading-relaxed">
                 <strong className="text-white">
                   Looking for the technical detail?
                 </strong>{" "}
                 Our{" "}
                 <Link
                   href="/docs/privacy"
-                  className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                  className="text-sky-400 hover:text-sky-300 underline underline-offset-2"
                 >
                   Data &amp; Privacy Architecture
                 </Link>{" "}
@@ -82,7 +82,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Information We Collect
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-white mb-3">
                   Account Information
@@ -165,20 +165,20 @@ export default function PrivacyPolicyPage() {
           {/* Section 2 */}
           <section className="mb-10">
             <h2 className="text-2xl font-semibold text-white mb-4 flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/10 text-green-400 text-sm font-bold">
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 text-sm font-bold">
                 2
               </span>
               Information We Do NOT Collect
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
-              <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-lg">
-                <p className="mb-4 font-medium text-green-400">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
+              <div className="p-4 bg-emerald-900/20 border border-emerald-800/50 rounded-lg">
+                <p className="mb-4 font-medium text-emerald-400">
                   We are committed to your privacy. We explicitly do NOT
                   collect:
                 </p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5 shrink-0" />
                     <span>
                       <strong className="text-white">
                         Your prompts or queries
@@ -188,7 +188,7 @@ export default function PrivacyPolicyPage() {
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5 shrink-0" />
                     <span>
                       <strong className="text-white">LLM responses</strong> —
                       The content generated by AI models is never captured by
@@ -196,7 +196,7 @@ export default function PrivacyPolicyPage() {
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5 shrink-0" />
                     <span>
                       <strong className="text-white">
                         Sensitive business data
@@ -206,7 +206,7 @@ export default function PrivacyPolicyPage() {
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5 shrink-0" />
                     <span>
                       <strong className="text-white">
                         Personal information beyond email
@@ -228,7 +228,7 @@ export default function PrivacyPolicyPage() {
               </span>
               How We Use Your Information
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-white mt-2.5 shrink-0" />
@@ -286,7 +286,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Data Storage and Security
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11 space-y-4">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11 space-y-4">
               <p>
                 Your data is stored securely using PostgreSQL with
                 industry-standard encryption. We implement multiple layers of
@@ -317,8 +317,8 @@ export default function PrivacyPolicyPage() {
                   <span>JWT tokens are used for secure session management</span>
                 </li>
               </ul>
-              <div className="p-4 bg-blue-900/20 border border-blue-800/50 rounded-lg mt-4">
-                <p className="text-blue-300">
+              <div className="p-4 bg-sky-900/20 border border-sky-800/50 rounded-lg mt-4">
+                <p className="text-sky-300">
                   <strong className="text-white">Self-Hosted Option:</strong>{" "}
                   AgentCost can be self-hosted, giving you complete control over
                   your data storage and security. When self-hosted, your data
@@ -336,22 +336,22 @@ export default function PrivacyPolicyPage() {
               </span>
               Data Sharing
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11 space-y-4">
-              <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11 space-y-4">
+              <div className="p-4 bg-neutral-800/50 border border-neutral-700 rounded-lg">
                 <p className="font-medium text-white mb-3">
                   Our commitment to your privacy:
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
-                    <span className="text-green-400 font-bold">✓</span>
+                    <span className="text-emerald-400 font-bold">✓</span>
                     <span>We do NOT sell your data to third parties</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-green-400 font-bold">✓</span>
+                    <span className="text-emerald-400 font-bold">✓</span>
                     <span>We do NOT share your data with advertisers</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-green-400 font-bold">✓</span>
+                    <span className="text-emerald-400 font-bold">✓</span>
                     <span>
                       We do NOT use your data for purposes other than providing
                       the service
@@ -379,7 +379,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Your Rights
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <p className="mb-4">
                 You have the following rights regarding your data:
               </p>
@@ -443,7 +443,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Data Retention
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11 space-y-4">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11 space-y-4">
               <p>
                 We retain your personal data for as long as your account is
                 active or as needed to provide you with the Service. Usage data
@@ -466,7 +466,7 @@ export default function PrivacyPolicyPage() {
               </span>
               Changes to This Policy
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11 space-y-4">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11 space-y-4">
               <p>
                 We may update this Privacy Policy from time to time. When we
                 make significant changes, we will notify you by email and update
@@ -488,20 +488,20 @@ export default function PrivacyPolicyPage() {
               </span>
               Contact Information
             </h2>
-            <div className="text-gray-300 leading-relaxed sm:pl-11">
+            <div className="text-neutral-300 leading-relaxed sm:pl-11">
               <p className="mb-4">
                 For questions, concerns, or requests regarding this Privacy
                 Policy or your personal data, please contact us at:
               </p>
-              <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+              <div className="p-4 bg-neutral-800/50 border border-neutral-700 rounded-lg">
                 <a
                   href="mailto:hello@agentcost.tech"
-                  className="text-white hover:text-gray-300 transition-colors font-medium wrap-break-word"
+                  className="text-white hover:text-neutral-300 transition-colors font-medium wrap-break-word"
                 >
                   hello@agentcost.tech
                 </a>
               </div>
-              <p className="mt-4 text-gray-400 text-sm">
+              <p className="mt-4 text-neutral-400 text-sm">
                 We aim to respond to all privacy-related inquiries within 72
                 hours.
               </p>
@@ -509,23 +509,23 @@ export default function PrivacyPolicyPage() {
           </section>
 
           {/* Footer Links */}
-          <div className="mt-16 pt-8 border-t border-gray-800">
+          <div className="mt-16 pt-8 border-t border-neutral-800">
             <div className="flex flex-wrap gap-6 text-sm">
               <Link
                 href="/terms"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors"
               >
                 Terms of Service
               </Link>
               <Link
                 href="/auth/register"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors"
               >
                 Create Account
               </Link>
               <Link
                 href="/auth/login"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors"
               >
                 Sign In
               </Link>

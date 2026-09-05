@@ -164,7 +164,7 @@ function AcceptPoliciesContent() {
         <h1 className="text-2xl font-semibold text-white mb-3">
           Updated Policies
         </h1>
-        <p className="text-gray-400 leading-relaxed">
+        <p className="text-neutral-400 leading-relaxed">
           We have updated our legal agreements. Please review and accept the
           updated policies to continue using AgentCost.
         </p>
@@ -192,10 +192,10 @@ function AcceptPoliciesContent() {
                 <h3 className="font-medium text-white mb-1">
                   Terms of Service
                 </h3>
-                <p className="text-sm text-gray-400 mb-3">
+                <p className="text-sm text-neutral-400 mb-3">
                   Updated to version {policyStatus?.terms.current_version}
                   {policyStatus?.terms.accepted_version && (
-                    <span className="text-gray-500">
+                    <span className="text-neutral-500">
                       {" "}
                       (you accepted v{policyStatus.terms.accepted_version})
                     </span>
@@ -204,7 +204,7 @@ function AcceptPoliciesContent() {
                 <Link
                   href="/terms"
                   target="_blank"
-                  className="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+                  className="text-sm text-sky-400 hover:text-sky-300 inline-flex items-center gap-1"
                 >
                   Read Terms of Service
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -219,7 +219,7 @@ function AcceptPoliciesContent() {
                   onChange={setAcceptTerms}
                 />
               </div>
-              <span className="text-sm text-gray-300">
+              <span className="text-sm text-neutral-300">
                 I have read and agree to the updated Terms of Service
               </span>
             </label>
@@ -235,10 +235,10 @@ function AcceptPoliciesContent() {
               </div>
               <div className="flex-1">
                 <h3 className="font-medium text-white mb-1">Privacy Policy</h3>
-                <p className="text-sm text-gray-400 mb-3">
+                <p className="text-sm text-neutral-400 mb-3">
                   Updated to version {policyStatus?.privacy.current_version}
                   {policyStatus?.privacy.accepted_version && (
-                    <span className="text-gray-500">
+                    <span className="text-neutral-500">
                       {" "}
                       (you accepted v{policyStatus.privacy.accepted_version})
                     </span>
@@ -247,7 +247,7 @@ function AcceptPoliciesContent() {
                 <Link
                   href="/privacy"
                   target="_blank"
-                  className="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+                  className="text-sm text-sky-400 hover:text-sky-300 inline-flex items-center gap-1"
                 >
                   Read Privacy Policy
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -262,7 +262,7 @@ function AcceptPoliciesContent() {
                   onChange={setAcceptPrivacy}
                 />
               </div>
-              <span className="text-sm text-gray-300">
+              <span className="text-sm text-neutral-300">
                 I have read and agree to the updated Privacy Policy
               </span>
             </label>
@@ -274,14 +274,14 @@ function AcceptPoliciesContent() {
           <button
             type="button"
             onClick={handleDecline}
-            className="flex-1 py-3 px-4 rounded-xl border border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 transition-colors font-medium"
+            className="flex-1 py-3 px-4 rounded-xl border border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-600 transition-colors font-medium"
           >
             Decline and Logout
           </button>
           <button
             type="submit"
             disabled={!canSubmit || isSubmitting}
-            className="flex-1 bg-white hover:bg-gray-100 disabled:bg-white/40 disabled:cursor-not-allowed text-slate-900 font-medium py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/10"
+            className="flex-1 bg-white hover:bg-neutral-100 disabled:bg-white/40 disabled:cursor-not-allowed text-neutral-900 font-medium py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/10"
           >
             {isSubmitting ? (
               <>
@@ -296,11 +296,11 @@ function AcceptPoliciesContent() {
       </form>
 
       {/* Footer */}
-      <p className="text-center text-gray-500 text-sm mt-8">
+      <p className="text-center text-neutral-500 text-sm mt-8">
         Questions about these changes?{" "}
         <a
           href="mailto:hello@agentcost.tech"
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-neutral-400 hover:text-white transition-colors"
         >
           Contact us
         </a>

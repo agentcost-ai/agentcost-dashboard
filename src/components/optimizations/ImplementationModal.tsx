@@ -217,15 +217,15 @@ function CopyButton({ text }: { text: string }) {
 function getTypeIcon(type: string) {
     switch (type) {
         case "model_downgrade":
-            return <Code size={20} className="text-blue-400" />;
+            return <Code size={20} className="text-sky-400" />;
         case "caching":
-            return <Database size={20} className="text-purple-400" />;
+            return <Database size={20} className="text-violet-400" />;
         case "error_reduction":
             return <AlertCircle size={20} className="text-red-400" />;
         case "anomaly_alert":
             return <Zap size={20} className="text-amber-400" />;
         case "latency":
-            return <Timer size={20} className="text-cyan-400" />;
+            return <Timer size={20} className="text-sky-400" />;
         default:
             return <CheckCircle2 size={20} className="text-emerald-400" />;
     }
@@ -331,11 +331,11 @@ export function ImplementationModal({
                     </div>
 
                     {/* Tracking Info */}
-                    <div className="p-4 rounded-lg bg-blue-950/30 border border-blue-900/50">
+                    <div className="p-4 rounded-lg bg-sky-950/30 border border-sky-900/50">
                         <div className="flex items-start gap-3">
-                            <TrendingDown size={18} className="mt-0.5 text-blue-400 shrink-0" />
+                            <TrendingDown size={18} className="mt-0.5 text-sky-400 shrink-0" />
                             <div>
-                                <h4 className="font-medium text-blue-400">Savings Tracking</h4>
+                                <h4 className="font-medium text-sky-400">Savings Tracking</h4>
                                 <p className="mt-1 text-sm text-neutral-400">{trackingInfo}</p>
                             </div>
                         </div>

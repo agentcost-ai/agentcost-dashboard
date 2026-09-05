@@ -93,7 +93,7 @@ function VerifyEmailContent() {
           <h1 className="text-2xl font-semibold text-white mb-2">
             Verifying your email
           </h1>
-          <p className="text-gray-400">
+          <p className="text-neutral-400">
             Please wait while we verify your email address...
           </p>
         </>
@@ -101,21 +101,21 @@ function VerifyEmailContent() {
 
       {status === "success" && (
         <>
-          <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
-            <CheckCircle className="w-8 h-8 text-green-500" />
+          <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-emerald-500/20">
+            <CheckCircle className="w-8 h-8 text-emerald-500" />
           </div>
           <h1 className="text-2xl font-semibold text-white mb-2">
             Email Verified
           </h1>
-          <p className="text-gray-400 mb-6 wrap-break-word">{message}</p>
-          <p className="text-gray-500 text-sm mb-6">
+          <p className="text-neutral-400 mb-6 wrap-break-word">{message}</p>
+          <p className="text-neutral-500 text-sm mb-6">
             {hasSession
               ? "Taking you to your dashboard..."
               : "Redirecting you to login..."}
           </p>
           <Link
             href={hasSession ? "/dashboard" : "/auth/login"}
-            className="inline-flex items-center justify-center bg-white hover:bg-gray-100 text-slate-900 font-medium py-3 px-8 rounded-xl transition-colors shadow-lg shadow-white/10"
+            className="inline-flex items-center justify-center bg-white hover:bg-neutral-100 text-neutral-900 font-medium py-3 px-8 rounded-xl transition-colors shadow-lg shadow-white/10"
           >
             {hasSession ? "Go to Dashboard" : "Continue to Login"}
           </Link>
@@ -130,17 +130,17 @@ function VerifyEmailContent() {
           <h1 className="text-2xl font-semibold text-white mb-2">
             Verification Failed
           </h1>
-          <p className="text-gray-400 mb-6 wrap-break-word">{message}</p>
+          <p className="text-neutral-400 mb-6 wrap-break-word">{message}</p>
           <div className="space-y-3">
             <Link
               href="/auth/login"
-              className="block w-full bg-white hover:bg-gray-100 text-slate-900 font-medium py-3 px-6 rounded-xl transition-colors shadow-lg shadow-white/10"
+              className="block w-full bg-white hover:bg-neutral-100 text-neutral-900 font-medium py-3 px-6 rounded-xl transition-colors shadow-lg shadow-white/10"
             >
               Go to Login
             </Link>
             <Link
               href="/auth/register"
-              className="block w-full bg-transparent border border-gray-700 hover:border-gray-600 text-gray-300 font-medium py-3 px-6 rounded-xl transition-colors"
+              className="block w-full bg-transparent border border-neutral-700 hover:border-neutral-600 text-neutral-300 font-medium py-3 px-6 rounded-xl transition-colors"
             >
               Create New Account
             </Link>

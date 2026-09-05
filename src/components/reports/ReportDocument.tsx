@@ -36,6 +36,7 @@ import {
   formatLatency,
   formatPercentage,
 } from "@/lib/utils";
+import { METRIC_COLORS } from "@/lib/palette";
 import type {
   ExecutiveReport,
   MetricDelta,
@@ -179,25 +180,25 @@ export function ReportDocument({ report }: ReportDocumentProps) {
           iconClassName="bg-sky-500/10 text-sky-400"
           delta={toHeroDelta(summary.cost)}
           upIsBad
-          sparkline={{ data: report.timeseries.map((p) => p.cost), color: "#38bdf8" }}
+          sparkline={{ data: report.timeseries.map((p) => p.cost), color: METRIC_COLORS.cost }}
         />
         <HeroStatCard
           label="API Calls"
           value={formatNumber(overview.total_calls)}
           sub={`${formatNumber(overview.avg_tokens_per_call)} tok / call`}
           icon={<Activity size={15} />}
-          iconClassName="bg-violet-500/10 text-violet-400"
+          iconClassName="bg-emerald-500/10 text-emerald-400"
           delta={toHeroDelta(summary.calls)}
-          sparkline={{ data: report.timeseries.map((p) => p.calls), color: "#a78bfa" }}
+          sparkline={{ data: report.timeseries.map((p) => p.calls), color: METRIC_COLORS.calls }}
         />
         <HeroStatCard
           label="Tokens"
           value={formatNumber(overview.total_tokens)}
           sub={`${formatNumber(overview.total_input_tokens)} in · ${formatNumber(overview.total_output_tokens)} out`}
           icon={<Zap size={15} />}
-          iconClassName="bg-amber-500/10 text-amber-400"
+          iconClassName="bg-violet-500/10 text-violet-400"
           delta={toHeroDelta(summary.tokens)}
-          sparkline={{ data: report.timeseries.map((p) => p.tokens), color: "#fbbf24" }}
+          sparkline={{ data: report.timeseries.map((p) => p.tokens), color: METRIC_COLORS.tokens }}
         />
         <HeroStatCard
           label="Success Rate"
@@ -212,7 +213,7 @@ export function ReportDocument({ report }: ReportDocumentProps) {
           value={formatLatency(overview.avg_latency_ms)}
           sub={`p95 ${formatLatency(latency.p95)}`}
           icon={<Timer size={15} />}
-          iconClassName="bg-rose-500/10 text-rose-400"
+          iconClassName="bg-pink-500/10 text-pink-400"
           delta={toHeroDelta(summary.avg_latency_ms)}
           upIsBad
         />
@@ -476,7 +477,7 @@ export function ReportDocument({ report }: ReportDocumentProps) {
             icon={<Timer size={14} />}
             title="Latency Percentiles"
             subtitle={`${formatNumber(latency.sample_size)} calls${latency.approximate ? " · sampled" : ""}`}
-            iconClass="bg-rose-500/10 text-rose-400"
+            iconClass="bg-pink-500/10 text-pink-400"
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="p50" value={formatLatency(latency.p50)} />
@@ -607,7 +608,7 @@ export function ReportDocument({ report }: ReportDocumentProps) {
             <CadenceBars
               data={report.cadence.by_dow}
               busiestLabel={report.cadence.busiest_day}
-              color="bg-indigo-500"
+              color="bg-emerald-600"
             />
           </div>
           <div>
@@ -617,7 +618,7 @@ export function ReportDocument({ report }: ReportDocumentProps) {
             <CadenceBars
               data={report.cadence.by_hour}
               busiestLabel={report.cadence.busiest_hour}
-              color="bg-sky-500"
+              color="bg-emerald-600"
               labelWidth="w-12"
             />
           </div>
