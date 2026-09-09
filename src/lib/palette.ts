@@ -61,3 +61,9 @@ export const TOOLTIP_CONTENT_STYLE = {
 
 export const TOOLTIP_LABEL_STYLE = { color: "#a3a3a3", marginBottom: 4 } as const;
 export const TOOLTIP_ITEM_STYLE = { color: "#fafafa" } as const;
+
+/** Emphasis accent for the Agents pages: the flagged day, share bars, the trend
+ *  line and wasted amounts. Indigo so it never collides with the status colours
+ *  (red = failure/breach, emerald = savings/compliant). */
+export const ACCENT = "#818cf8"; // indigo-400
+export const ACCENT_SOFT = "#a5b4fc"; // indigo-300

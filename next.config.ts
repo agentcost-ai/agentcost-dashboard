@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
+        source: "/agents/:name*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
         // Every public page has two representations (HTML and Markdown, chosen
         // in proxy.ts), so a shared cache should key on Accept.
         //

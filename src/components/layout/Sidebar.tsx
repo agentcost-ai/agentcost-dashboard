@@ -2,378 +2,324 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useRef, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
-  LayoutDashboard,
-  Users,
-  Cpu,
-  List,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Zap,
-  LogOut,
-  User,
   BookOpen,
-  ChevronDown,
-  MessageSquare,
+  ChevronsUpDown,
+  Cpu,
   FileText,
   Grid2x2Plus,
-  Workflow,
+  LayoutDashboard,
+  List,
+  LogOut,
+  MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
   ShieldCheck,
+  User,
+  Users,
+  Workflow,
+  X,
+  Zap,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
+import { api, type AgentStats } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 
-const navigation = [
+
+type Item = { name: string; href: string; icon: LucideIcon };
+
+const READ: Item[] = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { name: "Agents", href: "/agents", icon: Users },
   { name: "Workflows", href: "/workflows", icon: Workflow },
   { name: "Models", href: "/models", icon: Cpu },
-  { name: "Reports", href: "/reports", icon: FileText },
   { name: "Events", href: "/events", icon: List },
+];
+
+const ACT: Item[] = [
   { name: "Optimizations", href: "/optimizations", icon: Zap },
   { name: "Guardrails", href: "/guardrails", icon: ShieldCheck },
+  { name: "Reports", href: "/reports", icon: FileText },
+];
+
+const FOOTER: Item[] = [
   { name: "Feedback", href: "/feedback", icon: MessageSquare },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Docs", href: "/docs/sdk", icon: BookOpen },
 ];
 
-const docsLinks = [
-  { name: "SDK Documentation", href: "/docs/sdk" },
-  { name: "API Reference", href: "/docs/api" },
-  { name: "Blog", href: "/blog" },
-  { name: "Changelog", href: "/changelog" },
-];
+const VERSION = "v0.1.0";
+const TOP_AGENTS = 5;
 
 interface SidebarProps {
-  /** Whether the sidebar is open as a drawer on mobile (<lg). */
   mobileOpen?: boolean;
-  /** Called when the mobile drawer should close. */
   onMobileClose?: () => void;
+}
+
+function NavItem({
+  item,
+  active,
+  collapsed,
+  count,
+  onClick,
+}: {
+  item: Item;
+  active: boolean;
+  collapsed: boolean;
+  count?: number;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      title={collapsed ? item.name : undefined}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group flex h-8 items-center gap-2.5 rounded-md text-[13px] font-medium transition-colors",
+        collapsed ? "justify-center px-0" : "px-2",
+        active ? "bg-white/8 text-white" : "text-neutral-300 hover:bg-white/5 hover:text-white",
+      )}
+    >
+      <item.icon
+        size={18}
+        strokeWidth={1.75}
+        className={cn("shrink-0", active ? "text-neutral-100" : "text-neutral-400 group-hover:text-neutral-200")}
+      />
+      {!collapsed && <span className="truncate">{item.name}</span>}
+      {!collapsed && count ? (
+        <span className="ml-auto text-[12px] tabular-nums text-red-300">{count}</span>
+      ) : null}
+    </Link>
+  );
 }
 
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  // The collapsed (icon-only) mode is desktop-only; the mobile drawer always
-  // renders the full expanded sidebar.
   const isCollapsed = collapsed && !mobileOpen;
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showDocsMenu, setShowDocsMenu] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  const docsMenuRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [breaching, setBreaching] = useState(0);
+  const [topAgents, setTopAgents] = useState<AgentStats[]>([]);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Update CSS custom property when collapsed state changes
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--sidebar-width",
-      collapsed ? "4rem" : "16rem",
-    );
+    document.documentElement.style.setProperty("--sidebar-width", collapsed ? "3.5rem" : "15rem");
   }, [collapsed]);
 
-  // Close menus when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(event.target as Node)
-      ) {
-        setShowUserMenu(false);
-      }
-      if (
-        docsMenuRef.current &&
-        !docsMenuRef.current.contains(event.target as Node)
-      ) {
-        setShowDocsMenu(false);
-      }
+    function onDown(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
     }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
-  const handleLogout = async () => {
-    setShowUserMenu(false);
-    await logout();
-  };
+  // Live state for the nav: breaching agents on Guardrails, the top spenders
+  // under Agents. Both from the last 7 days; both optional.
+  useEffect(() => {
+    if (!api.hasProjectAccess()) return;
+    let cancelled = false;
+    api
+      .getGuardrailCompliance("7d")
+      .then((res) => {
+        if (!cancelled) setBreaching(res.agents.filter((a) => a.status === "breach").length);
+      })
+      .catch(() => {});
+    api
+      .getAgentStats("7d", TOP_AGENTS)
+      .then((rows) => {
+        if (!cancelled) setTopAgents(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
-  // Get user initials for avatar
-  const getUserInitials = () => {
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const activeAgent = pathname.startsWith("/agents/") ? decodeURIComponent(pathname.slice("/agents/".length)) : null;
+
+  const initials = (() => {
     if (!user) return "U";
     if (user.name) {
-      const parts = user.name.split(" ");
-      return parts.length > 1
-        ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-        : parts[0][0].toUpperCase();
+      const parts = user.name.trim().split(/\s+/);
+      return (parts.length > 1 ? parts[0][0] + parts[1][0] : parts[0][0]).toUpperCase();
     }
     return user.email[0].toUpperCase();
-  };
-
-  // Get display name
-  const getDisplayName = () => {
-    if (!user) return "User";
-    return user.name || user.email.split("@")[0];
-  };
+  })();
+  const displayName = user?.name || user?.email.split("@")[0] || "User";
 
   return (
     <aside
       aria-label="Main sidebar"
       className={cn(
-        "fixed left-0 top-0 z-40 h-dvh border-r border-neutral-800 backdrop-blur-sm",
-        // Solid background when floating as a mobile drawer, translucent on desktop
-        "bg-neutral-950 lg:bg-neutral-900/50",
-        // Off-canvas drawer below lg; always visible on lg+
+        "fixed left-0 top-0 z-40 flex h-dvh flex-col bg-[#0a0a0b]",
+        "border-r border-white/6 lg:border-r-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-        isCollapsed ? "w-16" : "w-64",
+        isCollapsed ? "w-14" : "w-60",
       )}
-      style={{
-        transition: "width 0.2s ease-out, transform 0.2s ease-out",
-        willChange: "width, transform",
-      }}
+      style={{ transition: "width 0.18s ease-out, transform 0.18s ease-out" }}
     >
-      <div className="flex h-full flex-col">
-        {/* Logo */}
-        <div className="flex h-16 items-center justify-between border-b border-neutral-800 px-4">
-          {!isCollapsed && (
-            <div className="flex items-center gap-2">
-              <Grid2x2Plus className="size-7 text-sky-400" />
-              <span className="text-lg font-semibold text-white">
-                AgentCost
-              </span>
+      {/* Brand */}
+      <div className={cn("flex h-12 items-center", isCollapsed ? "justify-center px-0" : "justify-between pl-4 pr-2")}>
+        <Link href="/dashboard" className="flex items-center gap-2" aria-label="AgentCost home">
+          <Grid2x2Plus size={18} className="text-sky-400" strokeWidth={1.75} />
+          {!isCollapsed && <span className="text-[14px] font-semibold tracking-tight text-white">AgentCost</span>}
+        </Link>
+        {!isCollapsed && (
+          <>
+            <button
+              onClick={() => setCollapsed(true)}
+              aria-label="Collapse sidebar"
+              className="hidden size-7 items-center justify-center rounded-md text-neutral-500 hover:bg-white/5 hover:text-neutral-200 lg:flex"
+            >
+              <PanelLeftClose size={15} strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={onMobileClose}
+              aria-label="Close navigation"
+              className="flex size-9 items-center justify-center rounded-md text-neutral-400 hover:bg-white/5 hover:text-white lg:hidden"
+            >
+              <X size={18} />
+            </button>
+          </>
+        )}
+      </div>
+      {isCollapsed && (
+        <button
+          onClick={() => setCollapsed(false)}
+          aria-label="Expand sidebar"
+          className="mx-auto mb-1 flex size-8 items-center justify-center rounded-md text-neutral-500 hover:bg-white/5 hover:text-neutral-200"
+        >
+          <PanelLeftOpen size={15} strokeWidth={1.75} />
+        </button>
+      )}
+
+      {/* Workspace */}
+      <div className={cn("pb-2", isCollapsed ? "px-1" : "px-2")}>
+        <ProjectSwitcher collapsed={isCollapsed} />
+      </div>
+
+      {/* Navigation */}
+      <nav className={cn("flex-1 overflow-y-auto", isCollapsed ? "px-1.5" : "px-2")}>
+        <div className="space-y-px">
+          {READ.map((item) => (
+            <div key={item.href}>
+              <NavItem item={item} active={isActive(item.href)} collapsed={isCollapsed} onClick={onMobileClose} />
+              {item.href === "/agents" && !isCollapsed && topAgents.length > 0 && (
+                <div className="relative my-px ml-4 border-l border-white/8 pl-2">
+                  {topAgents.map((a) => {
+                    const active = activeAgent === a.agent_name;
+                    return (
+                      <Link
+                        key={a.agent_name}
+                        href={`/agents/${encodeURIComponent(a.agent_name)}`}
+                        onClick={onMobileClose}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "flex h-7 items-center rounded-md px-2 text-[12.5px] transition-colors",
+                          active ? "bg-white/8 text-white" : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100",
+                        )}
+                      >
+                        <span className="truncate">{a.agent_name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+          ))}
+        </div>
+
+        <div className={cn("my-3 border-t border-white/6", !isCollapsed && "mx-2")} />
+
+        <div className="space-y-px">
+          {ACT.map((item) => (
+            <NavItem
+              key={item.href}
+              item={item}
+              active={isActive(item.href)}
+              collapsed={isCollapsed}
+              count={item.href === "/guardrails" ? breaching : undefined}
+              onClick={onMobileClose}
+            />
+          ))}
+        </div>
+      </nav>
+
+      {/* Footer links */}
+      <div className={cn("space-y-px pb-1 pt-2", isCollapsed ? "px-1.5" : "px-2")}>
+        {FOOTER.map((item) => (
+          <NavItem key={item.href} item={item} active={isActive(item.href)} collapsed={isCollapsed} onClick={onMobileClose} />
+        ))}
+      </div>
+
+      {/* Account */}
+      <div ref={menuRef} className={cn("relative border-t border-white/6", isCollapsed ? "p-1.5" : "p-2")}>
+        <button
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          title={isCollapsed ? displayName : undefined}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-md text-left transition-colors hover:bg-white/5",
+            isCollapsed ? "justify-center px-0 py-1.5" : "px-2 py-1.5",
           )}
-          {isCollapsed && (
-            <Grid2x2Plus className="size-7 text-sky-400 mx-auto" />
-          )}
+        >
+          <span className="grid size-6 shrink-0 place-items-center rounded-md bg-white/10 text-[10px] font-semibold text-neutral-100">
+            {initials}
+          </span>
           {!isCollapsed && (
             <>
-              {/* Desktop: collapse to icon rail */}
-              <button
-                onClick={() => setCollapsed(!collapsed)}
-                aria-label="Collapse sidebar"
-                className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              {/* Mobile: close the drawer */}
-              <button
-                onClick={onMobileClose}
-                aria-label="Close navigation"
-                className="flex lg:hidden h-10 w-10 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white"
-              >
-                <X size={18} />
-              </button>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-medium leading-tight text-white">{displayName}</span>
+                <span className="block truncate text-[11px] leading-tight text-neutral-500">{user?.email}</span>
+              </span>
+              <ChevronsUpDown size={13} className="shrink-0 text-neutral-500" />
             </>
           )}
-        </div>
+        </button>
 
-        {/* Expand button when collapsed */}
-        {isCollapsed && (
-          <button
-            onClick={() => setCollapsed(false)}
-            aria-label="Expand sidebar"
-            className="flex h-10 items-center justify-center text-neutral-400 hover:bg-neutral-800 hover:text-white border-b border-neutral-800"
+        {menuOpen && (
+          <div
+            role="menu"
+            className={cn(
+              "absolute bottom-full z-50 mb-1 overflow-hidden rounded-lg border border-white/8 bg-[#141417] p-1 shadow-2xl shadow-black/60",
+              isCollapsed ? "left-1.5 w-52" : "left-2 right-2",
+            )}
           >
-            <ChevronRight size={18} />
-          </button>
-        )}
-
-        {/* Project switcher */}
-        {!isCollapsed && (
-          <div className="px-3 pt-3 pb-1">
-            <ProjectSwitcher />
-          </div>
-        )}
-
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={onMobileClose}
-                className={cn(
-                  "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary-600/10 text-primary-400"
-                    : "text-neutral-400 hover:bg-neutral-800 hover:text-white",
-                  isCollapsed && "justify-center px-2",
-                )}
-                title={isCollapsed ? item.name : undefined}
-              >
-                <item.icon
-                  size={20}
-                  className={cn(
-                    "shrink-0",
-                    isActive
-                      ? "text-primary-400"
-                      : "text-neutral-500 group-hover:text-white",
-                  )}
-                />
-                {!isCollapsed && <span>{item.name}</span>}
-              </Link>
-            );
-          })}
-
-          {/* Documentation Dropdown */}
-          {!isCollapsed && (
-            <div ref={docsMenuRef} className="relative pt-2">
-              <button
-                onClick={() => setShowDocsMenu(!showDocsMenu)}
-                className="w-full group flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <BookOpen
-                    size={20}
-                    className="shrink-0 text-neutral-500 group-hover:text-white"
-                  />
-                  <span>Documentation</span>
-                </div>
-                <ChevronDown
-                  size={16}
-                  className={cn(
-                    "transition-transform",
-                    showDocsMenu && "rotate-180",
-                  )}
-                />
-              </button>
-
-              {showDocsMenu && (
-                <div className="mt-1 ml-8 space-y-1">
-                  {docsLinks.map((doc) => (
-                    <Link
-                      key={doc.href}
-                      href={doc.href}
-                      className="block px-3 py-2 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800/50 rounded-lg transition-colors"
-                      onClick={() => {
-                        setShowDocsMenu(false);
-                        onMobileClose?.();
-                      }}
-                    >
-                      {doc.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
+            <div className="px-2 py-1.5">
+              <p className="truncate text-[12px] text-neutral-400">{user?.email}</p>
             </div>
-          )}
-
-          {/* Collapsed docs icon */}
-          {isCollapsed && (
             <Link
-              href="/docs/sdk"
-              className="group flex items-center justify-center rounded-lg px-2 py-2.5 text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"
-              title="Documentation"
+              href="/account"
+              role="menuitem"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-neutral-200 hover:bg-white/5 hover:text-white"
             >
-              <BookOpen
-                size={20}
-                className="text-neutral-500 group-hover:text-white"
-              />
+              <User size={14} strokeWidth={1.75} />
+              Account settings
             </Link>
-          )}
-        </nav>
-
-        {/* User Profile Section */}
-        <div className="border-t border-neutral-800 p-3">
-          <div ref={userMenuRef} className="relative">
             <button
-              onClick={() => !isCollapsed && setShowUserMenu(!showUserMenu)}
-              aria-haspopup="true"
-              aria-expanded={showUserMenu}
-              className={cn(
-                "w-full flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800 transition-colors",
-                isCollapsed && "justify-center",
-              )}
+              role="menuitem"
+              onClick={async () => {
+                setMenuOpen(false);
+                await logout();
+              }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-red-300 hover:bg-red-500/10"
             >
-              {/* Initials only, no disc. The accent belongs to the active nav
-                  item; a filled avatar competes with it for attention and adds
-                  nothing — the letter already identifies the account. */}
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center text-neutral-200 font-medium text-sm">
-                {getUserInitials()}
-              </div>
-
-              {!isCollapsed && (
-                <>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
-                      {getDisplayName()}
-                    </p>
-                    <p className="text-xs text-neutral-500 truncate">
-                      {user?.email}
-                    </p>
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className={cn(
-                      "text-neutral-400 transition-transform shrink-0",
-                      showUserMenu && "rotate-180",
-                    )}
-                  />
-                </>
-              )}
+              <LogOut size={14} strokeWidth={1.75} />
+              Sign out
             </button>
-
-            {/* User Dropdown Menu */}
-            {showUserMenu && !isCollapsed && (
-              <div
-                role="menu"
-                className="absolute bottom-full left-0 right-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg overflow-hidden"
-              >
-                <div className="px-3 py-2 border-b border-neutral-700">
-                  <p className="text-xs text-neutral-400">Signed in as</p>
-                  <p className="text-sm text-white font-medium truncate">
-                    {user?.email}
-                  </p>
-                </div>
-
-                <div className="p-1">
-                  <Link
-                    href="/account"
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white rounded transition-colors"
-                    onClick={() => setShowUserMenu(false)}
-                  >
-                    <User size={16} />
-                    <span>Account Settings</span>
-                  </Link>
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 rounded transition-colors"
-                  >
-                    <LogOut size={16} />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Collapsed logout button */}
-            {isCollapsed && (
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center p-2 mt-2 rounded-lg text-neutral-400 hover:bg-red-900/20 hover:text-red-400 transition-colors"
-                title="Sign Out"
-                aria-label="Sign Out"
-              >
-                <LogOut size={18} />
-              </button>
-            )}
+            <p className="px-2 pb-1 pt-2 text-[11px] text-neutral-600">AgentCost {VERSION}</p>
           </div>
-
-          {/* Version */}
-          {!isCollapsed && (
-            <div className="mt-3 pt-3 border-t border-neutral-800">
-              <p className="text-xs text-neutral-600 text-center">
-                AgentCost v0.1.0
-              </p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </aside>
   );

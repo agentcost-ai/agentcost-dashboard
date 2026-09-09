@@ -40,9 +40,10 @@ export function AgentRankList({ data, limit = 7 }: AgentRankListProps) {
         const healthy = agent.success_rate >= 97;
 
         return (
-          <div
+          <Link
             key={agent.agent_name}
-            className="group rounded-xl px-3 py-2.5 -mx-1 transition-colors duration-150 hover:bg-white/2"
+            href={`/agents/${encodeURIComponent(agent.agent_name)}`}
+            className="group block rounded-xl px-3 py-2.5 -mx-1 transition-colors duration-150 hover:bg-white/2"
           >
             <div className="flex items-center justify-between gap-3 mb-1.5">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -100,7 +101,7 @@ export function AgentRankList({ data, limit = 7 }: AgentRankListProps) {
                 </span>
               </div>
             </div>
-          </div>
+          </Link>
         );
       })}
 

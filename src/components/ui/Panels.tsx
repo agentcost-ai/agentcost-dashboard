@@ -25,12 +25,14 @@ export function StatBand({ items, className }: { items: StatItem[]; className?: 
         // Hairlines come from the 1px gap over a faint background.
         "grid gap-px overflow-hidden rounded-xl border border-white/8 bg-white/6 sm:grid-cols-2",
         items.length === 3 && "lg:grid-cols-3",
-        items.length >= 4 && "lg:grid-cols-4",
+        items.length === 4 && "lg:grid-cols-4",
+        items.length === 5 && "lg:grid-cols-5",
+        items.length >= 6 && "lg:grid-cols-3 xl:grid-cols-6",
         className,
       )}
     >
       {items.map((item) => (
-        <div key={item.label} className="bg-[#0c0c0e] px-5 py-4">
+        <div key={item.label} className="bg-[#131317] px-5 py-4">
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500">
             {item.label}
           </p>

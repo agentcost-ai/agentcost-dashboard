@@ -2779,6 +2779,242 @@
     "servers":
       - "url": "https://api.agentcost.tech"
         "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/analytics/agents/summary":
+    "get":
+      "tags":
+        - "Analytics"
+      "summary": "Get Agent Summaries"
+      "description": "Per-agent cost, change against the previous window, model mix, cache\neconomics, failed-call spend, repeated work and one computed signal each.\nThe Agents page reads this instead of /agents."
+      "operationId": "analytics_get_agent_summaries"
+      "security":
+        - "APIKeyHeader": []
+      "parameters":
+        - "name": "range"
+          "in": "query"
+          "required": false
+          "schema":
+            "enum":
+              - "1h"
+              - "24h"
+              - "7d"
+              - "30d"
+              - "90d"
+            "type": "string"
+            "description": "Time range: 1h, 24h, 7d, 30d, 90d"
+            "default": "7d"
+            "title": "Range"
+          "description": "Time range: 1h, 24h, 7d, 30d, 90d"
+        - "name": "limit"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "integer"
+            "maximum": 200
+            "minimum": 1
+            "default": 50
+            "title": "Limit"
+        - "name": "project_id"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Project ID. Required for JWT-authenticated requests; ignored for SDK API-key requests (the project is derived from the key)."
+            "title": "Project Id"
+          "description": "Project ID. Required for JWT-authenticated requests; ignored for SDK API-key requests (the project is derived from the key)."
+      "responses":
+        "200":
+          "description": "Successful Response"
+          "content":
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/AgentSummary"
+                "title": "Response Get Agent Summaries V1 Analytics Agents Summary Get"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
+  "/v1/analytics/agents/{agent_name}":
+    "get":
+      "tags":
+        - "Analytics"
+      "summary": "Get Agent Detail"
+      "description": "Everything the agent page shows for one agent, in one response."
+      "operationId": "analytics_get_agent_detail"
+      "security":
+        - "APIKeyHeader": []
+      "parameters":
+        - "name": "agent_name"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "title": "Agent Name"
+        - "name": "range"
+          "in": "query"
+          "required": false
+          "schema":
+            "enum":
+              - "1h"
+              - "24h"
+              - "7d"
+              - "30d"
+              - "90d"
+            "type": "string"
+            "description": "Time range: 1h, 24h, 7d, 30d, 90d"
+            "default": "7d"
+            "title": "Range"
+          "description": "Time range: 1h, 24h, 7d, 30d, 90d"
+        - "name": "project_id"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Project ID. Required for JWT-authenticated requests; ignored for SDK API-key requests (the project is derived from the key)."
+            "title": "Project Id"
+          "description": "Project ID. Required for JWT-authenticated requests; ignored for SDK API-key requests (the project is derived from the key)."
+      "responses":
+        "200":
+          "description": "Successful Response"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/AgentDetail"
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+        "401":
+          "description": "Missing or invalid credentials."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "422":
+          "description": "Request validation failed."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+        "429":
+          "description": "Rate limit exceeded. Wait for the number of seconds in Retry-After, then retry."
+          "headers":
+            "RateLimit-Policy":
+              "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
+              "schema":
+                "type": "string"
+            "RateLimit":
+              "description": "Remaining quota and seconds until reset, e.g. \"public\";r=119;t=60."
+              "schema":
+                "type": "string"
+            "RateLimit-Limit":
+              "description": "Requests allowed per window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Remaining":
+              "description": "Requests left in the current window."
+              "schema":
+                "type": "integer"
+            "RateLimit-Reset":
+              "description": "Seconds until the window resets."
+              "schema":
+                "type": "integer"
+            "Retry-After":
+              "description": "Seconds to wait before retrying. Always present on a 429."
+              "schema":
+                "type": "integer"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ApiError"
+    "servers":
+      - "url": "https://api.agentcost.tech"
+        "description": "AgentCost API (origin). Sleeps when idle; a cold request can take ~60s."
   "/v1/analytics/by/{dimension}":
     "get":
       "tags":
@@ -2826,6 +3062,16 @@
             "minimum": 1
             "default": 50
             "title": "Limit"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "project_id"
           "in": "query"
           "required": false
@@ -3180,6 +3426,16 @@
             "default": "day"
             "title": "Granularity"
           "description": "Granularity: hour, day"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "project_id"
           "in": "query"
           "required": false
@@ -3536,6 +3792,16 @@
             "type": "string"
             "default": "7d"
             "title": "Range"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "limit"
           "in": "query"
           "required": false
@@ -3651,6 +3917,16 @@
             "type": "string"
             "default": "7d"
             "title": "Range"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "workflow"
           "in": "query"
           "required": false
@@ -3776,6 +4052,16 @@
             "type": "string"
             "default": "7d"
             "title": "Range"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "limit"
           "in": "query"
           "required": false
@@ -3891,6 +4177,16 @@
             "type": "string"
             "default": "7d"
             "title": "Range"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "limit"
           "in": "query"
           "required": false
@@ -4006,6 +4302,16 @@
             "type": "string"
             "default": "7d"
             "title": "Range"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "limit"
           "in": "query"
           "required": false
@@ -4121,6 +4427,16 @@
             "type": "string"
             "default": "7d"
             "title": "Range"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "workflow"
           "in": "query"
           "required": false
@@ -4246,6 +4562,16 @@
             "type": "string"
             "default": "7d"
             "title": "Range"
+        - "name": "agent_name"
+          "in": "query"
+          "required": false
+          "schema":
+            "anyOf":
+              - "type": "string"
+              - "type": "null"
+            "description": "Restrict to one agent"
+            "title": "Agent Name"
+          "description": "Restrict to one agent"
         - "name": "workflow"
           "in": "query"
           "required": false
@@ -14203,6 +14529,203 @@
         - "agent_name"
         - "status"
       "title": "AgentCompliance"
+    "AgentDailyPoint":
+      "properties":
+        "day":
+          "type": "string"
+          "title": "Day"
+        "cost":
+          "type": "number"
+          "title": "Cost"
+        "calls":
+          "type": "integer"
+          "title": "Calls"
+        "failed_cost":
+          "type": "number"
+          "title": "Failed Cost"
+      "type": "object"
+      "required":
+        - "day"
+        - "cost"
+        - "calls"
+        - "failed_cost"
+      "title": "AgentDailyPoint"
+    "AgentDetail":
+      "properties":
+        "summary":
+          "$ref": "#/components/schemas/AgentSummary"
+        "latency":
+          "$ref": "#/components/schemas/LatencyPercentiles"
+        "steps":
+          "items":
+            "$ref": "#/components/schemas/AgentStepCost"
+          "type": "array"
+          "title": "Steps"
+        "by_model":
+          "items":
+            "$ref": "#/components/schemas/DimensionStat"
+          "type": "array"
+          "title": "By Model"
+        "by_tool":
+          "items":
+            "$ref": "#/components/schemas/DimensionStat"
+          "type": "array"
+          "title": "By Tool"
+        "by_user":
+          "items":
+            "$ref": "#/components/schemas/DimensionStat"
+          "type": "array"
+          "title": "By User"
+        "by_session":
+          "items":
+            "$ref": "#/components/schemas/DimensionStat"
+          "type": "array"
+          "title": "By Session"
+        "by_workflow":
+          "items":
+            "$ref": "#/components/schemas/DimensionStat"
+          "type": "array"
+          "title": "By Workflow"
+        "distribution":
+          "anyOf":
+            - "additionalProperties": true
+              "type": "object"
+            - "type": "null"
+          "title": "Distribution"
+        "tail_cost":
+          "type": "number"
+          "title": "Tail Cost"
+        "repeated_work":
+          "items":
+            "additionalProperties": true
+            "type": "object"
+          "type": "array"
+          "title": "Repeated Work"
+        "traces":
+          "items":
+            "additionalProperties": true
+            "type": "object"
+          "type": "array"
+          "title": "Traces"
+        "outcomes":
+          "anyOf":
+            - "$ref": "#/components/schemas/AgentOutcomes"
+            - "type": "null"
+        "compliance":
+          "anyOf":
+            - "$ref": "#/components/schemas/AgentCompliance"
+            - "type": "null"
+      "type": "object"
+      "required":
+        - "summary"
+        - "latency"
+        - "steps"
+        - "by_model"
+        - "by_tool"
+        - "by_user"
+        - "by_session"
+        - "by_workflow"
+        - "distribution"
+        - "tail_cost"
+        - "repeated_work"
+        - "traces"
+        - "outcomes"
+        - "compliance"
+      "title": "AgentDetail"
+    "AgentModelShare":
+      "properties":
+        "model":
+          "type": "string"
+          "title": "Model"
+        "calls":
+          "type": "integer"
+          "title": "Calls"
+        "cost":
+          "type": "number"
+          "title": "Cost"
+        "cached_share":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Cached Share"
+      "type": "object"
+      "required":
+        - "model"
+        - "calls"
+        - "cost"
+      "title": "AgentModelShare"
+    "AgentOutcomes":
+      "properties":
+        "runs":
+          "type": "integer"
+          "title": "Runs"
+        "succeeded":
+          "type": "integer"
+          "title": "Succeeded"
+        "failed":
+          "type": "integer"
+          "title": "Failed"
+        "unknown":
+          "type": "integer"
+          "title": "Unknown"
+        "cost_on_success":
+          "type": "number"
+          "title": "Cost On Success"
+        "cost_on_failure":
+          "type": "number"
+          "title": "Cost On Failure"
+        "cost_per_success":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Cost Per Success"
+        "success_rate":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Success Rate"
+      "type": "object"
+      "required":
+        - "runs"
+        - "succeeded"
+        - "failed"
+        - "unknown"
+        - "cost_on_success"
+        - "cost_on_failure"
+        - "cost_per_success"
+        - "success_rate"
+      "title": "AgentOutcomes"
+    "AgentSignal":
+      "properties":
+        "kind":
+          "type": "string"
+          "enum":
+            - "breach"
+            - "repeated_work"
+            - "failed_spend"
+            - "untraced"
+            - "classification"
+            - "none"
+          "title": "Kind"
+        "title":
+          "type": "string"
+          "title": "Title"
+        "detail":
+          "anyOf":
+            - "type": "string"
+            - "type": "null"
+          "title": "Detail"
+        "amount":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Amount"
+      "type": "object"
+      "required":
+        - "kind"
+        - "title"
+      "title": "AgentSignal"
+      "description": "The one most expensive thing we can prove about an agent in the window."
     "AgentStats":
       "properties":
         "agent_name":
@@ -14233,6 +14756,179 @@
         - "success_rate"
       "title": "AgentStats"
       "description": "Stats for a single agent"
+    "AgentStepCost":
+      "properties":
+        "step_name":
+          "type": "string"
+          "title": "Step Name"
+        "tool":
+          "type": "boolean"
+          "title": "Tool"
+        "models":
+          "items":
+            "type": "string"
+          "type": "array"
+          "title": "Models"
+        "runs":
+          "type": "integer"
+          "title": "Runs"
+        "calls":
+          "type": "integer"
+          "title": "Calls"
+        "calls_per_run":
+          "type": "number"
+          "title": "Calls Per Run"
+        "max_calls_per_run":
+          "type": "integer"
+          "title": "Max Calls Per Run"
+        "total_cost":
+          "type": "number"
+          "title": "Total Cost"
+        "median_cost_per_run":
+          "type": "number"
+          "title": "Median Cost Per Run"
+        "p95_cost_per_run":
+          "type": "number"
+          "title": "P95 Cost Per Run"
+        "success_rate":
+          "type": "number"
+          "title": "Success Rate"
+      "type": "object"
+      "required":
+        - "step_name"
+        - "tool"
+        - "models"
+        - "runs"
+        - "calls"
+        - "calls_per_run"
+        - "max_calls_per_run"
+        - "total_cost"
+        - "median_cost_per_run"
+        - "p95_cost_per_run"
+        - "success_rate"
+      "title": "AgentStepCost"
+    "AgentSummary":
+      "properties":
+        "agent_name":
+          "type": "string"
+          "title": "Agent Name"
+        "total_calls":
+          "type": "integer"
+          "title": "Total Calls"
+        "total_tokens":
+          "type": "integer"
+          "title": "Total Tokens"
+        "total_cost":
+          "type": "number"
+          "title": "Total Cost"
+        "avg_latency_ms":
+          "type": "number"
+          "title": "Avg Latency Ms"
+        "success_rate":
+          "type": "number"
+          "title": "Success Rate"
+        "share_percent":
+          "type": "number"
+          "title": "Share Percent"
+        "previous_cost":
+          "type": "number"
+          "title": "Previous Cost"
+        "cost_change_percent":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Cost Change Percent"
+        "models":
+          "items":
+            "$ref": "#/components/schemas/AgentModelShare"
+          "type": "array"
+          "title": "Models"
+        "runs":
+          "type": "integer"
+          "title": "Runs"
+        "cost_per_run":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Cost Per Run"
+        "calls_per_run":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Calls Per Run"
+        "cached_share":
+          "anyOf":
+            - "type": "number"
+            - "type": "null"
+          "title": "Cached Share"
+        "cache_savings":
+          "type": "number"
+          "title": "Cache Savings"
+        "failed_calls":
+          "type": "integer"
+          "title": "Failed Calls"
+        "failed_cost":
+          "type": "number"
+          "title": "Failed Cost"
+        "repeated_cost":
+          "type": "number"
+          "title": "Repeated Cost"
+        "repeated_runs":
+          "type": "integer"
+          "title": "Repeated Runs"
+        "developers":
+          "type": "integer"
+          "title": "Developers"
+        "sessions":
+          "type": "integer"
+          "title": "Sessions"
+        "first_seen":
+          "anyOf":
+            - "type": "string"
+              "format": "date-time"
+            - "type": "null"
+          "title": "First Seen"
+        "last_seen":
+          "anyOf":
+            - "type": "string"
+              "format": "date-time"
+            - "type": "null"
+          "title": "Last Seen"
+        "daily":
+          "items":
+            "$ref": "#/components/schemas/AgentDailyPoint"
+          "type": "array"
+          "title": "Daily"
+        "signal":
+          "$ref": "#/components/schemas/AgentSignal"
+      "type": "object"
+      "required":
+        - "agent_name"
+        - "total_calls"
+        - "total_tokens"
+        - "total_cost"
+        - "avg_latency_ms"
+        - "success_rate"
+        - "share_percent"
+        - "previous_cost"
+        - "cost_change_percent"
+        - "models"
+        - "runs"
+        - "cost_per_run"
+        - "calls_per_run"
+        - "cached_share"
+        - "cache_savings"
+        - "failed_calls"
+        - "failed_cost"
+        - "repeated_cost"
+        - "repeated_runs"
+        - "developers"
+        - "sessions"
+        - "first_seen"
+        - "last_seen"
+        - "daily"
+        - "signal"
+      "title": "AgentSummary"
     "AnalyticsOverview":
       "properties":
         "total_cost":

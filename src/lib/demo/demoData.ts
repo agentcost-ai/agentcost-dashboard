@@ -73,7 +73,7 @@ interface AgentProfile {
   errorRate: number;
 }
 
-const AGENTS: AgentProfile[] = [
+export const AGENTS: AgentProfile[] = [
   { name: "support-triage-agent", model: "gpt-4o", callsPerDay: 3200, inTokens: 1800, outTokens: 420, avgLatencyMs: 950, errorRate: 0.012 },
   { name: "faq-bot", model: "gpt-4o", callsPerDay: 4100, inTokens: 900, outTokens: 220, avgLatencyMs: 720, errorRate: 0.034 },
   { name: "research-agent", model: "claude-sonnet-4-5", callsPerDay: 420, inTokens: 9000, outTokens: 1800, avgLatencyMs: 4200, errorRate: 0.018 },
@@ -83,12 +83,12 @@ const AGENTS: AgentProfile[] = [
   { name: "sentiment-classifier", model: "gpt-4o", callsPerDay: 5500, inTokens: 280, outTokens: 12, avgLatencyMs: 340, errorRate: 0.004 },
 ];
 
-function perCallCost(p: AgentProfile): number {
+export function perCallCost(p: AgentProfile): number {
   const [inP, outP] = PRICING[p.model];
   return (p.inTokens * inP + p.outTokens * outP) / 1_000_000;
 }
 
-function rangeToDays(range: string): number {
+export function rangeToDays(range: string): number {
   const map: Record<string, number> = { "1h": 1, "24h": 1, "7d": 7, "30d": 30, "90d": 90 };
   return map[range] ?? 7;
 }
@@ -98,7 +98,7 @@ function rangeToDays(range: string): number {
  * seeded wobble so the chart looks like real traffic.
  * `daysAgo` = 0 is today.
  */
-function dayMultiplier(daysAgo: number): number {
+export function dayMultiplier(daysAgo: number): number {
   const date = new Date();
   date.setDate(date.getDate() - daysAgo);
   const dow = date.getDay();
@@ -699,7 +699,7 @@ export function demoNotifications(): NotificationListResponse {
   };
 }
 
-function round2(n: number): number {
+export function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
@@ -1014,7 +1014,7 @@ interface WorkflowProfile {
   }>;
 }
 
-const WORKFLOWS: WorkflowProfile[] = [
+export const WORKFLOWS: WorkflowProfile[] = [
   {
     name: "support-triage",
     runsPerDay: 1600,
@@ -1035,12 +1035,12 @@ const WORKFLOWS: WorkflowProfile[] = [
   },
 ];
 
-function stepCost(step: WorkflowProfile["steps"][number]): number {
+export function stepCost(step: WorkflowProfile["steps"][number]): number {
   const [inP, outP] = PRICING[step.model];
   return (step.inTokens * inP + step.outTokens * outP) / 1_000_000;
 }
 
-function runMultiplier(range: string): number {
+export function runMultiplier(range: string): number {
   const days = rangeToDays(range);
   let mult = 0;
   for (let d = 0; d < days; d++) mult += dayMultiplier(d);

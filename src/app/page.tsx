@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { TrustedBySection } from "@/components/landing/TrustedBySection";
+import { EvidenceLedgerSection } from "@/components/landing/EvidenceLedgerSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { ArchitectureSection } from "@/components/landing/ArchitectureSection";
 import { IntegrationSection } from "@/components/landing/IntegrationSection";
@@ -45,6 +46,7 @@ export default function LandingPage() {
       <Navbar />
       <HeroSection />
       <TrustedBySection />
+      <EvidenceLedgerSection />
       <FeaturesSection />
       <ArchitectureSection />
       <IntegrationSection />

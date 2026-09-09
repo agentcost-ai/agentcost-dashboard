@@ -35,6 +35,7 @@ import {
   demoGuardrails,
   demoGuardrailCompliance,
 } from "./demoData";
+import { demoAgentSummaries, demoAgentDetail } from "./demoAgents";
 
 export const DEMO_SIGNUP_PROMPT_EVENT = "demo-signup-prompt";
 
@@ -134,6 +135,21 @@ export async function resolveDemoRequest<T>(
 
   if (path === "/v1/analytics/overview") {
     return demoOverview(param(endpoint, "range") ?? "7d") as T;
+  }
+  if (path === "/v1/analytics/agents/summary") {
+    return demoAgentSummaries(
+      param(endpoint, "range") ?? "7d",
+      Number(param(endpoint, "limit") ?? 50),
+    ) as T;
+  }
+  const agentDetail = path.match(/^\/v1\/analytics\/agents\/([^/]+)$/);
+  if (agentDetail) {
+    const detail = demoAgentDetail(
+      decodeURIComponent(agentDetail[1]),
+      param(endpoint, "range") ?? "7d",
+    );
+    if (!detail) throw new Error("No events for this agent in the window");
+    return detail as T;
   }
   if (path === "/v1/analytics/agents") {
     return demoAgentStats(

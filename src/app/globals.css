@@ -28,6 +28,7 @@
      to the inherited body font. Inline substitutes the var() into the utility
      itself, so it resolves against the element instead. */
   --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-newsreader), "Iowan Old Style", Georgia, "Times New Roman", serif;
 }
 
 /* Tokens that used to live in tailwind.config.ts.
@@ -142,61 +143,6 @@ select:focus-visible {
   animation: marquee 40s linear infinite;
 }
 
-/* ─── Premium Aurora Background ─── */
-@keyframes aurora-1 {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  25% {
-    transform: translate(30px, -40px) scale(1.05);
-  }
-  50% {
-    transform: translate(-20px, 20px) scale(0.95);
-  }
-  75% {
-    transform: translate(40px, 10px) scale(1.02);
-  }
-}
-
-@keyframes aurora-2 {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  25% {
-    transform: translate(-40px, 20px) scale(0.98);
-  }
-  50% {
-    transform: translate(20px, -30px) scale(1.04);
-  }
-  75% {
-    transform: translate(-10px, 40px) scale(1);
-  }
-}
-
-@keyframes aurora-3 {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, 30px) scale(1.03);
-  }
-  66% {
-    transform: translate(-30px, -20px) scale(0.97);
-  }
-}
-
-.animate-aurora-1 {
-  animation: aurora-1 20s ease-in-out infinite;
-}
-.animate-aurora-2 {
-  animation: aurora-2 25s ease-in-out infinite;
-}
-.animate-aurora-3 {
-  animation: aurora-3 22s ease-in-out infinite;
-}
 
 /* ─── Dashboard Chart Draw Animation ─── */
 .animate-chart-draw {
@@ -430,16 +376,3 @@ html {
 .gradient-blur > div:nth-of-type(6) { backdrop-filter: blur(32px); mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%); }
 .gradient-blur > div:nth-of-type(7) { backdrop-filter: blur(64px); mask-image: linear-gradient(to bottom, transparent 75%, #000 87.5%, #000 100%); }
 .gradient-blur > div:nth-of-type(8) { backdrop-filter: blur(96px); mask-image: linear-gradient(to bottom, transparent 87.5%, #000 100%); }
-
-/* Announcement card tiles: each lights twice per cycle, offset per tile. */
-@keyframes tiles {
-  0%, 40%, 80% { opacity: 0; }
-  20%, 60% { opacity: 1; }
-}
-.announcement-tile {
-  opacity: 0;
-  animation: tiles 14s ease infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .announcement-tile { animation: none; }
-}

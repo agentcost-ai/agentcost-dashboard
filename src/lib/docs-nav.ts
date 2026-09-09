@@ -98,6 +98,8 @@ export const DOCS_PAGES: DocsPage[] = [
       { id: "analytics", label: "Analytics" },
       ep("GET", "/v1/analytics/overview", "Overview"),
       ep("GET", "/v1/analytics/agents", "By agent"),
+      ep("GET", "/v1/analytics/agents/summary", "Agent summaries"),
+      ep("GET", "/v1/analytics/agents/{agent_name}", "Agent detail"),
       ep("GET", "/v1/analytics/models", "By model"),
       ep("GET", "/v1/analytics/timeseries", "Time series"),
       ep("GET", "/v1/analytics/full", "Full analytics"),

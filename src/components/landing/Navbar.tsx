@@ -7,15 +7,13 @@ import { Grid2x2Plus, Menu, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 
 const navLinks = [
-  // Root-anchored so section links work from every page, not just the
-  // landing page (a bare "#integration" resolves against the current path).
-  { label: "About", href: "/about" },
+  // Root-anchored so links work from every page. About, Integration and MCP
+  // live in the footer; the top bar stays at six items.
   { label: "Live Demo", href: "/demo?src=navbar" },
-  { label: "Integration", href: "/#integration" },
+  { label: "Docs", href: "/docs" },
   { label: "Pricing", href: "/pricing" },
   { label: "Blog", href: "/blog" },
   { label: "Changelog", href: "/changelog" },
-  { label: "Docs", href: "/docs" },
   { label: "MCP", href: "/docs/mcp" },
 ];
 
@@ -44,10 +42,7 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative">
-              <Grid2x2Plus className="size-6 text-sky-400 transition-transform duration-500 group-hover:rotate-90" />
-              <div className="absolute inset-0 blur-xl bg-sky-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            </div>
+            <Grid2x2Plus className="size-6 text-sky-400" />
             <span className="text-lg font-semibold tracking-tight text-white">
               AgentCost
             </span>

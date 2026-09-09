@@ -80,18 +80,22 @@ export default function DashboardLayout({
         <NotificationBell />
       </header>
 
-      <main
-        className={`min-h-screen p-4 sm:p-6 lg:p-8 lg:ml-(--sidebar-width,16rem) transition-[margin-left] duration-200 ease-out ${
-          // The floating demo banner (fixed, ~100px tall) must never cover
-          // page-bottom controls like pagination — reserve space for it.
-          isDemo ? "pb-36 sm:pb-36 lg:pb-32" : ""
-        }`}
-      >
-        <div className="fixed top-4 right-6 z-30 hidden lg:block print:hidden">
-          <NotificationBell />
+      <main className="min-h-screen transition-[margin-left] duration-200 ease-out lg:ml-(--sidebar-width,15rem) lg:p-2 lg:pl-0 print:m-0 print:p-0">
+        {/* The content panel is the raised surface; the sidebar sits on the
+            page ground behind it (the Linear / Attio structure). */}
+        <div
+          className={`min-h-full p-4 sm:p-6 lg:min-h-[calc(100dvh-1rem)] lg:rounded-xl lg:border lg:border-white/8 lg:bg-[#101013] lg:p-8 print:rounded-none print:border-0 print:bg-transparent print:p-0 ${
+            // The floating demo banner (fixed, ~100px tall) must never cover
+            // page-bottom controls like pagination — reserve space for it.
+            isDemo ? "pb-36 sm:pb-36 lg:pb-32" : ""
+          }`}
+        >
+          <div className="fixed right-8 top-5 z-30 hidden lg:block print:hidden">
+            <NotificationBell />
+          </div>
+          <VerifyEmailBanner />
+          {children}
         </div>
-        <VerifyEmailBanner />
-        {children}
       </main>
       <DemoExperience />
     </ActiveProjectProvider>

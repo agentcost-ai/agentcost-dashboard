@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Check,
-  ChevronsUpDown,
+  ChevronDown,
   Crown,
   FolderOpen,
   Plus,
@@ -41,10 +41,14 @@ export function ProjectSwitcher({ collapsed = false }: { collapsed?: boolean }) 
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  const initial = (activeProject?.name?.trim()[0] ?? "P").toUpperCase();
+
   if (collapsed) {
     return (
-      <div className="flex h-10 items-center justify-center">
-        <FolderOpen size={18} className="text-neutral-500" />
+      <div className="flex h-9 items-center justify-center" title={activeProject?.name}>
+        <span className="grid size-6 place-items-center rounded-md bg-white/10 text-[11px] font-semibold text-neutral-200">
+          {initial}
+        </span>
       </div>
     );
   }
@@ -78,26 +82,23 @@ export function ProjectSwitcher({ collapsed = false }: { collapsed?: boolean }) 
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          "w-full flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900/40 px-2.5 py-2 text-left transition-colors",
-          "hover:bg-neutral-800 focus:outline-none focus:border-primary-500",
+          "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
+          "hover:bg-white/4 focus:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
         )}
       >
-        <FolderOpen size={16} className="text-primary-400 shrink-0" />
-        <span className="flex-1 min-w-0">
-          <span className="block text-[10px] uppercase tracking-wider text-neutral-500">
-            Project
-          </span>
-          <span className="block truncate text-sm font-medium text-white">
-            {activeProject?.name ?? "Select a project"}
-          </span>
+        <span className="grid size-[18px] shrink-0 place-items-center rounded-[5px] bg-white/12 text-[10px] font-bold text-white">
+          {initial}
         </span>
-        <ChevronsUpDown size={14} className="text-neutral-500 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-white">
+          {activeProject?.name ?? "Select a project"}
+        </span>
+        <ChevronDown size={14} className="shrink-0 text-neutral-500" />
       </button>
 
       {open && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 z-40 mt-2 max-h-[60vh] overflow-y-auto rounded-xl border border-neutral-800 bg-neutral-900 shadow-xl"
+          className="absolute left-0 right-0 z-40 mt-1 max-h-[60vh] overflow-y-auto rounded-lg border border-white/8 bg-[#131316] shadow-2xl shadow-black/60"
         >
           <div className="px-3 py-2 border-b border-neutral-800">
             <p className="text-[10px] uppercase tracking-wider text-neutral-500">

@@ -66,6 +66,19 @@ export const blogPosts: BlogPost[] = [
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "v1.13.0",
+    date: "2026-09-08",
+    summary:
+      "A page for every agent, an Agents list that says what changed and why, a rebuilt sidebar, and a new landing hero",
+    changes: [
+      "Every agent now has its own page: spend by day with the day that stands out named, a waste ledger (identical calls repeated inside one run, failed calls that still billed, the most expensive 5% of runs), cost per step with median and p95 per run, spend by developer, session and model with cached-input share, the guardrail policy against what actually ran, the most expensive runs, and the recommendations that apply to that agent.",
+      "The Agents list carries change and cause: spend against the previous window, a seven-day trend, cost per run, cache hit share, dollars spent on failed calls, guardrail state and one computed signal per agent — a retry loop priced in dollars, failed calls that still bill, a classifier running on a generation model, an untraced agent, or a model swap worth making. Rows open the agent page.",
+      "New API: GET /v1/analytics/agents/summary and GET /v1/analytics/agents/{agent_name}, and an agent_name filter on timeseries, by/{dimension}, the workflow endpoints and traces.",
+      "Sidebar rebuilt: the workspace first, the five places you read, a collapsible Controls section, the account at the bottom, and the content as a raised panel over the page ground.",
+      "Landing page hero rebuilt: a serif headline, one button and one link, and the real Agents page as the only visual.",
+    ],
+  },
+  {
     version: "v1.12.0",
     date: "2026-09-05",
     summary:

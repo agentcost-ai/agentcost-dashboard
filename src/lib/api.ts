@@ -298,6 +298,117 @@ export interface LatencyPercentiles {
   approximate: boolean;
 }
 
+// ── Agent insights (Agents list + agent page) ──────────────────────────
+
+export interface AgentModelShare {
+  model: string;
+  calls: number;
+  cost: number;
+  cached_share: number | null;
+}
+
+export interface AgentDailyPoint {
+  day: string;
+  cost: number;
+  calls: number;
+  failed_cost: number;
+}
+
+export type AgentSignalKind =
+  | "breach"
+  | "repeated_work"
+  | "failed_spend"
+  | "untraced"
+  | "classification"
+  | "none";
+
+/** The one most expensive thing the backend can prove about an agent in the window. */
+export interface AgentSignal {
+  kind: AgentSignalKind;
+  title: string;
+  detail: string | null;
+  amount: number | null;
+}
+
+export interface AgentSummary {
+  agent_name: string;
+  total_calls: number;
+  total_tokens: number;
+  total_cost: number;
+  avg_latency_ms: number;
+  success_rate: number;
+  share_percent: number;
+  previous_cost: number;
+  cost_change_percent: number | null;
+  models: AgentModelShare[];
+  runs: number;
+  cost_per_run: number | null;
+  calls_per_run: number | null;
+  cached_share: number | null;
+  cache_savings: number;
+  failed_calls: number;
+  failed_cost: number;
+  repeated_cost: number;
+  repeated_runs: number;
+  developers: number;
+  sessions: number;
+  first_seen: string | null;
+  last_seen: string | null;
+  daily: AgentDailyPoint[];
+  signal: AgentSignal;
+}
+
+export interface AgentStepCost {
+  step_name: string;
+  tool: boolean;
+  models: string[];
+  runs: number;
+  calls: number;
+  calls_per_run: number;
+  max_calls_per_run: number;
+  total_cost: number;
+  median_cost_per_run: number;
+  p95_cost_per_run: number;
+  success_rate: number;
+}
+
+export interface AgentOutcomes {
+  runs: number;
+  succeeded: number;
+  failed: number;
+  unknown: number;
+  cost_on_success: number;
+  cost_on_failure: number;
+  cost_per_success: number | null;
+  success_rate: number | null;
+}
+
+export interface DimensionStat {
+  key: string;
+  total_calls: number;
+  total_tokens: number;
+  total_cost: number;
+  avg_latency_ms: number;
+  success_rate: number;
+}
+
+export interface AgentDetail {
+  summary: AgentSummary;
+  latency: LatencyPercentiles;
+  steps: AgentStepCost[];
+  by_model: DimensionStat[];
+  by_tool: DimensionStat[];
+  by_user: DimensionStat[];
+  by_session: DimensionStat[];
+  by_workflow: DimensionStat[];
+  distribution: RunCostDistribution | null;
+  tail_cost: number;
+  repeated_work: RepeatedWorkFinding[];
+  traces: TraceSummary[];
+  outcomes: AgentOutcomes | null;
+  compliance: AgentCompliance | null;
+}
+
 export interface ModelEfficiency {
   model: string;
   cost_per_1k: number;
@@ -1083,6 +1194,18 @@ class ApiClient {
     limit: number = 10,
   ): Promise<AgentStats[]> {
     return this.request(`/v1/analytics/agents?range=${range}&limit=${limit}`);
+  }
+
+  // ── Agent insights ───────────────────────────────────────────────────
+  async getAgentSummaries(range: string = "7d", limit: number = 50): Promise<AgentSummary[]> {
+    const rows = await this.request<AgentSummary[]>(
+      `/v1/analytics/agents/summary?range=${range}&limit=${limit}`,
+    );
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  async getAgentDetail(agentName: string, range: string = "7d"): Promise<AgentDetail> {
+    return this.request(`/v1/analytics/agents/${encodeURIComponent(agentName)}?range=${range}`);
   }
 
   // ── Trace analytics ──────────────────────────────────────────────────

@@ -883,6 +883,119 @@ curl -H "Authorization: Bearer your_jwt_token" \\
 
           <Endpoint
             method="GET"
+            path="/v1/analytics/agents/summary"
+            description="Per agent: cost, change, model mix, waste and one computed signal"
+          >
+            <p>
+              What the Agents page reads. Each row carries the agent&apos;s cost
+              and its change against the previous window of the same length,
+              share of project spend, the models it used with cached-input
+              share, traced runs with cost and calls per run, cache savings
+              priced per model, failed calls and what they still billed,
+              identical calls repeated inside one run priced as waste, distinct
+              developers and sessions, a daily series, and a{" "}
+              <code>signal</code>: the most expensive thing the data proves.
+              Signal kinds, in priority order: <code>breach</code>,{" "}
+              <code>repeated_work</code> (above 5% of spend),{" "}
+              <code>failed_spend</code> (above 2%), <code>classification</code>{" "}
+              (100+ calls, output never above 16 tokens), <code>untraced</code>,{" "}
+              <code>none</code>.
+            </p>
+            <p>
+              Query: <code>range</code> (1h, 24h, 7d, 30d, 90d) and{" "}
+              <code>limit</code> (1–200, default 50).
+            </p>
+            <CodeBlock
+              language="json"
+              code={`[
+  {
+    "agent_name": "support-triage-agent",
+    "total_calls": 19012,
+    "total_tokens": 42180000,
+    "total_cost": 165.50,
+    "avg_latency_ms": 950,
+    "success_rate": 98.8,
+    "share_percent": 24.8,
+    "previous_cost": 150.45,
+    "cost_change_percent": 10.0,
+    "models": [
+      { "model": "gpt-4o", "calls": 17301, "cost": 158.88, "cached_share": 18.0 },
+      { "model": "gpt-4o-mini", "calls": 1711, "cost": 6.62, "cached_share": null }
+    ],
+    "runs": 4321,
+    "cost_per_run": 0.0383,
+    "calls_per_run": 4.4,
+    "cached_share": 18.0,
+    "cache_savings": 13.41,
+    "failed_calls": 228,
+    "failed_cost": 1.99,
+    "repeated_cost": 17.87,
+    "repeated_runs": 277,
+    "developers": 3,
+    "sessions": 3630,
+    "first_seen": "2026-07-14T09:12:00Z",
+    "last_seen": "2026-09-08T14:55:10Z",
+    "daily": [
+      { "day": "2026-09-02", "cost": 24.9, "calls": 2870, "failed_cost": 0.3 }
+    ],
+    "signal": {
+      "kind": "repeated_work",
+      "title": "Repeated work",
+      "detail": "277 runs re-ran an identical call",
+      "amount": 17.87
+    }
+  }
+]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/analytics/agents/{agent_name}"
+            description="Everything the agent page shows for one agent"
+          >
+            <p>
+              The summary row above plus exact latency percentiles, per-step
+              median and p95 cost per run, spend by model, tool, developer,
+              session and workflow (top 8 each), the run-cost distribution and
+              the tail&apos;s spend, repeated-work findings, the most expensive
+              runs, declared outcomes folded into one figure, and the
+              agent&apos;s guardrail compliance record. Returns 404 when the
+              agent made no calls in the window.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "summary": { "agent_name": "support-triage-agent", "...": "as above" },
+  "latency": { "p50": 722, "p95": 2375, "p99": 4085, "avg": 950, "sample_size": 19012 },
+  "steps": [
+    {
+      "step_name": "search_docs",
+      "tool": true,
+      "models": ["gpt-4o"],
+      "runs": 4321,
+      "calls": 12032,
+      "calls_per_run": 2.78,
+      "max_calls_per_run": 9,
+      "total_cost": 108.90,
+      "median_cost_per_run": 0.0209,
+      "p95_cost_per_run": 0.0610,
+      "success_rate": 98.8
+    }
+  ],
+  "by_model": [{ "key": "gpt-4o", "total_calls": 17301, "total_tokens": 38400000, "total_cost": 158.88, "avg_latency_ms": 950, "success_rate": 98.8 }],
+  "by_tool": [], "by_user": [], "by_session": [], "by_workflow": [],
+  "distribution": { "runs": 4321, "p50": 0.031, "p95": 0.079, "tail_share_percent": 15.0, "...": "see /workflows/distribution" },
+  "tail_cost": 24.49,
+  "repeated_work": [], "traces": [],
+  "outcomes": { "runs": 4321, "succeeded": 4238, "failed": 83, "unknown": 0, "cost_on_success": 162.32, "cost_on_failure": 3.18, "cost_per_success": 0.039, "success_rate": 98.08 },
+  "compliance": { "agent_name": "support-triage-agent", "status": "compliant", "...": "see /guardrails/compliance" }
+}`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
             path="/v1/analytics/models"
             description="Get per-model cost breakdown"
           >
@@ -1107,6 +1220,13 @@ curl -H "Authorization: Bearer your_jwt_token" \\
             path="/v1/analytics/workflows/repeated-work"
             description="Identical calls repeated within a single run, and what they cost"
           >
+            <p>
+              Every endpoint in this group, plus <code>/v1/analytics/timeseries</code>,{" "}
+              <code>/v1/analytics/by/{"{dimension}"}</code> and{" "}
+              <code>/v1/analytics/traces</code>, accepts an optional{" "}
+              <code>agent_name</code> query parameter that restricts the result
+              to one agent.
+            </p>
             <p>
               Distinct from the cross-run duplication the caching analyzer
               reports: that argues for a cache, this usually means the control
