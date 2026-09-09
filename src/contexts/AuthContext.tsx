@@ -107,6 +107,10 @@ interface AuthContextType {
   githubLogin: (code: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<RegisterResult>;
   logout: () => Promise<void>;
+  /** Leave the demo. Restores the real session parked underneath it, if any. */
+  exitDemo: () => void;
+  /** True while the demo is showing over a signed-in account. */
+  hasParkedSession: boolean;
   refreshUser: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
 }
@@ -123,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [hasParkedSession, setHasParkedSession] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -130,9 +135,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = () => {
       try {
-        // Demo mode: synthetic user, no tokens. Real auth wins if present.
-        if (isDemoMode() && !localStorage.getItem("access_token")) {
+        // Demo mode: the synthetic user, no token in state. A real session
+        // stays parked in localStorage and comes back on exitDemo(); loading
+        // it here while every request is answered from the demo dataset
+        // would show sample data under a real name with no way out.
+        if (isDemoMode()) {
           setUser(DEMO_USER);
+          setHasParkedSession(!!localStorage.getItem("access_token"));
           return;
         }
 
@@ -437,6 +446,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [API_URL],
   );
 
+  const exitDemo = useCallback(() => {
+    exitDemoMode();
+    const parked = !!localStorage.getItem("access_token");
+    // Full navigation: every mounted page holds demo data, and AuthContext
+    // re-initialises from the parked token (or as signed out) on load.
+    window.location.assign(parked ? "/dashboard" : "/");
+  }, []);
+
   const logout = useCallback(async () => {
     // Demo mode: no backend session to revoke — just leave the demo.
     if (!token && isDemoMode()) {
@@ -630,6 +647,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     githubLogin,
     register,
     logout,
+    exitDemo,
+    hasParkedSession,
     refreshUser,
     refreshToken,
   };

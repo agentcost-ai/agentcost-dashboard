@@ -260,6 +260,8 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
 
   const [currency, setCurrency] = useState<BudgetCurrency>("USD");
   const [liveFxRate, setLiveFxRate] = useState<number | null>(null);
+  // "frankfurter.dev" is the live ECB feed; anything else is a fallback or the demo table.
+  const [fxSource, setFxSource] = useState<string | null>(null);
   const [budgetInput, setBudgetInput] = useState<string>("");
   const [mode, setMode] = useState<EnforcementMode>("warn");
   const [thresholds, setThresholds] = useState<number[]>(DEFAULT_THRESHOLDS);
@@ -305,12 +307,18 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
     let cancelled = false;
     async function fetchRate() {
       if (currency === "USD") {
-        if (!cancelled) setLiveFxRate(1.0);
+        if (!cancelled) {
+          setLiveFxRate(1.0);
+          setFxSource("exact");
+        }
         return;
       }
       try {
         const data = await api.getFxRate(currency);
-        if (!cancelled) setLiveFxRate(data.rate);
+        if (!cancelled) {
+          setLiveFxRate(data.rate);
+          setFxSource(data.source ?? null);
+        }
       } catch {
         // Leave previous rate; the saved settings.fx_rate will still render.
       }
@@ -324,6 +332,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
   // Prefer the just-fetched live rate; fall back to whatever the backend
   // returned with the saved settings (or 1.0 if neither is available).
   const displayFxRate = liveFxRate ?? settings?.fx_rate ?? 1.0;
+  const fxIsLive = fxSource === "frankfurter.dev";
 
   const utilization = settings?.utilization_percent ?? null;
   const utilizationBarColor = useMemo(() => {
@@ -451,6 +460,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                             "USD",
                           )}{" "}
                           · 1 USD ≈ {displayFxRate.toFixed(2)} {currency}
+                          {!fxIsLive && " (approximate)"}
                         </p>
                       )}
                     </div>
@@ -493,7 +503,7 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                   </p>
                   {currency !== "USD" && (
                     <p className="mt-1 text-[11px] text-neutral-600">
-                      Live rate: 1 USD ≈ {displayFxRate.toFixed(2)} {currency}
+                      {fxIsLive ? "Live rate" : "Approximate rate"}: 1 USD ≈ {displayFxRate.toFixed(2)} {currency}
                     </p>
                   )}
                 </div>

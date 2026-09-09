@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { api, type AgentStats } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
+import { useActiveProject } from "@/contexts/ActiveProjectContext";
 
 
 type Item = { name: string; href: string; icon: LucideIcon };
@@ -101,6 +102,7 @@ function NavItem({
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { activeProject } = useActiveProject();
   const [collapsed, setCollapsed] = useState(false);
   const isCollapsed = collapsed && !mobileOpen;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -121,7 +123,8 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   }, []);
 
   // Live state for the nav: breaching agents on Guardrails, the top spenders
-  // under Agents. Both from the last 7 days; both optional.
+  // under Agents. Last 7 days, refetched when the project changes, not on
+  // every navigation.
   useEffect(() => {
     if (!api.hasProjectAccess()) return;
     let cancelled = false;
@@ -140,7 +143,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, [activeProject?.id]);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
   const activeAgent = pathname.startsWith("/agents/") ? decodeURIComponent(pathname.slice("/agents/".length)) : null;

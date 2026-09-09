@@ -39,6 +39,9 @@ import { demoAgentSummaries, demoAgentDetail } from "./demoAgents";
 
 export const DEMO_SIGNUP_PROMPT_EVENT = "demo-signup-prompt";
 
+// USD -> X, mirrors _FALLBACK_RATES in the backend currency service.
+const DEMO_FX_RATES: Record<string, number> = { USD: 1, INR: 95 };
+
 /** Human-readable label for the action the visitor tried to perform. */
 function describeAction(endpoint: string, method: string): string {
   if (endpoint.includes("/optimizations")) return "act on optimizations";
@@ -296,10 +299,14 @@ export async function resolveDemoRequest<T>(
   }
 
   if (path === "/v1/currency/rate") {
+    // The live rate endpoint needs a signed-in user, so the demo cannot show
+    // the real one. Same table as the backend's offline fallback, and the UI
+    // labels anything that is not the live provider as approximate.
+    const target = param(endpoint, "target") ?? "USD";
     return {
       base: "USD",
-      target: param(endpoint, "target") ?? "USD",
-      rate: 1,
+      target,
+      rate: DEMO_FX_RATES[target] ?? 1,
       source: "demo",
     } as T;
   }

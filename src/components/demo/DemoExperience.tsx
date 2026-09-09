@@ -33,7 +33,7 @@ import { demoOptimizationSummary } from "@/lib/demo/demoData";
  * Mounted once in the dashboard layout; renders nothing outside demo mode.
  */
 export function DemoExperience() {
-  const { isDemo, logout } = useAuth();
+  const { isDemo, exitDemo, hasParkedSession } = useAuth();
   const pathname = usePathname();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState<string | null>(null);
@@ -115,28 +115,41 @@ export function DemoExperience() {
             <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
             <p className="text-[13px] text-neutral-300 truncate">
               You&apos;re exploring{" "}
-              <span className="text-white font-medium">sample data</span> — this
-              could be your AI spend.
+              <span className="text-white font-medium">sample data</span>
+              {hasParkedSession ? " — your own project is one click away." : " — this could be your AI spend."}
             </p>
           </div>
           <div className="flex w-full sm:w-auto items-center gap-2 shrink-0">
-            <Link
-              href="/auth/register?from=demo"
-              onClick={() => handleSignupClick("demo_banner")}
-              className="group inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-2 min-h-11 sm:min-h-0 text-[13px] font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-colors"
-            >
-              Create free account
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => logout()}
-              title="Exit demo"
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-11 sm:min-h-0 text-[13px] text-neutral-500 hover:text-white rounded-full border border-white/8 hover:border-white/15 transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              Exit
-            </button>
+            {hasParkedSession ? (
+              <button
+                type="button"
+                onClick={exitDemo}
+                className="group inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-2 min-h-11 sm:min-h-0 text-[13px] font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-colors"
+              >
+                Back to my dashboard
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/auth/register?from=demo"
+                  onClick={() => handleSignupClick("demo_banner")}
+                  className="group inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-2 min-h-11 sm:min-h-0 text-[13px] font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-colors"
+                >
+                  Create free account
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={exitDemo}
+                  title="Exit demo"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-11 sm:min-h-0 text-[13px] text-neutral-500 hover:text-white rounded-full border border-white/8 hover:border-white/15 transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Exit
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -250,14 +263,25 @@ export function DemoExperience() {
                   ))}
                 </div>
 
-                <Link
-                  href="/auth/register?from=demo"
-                  onClick={() => handleSignupClick("demo_modal")}
-                  className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-2xl transition-all duration-200 shadow-[0_1px_24px_rgba(255,255,255,0.12)]"
-                >
-                  Start tracking free
-                  <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                </Link>
+                {hasParkedSession ? (
+                  <button
+                    type="button"
+                    onClick={exitDemo}
+                    className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-2xl transition-all duration-200 shadow-[0_1px_24px_rgba(255,255,255,0.12)]"
+                  >
+                    Back to my dashboard
+                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </button>
+                ) : (
+                  <Link
+                    href="/auth/register?from=demo"
+                    onClick={() => handleSignupClick("demo_modal")}
+                    className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-2xl transition-all duration-200 shadow-[0_1px_24px_rgba(255,255,255,0.12)]"
+                  >
+                    Start tracking free
+                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </Link>
+                )}
 
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 mt-4">
                   <span className="text-[11.5px] text-neutral-600">
