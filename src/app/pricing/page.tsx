@@ -16,6 +16,8 @@ import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { CTASection } from "@/components/landing/CTASection";
 import { SavingsEstimator } from "@/components/pricing/SavingsEstimator";
+import { BookingLink } from "@/components/BookingLink";
+import { BOOKING_URL } from "@/lib/site";
 import { comparisons } from "@/lib/comparisons";
 
 export const metadata: Metadata = {
@@ -165,6 +167,21 @@ export default function PricingPage() {
             is open source so you can read every line, run it yourself, and trust
             that the numbers it reports are the only thing it&apos;s after.
           </p>
+
+          {BOOKING_URL ? (
+            <p className="mx-auto mt-4 max-w-2xl text-center text-[13px] leading-relaxed text-neutral-500">
+              Rolling it out across a team, or self-hosting?{" "}
+              <BookingLink
+                location="pricing"
+                className="text-neutral-300 underline underline-offset-4 hover:text-white"
+              >
+                Book thirty minutes
+              </BookingLink>{" "}
+              with Kushagra, who maintains AgentCost. Setup, the self-host
+              install, how the guardrail checks work. No pitch, because there
+              is nothing to sell.
+            </p>
+          ) : null}
 
           {/* Anyone on this page is comparing prices — so show the comparison
               here, with the real numbers, instead of a generic "compare" CTA. */}

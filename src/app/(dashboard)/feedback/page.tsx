@@ -31,6 +31,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import FileUpload from "@/components/ui/FileUpload";
+import { BookingLink } from "@/components/BookingLink";
+import { BOOKING_URL } from "@/lib/site";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   api,
@@ -540,6 +542,19 @@ export default function FeedbackPage() {
               Centralize feature requests, bug reports, and model support
               requests. Upvote what matters most so we can prioritize
               accordingly.
+              {BOOKING_URL ? (
+                <>
+                  {" "}
+                  Easier to explain out loud?{" "}
+                  <BookingLink
+                    location="feedback"
+                    className="text-neutral-200 underline underline-offset-4 hover:text-white"
+                  >
+                    Book thirty minutes
+                  </BookingLink>
+                  .
+                </>
+              ) : null}
             </p>
           </div>
           <div className="flex items-center gap-3">

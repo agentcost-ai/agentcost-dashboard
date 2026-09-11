@@ -21,6 +21,9 @@
  *   openai_import_failed                  — import errored
  *   github_clicked          { location }  — outbound click to the GitHub repo
  *   sdk_install_started     { location }  — pip-install command copied
+ *   booking_clicked         { location }  — outbound click to the Cal.com page
+ *                                           (contact | pricing | feedback)
+ *   email_copied            { location }  — contact address copied to clipboard
  */
 
 declare global {
