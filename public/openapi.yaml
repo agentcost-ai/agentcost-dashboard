@@ -2388,7 +2388,7 @@
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/EventResponse"
-                "title": "Response List Events V1 Events Get"
+                "title": "Response Events List Events"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -2711,7 +2711,7 @@
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/AgentStats"
-                "title": "Response Get Agent Stats V1 Analytics Agents Get"
+                "title": "Response Analytics Get Agent Stats"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -2832,7 +2832,7 @@
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/AgentSummary"
-                "title": "Response Get Agent Summaries V1 Analytics Agents Summary Get"
+                "title": "Response Analytics Get Agent Summaries"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -3091,7 +3091,7 @@
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/DimensionStat"
-                "title": "Response Get Dimension Stats V1 Analytics By  Dimension  Get"
+                "title": "Response Analytics Get Dimension Stats"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -3321,7 +3321,7 @@
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/ModelStats"
-                "title": "Response Get Model Stats V1 Analytics Models Get"
+                "title": "Response Analytics Get Model Stats"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -3455,7 +3455,7 @@
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/TimeSeriesPoint"
-                "title": "Response Get Timeseries V1 Analytics Timeseries Get"
+                "title": "Response Analytics Get Timeseries"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -4677,7 +4677,7 @@
       "tags":
         - "Analytics"
       "summary": "Get Trace Detail"
-      "description": "Every span of one run, ordered as it executed."
+      "description": "Every span of one run, ordered as it executed, and how the run ended.\n\n`outcome` is null when none was reported. A run with an outcome and no\nevents -- refused before any model call -- is returned with zero spans."
       "operationId": "analytics_get_trace_detail"
       "security":
         - "APIKeyHeader": []
@@ -4788,7 +4788,7 @@
                   "additionalProperties": true
                   "type": "object"
                 "type": "array"
-                "title": "Response List My Projects V1 Projects Get"
+                "title": "Response Projects List My Projects"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -5962,7 +5962,7 @@
                 "items":
                   "type": "object"
                   "additionalProperties": true
-                "title": "Response Get Optimizations V1 Optimizations Get"
+                "title": "Response Optimizations Get Optimizations"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -6080,7 +6080,7 @@
                 "items":
                   "type": "object"
                   "additionalProperties": true
-                "title": "Response Generate Recommendations V1 Optimizations Recommendations Generate Post"
+                "title": "Response Optimizations Generate Recommendations"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -8903,7 +8903,7 @@
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/FeedbackEventResponse"
-                "title": "Response Get Feedback Events V1 Feedback Admin  Feedback Id  Events Get"
+                "title": "Response Feedback Get Feedback Events"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -8982,7 +8982,7 @@
         "content":
           "multipart/form-data":
             "schema":
-              "$ref": "#/components/schemas/Body_upload_attachment_v1_attachments_post"
+              "$ref": "#/components/schemas/Body_attachments_upload_attachment"
         "required": true
       "responses":
         "201":
@@ -9569,7 +9569,7 @@
       "tags":
         - "Currency"
       "summary": "Get Fx Rate"
-      "description": "Return the cached USD -> ``target`` exchange rate.\n\nAlways returns 1.0 when ``target=USD``. Falls back to a sensible static\nrate if the upstream FX provider is unreachable."
+      "description": "Return the cached USD -> ``target`` exchange rate.\n\nAlways returns 1.0 when ``target=USD``. Falls back to a sensible static\nrate if the upstream FX provider is unreachable; ``source`` says which\n(``frankfurter.dev``, ``fallback`` or ``exact``)."
       "operationId": "currency_get_fx_rate"
       "security":
         - "HTTPBearer": []
@@ -9968,7 +9968,7 @@
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/GuardrailResponse"
-                "title": "Response List Guardrails V1 Guardrails Get"
+                "title": "Response Guardrails List Guardrails"
           "headers":
             "RateLimit-Policy":
               "description": "The quota policy in force, e.g. \"public\";q=120;w=60 - 120 requests per 60 seconds."
@@ -15024,16 +15024,16 @@
         - "api_key"
       "title": "AnthropicCostImportRequest"
       "description": "Request to import retroactive costs from Anthropic's cost report API"
-    "Body_upload_attachment_v1_attachments_post":
+    "Body_attachments_upload_attachment":
       "properties":
         "file":
           "type": "string"
-          "format": "binary"
+          "contentMediaType": "application/octet-stream"
           "title": "File"
       "type": "object"
       "required":
         - "file"
-      "title": "Body_upload_attachment_v1_attachments_post"
+      "title": "Body_attachments_upload_attachment"
     "BudgetStatus":
       "properties":
         "enabled":
@@ -18134,6 +18134,11 @@
         "type":
           "type": "string"
           "title": "Error Type"
+        "input":
+          "title": "Input"
+        "ctx":
+          "type": "object"
+          "title": "Context"
       "type": "object"
       "required":
         - "loc"
