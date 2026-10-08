@@ -5,6 +5,7 @@ import { TOOLS, TOOLS_BY_NAME, callTool } from "./tools";
 // The tools read the catalogue through lib/catalog; stub that boundary so the
 // tests exercise the tool logic rather than the network.
 vi.mock("@/lib/catalog", () => ({
+  PRICING_API: "https://api.test",
   fetchRawCatalog: vi.fn(),
 }));
 
@@ -56,6 +57,10 @@ describe("tool definitions", () => {
       "get_model_pricing",
       "estimate_cost",
       "list_model_deprecations",
+      "get_spend_overview",
+      "get_spend_breakdown",
+      "get_budget_state",
+      "get_run_cost",
     ]);
   });
 });
@@ -228,5 +233,135 @@ describe("unknown tools", () => {
   it("is reported in-band so the model can recover", async () => {
     const res = await callTool("no_such_tool", {});
     expect(res.isError).toBe(true);
+  });
+});
+
+describe("account tools", () => {
+  const KEY = { apiKey: "sk_test" };
+
+  /** Answer each upstream path from a table; anything unlisted is a 404. */
+  function withApi(routes: Record<string, { status?: number; body?: unknown }>) {
+    const fetchMock = vi.fn(async (url: string | URL, init?: RequestInit) => {
+      void init;
+      const path = String(url).replace("https://api.test", "");
+      const route = routes[path];
+      const status = route ? (route.status ?? 200) : 404;
+      return new Response(JSON.stringify(route?.body ?? {}), { status });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("asks for the API key rather than calling upstream without one", async () => {
+    const fetchMock = withApi({});
+    for (const name of ["get_spend_overview", "get_spend_breakdown", "get_budget_state", "get_run_cost"]) {
+      const res = await callTool(name, { dimension: "agent", trace_id: "t1" });
+      expect(res.isError, name).toBe(true);
+      expect(res.content[0].text, name).toMatch(/Authorization: Bearer/);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards the caller's key and never puts it in the answer", async () => {
+    const fetchMock = withApi({
+      "/v1/analytics/overview?range=30d": {
+        body: { total_cost: 12.5, total_calls: 1000, total_tokens: 50000, avg_cost_per_call: 0.0125, avg_latency_ms: 900, success_rate: 99.1 },
+      },
+    });
+    const res = await callTool("get_spend_overview", { range: "30d" }, KEY);
+    expect(res.structuredContent).toMatchObject({ total_cost: 12.5, total_calls: 1000 });
+    expect(res.content[0].text).toContain("$12.50");
+    expect(JSON.stringify(res)).not.toContain("sk_test");
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.headers).toEqual({ Authorization: "Bearer sk_test" });
+    expect(init.cache).toBe("no-store");
+  });
+
+  it("rejects a range the API does not have instead of silently defaulting", async () => {
+    withApi({});
+    const res = await callTool("get_spend_overview", { range: "1y" }, KEY);
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain("90d");
+  });
+
+  it("says the key was rejected when the API answers 401", async () => {
+    withApi({ "/v1/analytics/overview?range=7d": { status: 401 } });
+    const res = await callTool("get_spend_overview", {}, KEY);
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toMatch(/rejected the API key/);
+  });
+
+  it("breaks spend down most expensive first", async () => {
+    withApi({
+      "/v1/analytics/by/agent?range=7d&limit=20": {
+        body: [
+          { key: "router", total_calls: 10, total_cost: 1 },
+          { key: "coder", total_calls: 5, total_cost: 9 },
+        ],
+      },
+    });
+    const res = await callTool("get_spend_breakdown", { dimension: "agent" }, KEY);
+    const structured = res.structuredContent as { groups: { key: string }[]; returned: number };
+    expect(structured.groups.map((g) => g.key)).toEqual(["coder", "router"]);
+    expect(structured.returned).toBe(2);
+  });
+
+  it("requires a known dimension", async () => {
+    withApi({});
+    const res = await callTool("get_spend_breakdown", { dimension: "team" }, KEY);
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain("workflow");
+  });
+
+  it("finds the project from the key before reading its budget", async () => {
+    withApi({
+      "/v1/projects/me": { body: { id: "p-1" } },
+      "/v1/projects/p-1/budget-state": {
+        body: { enabled: true, budget: 5000, spend_mtd: 4820.15, remaining: 179.85, utilization_percent: 96.4, exhausted: false, period_ends_at: "2026-11-01T00:00:00+00:00" },
+      },
+    });
+    const res = await callTool("get_budget_state", {}, KEY);
+    expect(res.structuredContent).toMatchObject({ remaining: 179.85, exhausted: false });
+    expect(res.content[0].text).toContain("$4820.15 of $5000.00");
+  });
+
+  it("reports a project with no budget as success, not an error", async () => {
+    withApi({
+      "/v1/projects/me": { body: { id: "p-1" } },
+      "/v1/projects/p-1/budget-state": {
+        body: { enabled: false, budget: null, spend_mtd: 3, remaining: null, utilization_percent: null, exhausted: false, period_ends_at: "x" },
+      },
+    });
+    const res = await callTool("get_budget_state", {}, KEY);
+    expect(res.isError).toBeUndefined();
+    expect(res.content[0].text).toMatch(/No budget is set/);
+  });
+
+  it("lists a run's calls and flags the failed ones", async () => {
+    withApi({
+      "/v1/analytics/traces/run-1": {
+        body: {
+          trace_id: "run-1", workflow: "refactor-run", total_cost: 0.05, total_calls: 2, failed_calls: 1,
+          spans: [
+            { step_name: "plan", tool_name: null, model: "gpt-4o", cost: 0.02, success: true },
+            { step_name: null, tool_name: "edit_file", model: "gpt-4o", cost: 0.03, success: false },
+          ],
+        },
+      },
+    });
+    const res = await callTool("get_run_cost", { trace_id: "run-1" }, KEY);
+    const text = res.content[0].text;
+    expect(text).toContain("$0.05 for 2 calls in refactor-run, 1 failed.");
+    expect(text).toMatch(/edit_file — gpt-4o — failed/);
+  });
+
+  it("says plainly when the run does not exist", async () => {
+    withApi({});
+    const res = await callTool("get_run_cost", { trace_id: "nope" }, KEY);
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain('"nope"');
   });
 });

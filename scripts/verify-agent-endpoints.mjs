@@ -278,7 +278,7 @@ async function main() {
     });
     const tools = body?.result?.tools ?? [];
     check("tools/list is 200", response.status === 200, `got ${response.status}`);
-    check("tools/list returns the four pricing tools", tools.length === 4, `got ${tools.length}`);
+    check("tools/list returns the four pricing and four account tools", tools.length === 8, `got ${tools.length}`);
     check("every tool has a description and inputSchema", tools.every((t) => t.description && t.inputSchema?.type === "object"));
     check("tools/list is cacheable (ttlMs + cacheScope)", typeof body?.result?.ttlMs === "number" && Boolean(body?.result?.cacheScope));
   }
@@ -300,6 +300,23 @@ async function main() {
     check("tool returns structuredContent", typeof body?.result?.structuredContent?.total_cost === "number", JSON.stringify(body?.result)?.slice(0, 140));
     check("tool also returns a text block", Boolean(body?.result?.content?.[0]?.text));
     check("tool did not report an error", body?.result?.isError !== true);
+  }
+  {
+    // Account tools must refuse in-band, not answer, when no key is sent.
+    const { response, body } = await mcp(
+      {
+        jsonrpc: "2.0",
+        id: 6,
+        method: "tools/call",
+        params: {
+          name: "get_spend_overview",
+          arguments: {},
+          _meta: { "io.modelcontextprotocol/protocolVersion": "2026-07-28" },
+        },
+      },
+      { "Mcp-Name": "get_spend_overview" },
+    );
+    check("account tool without a key is a tool error, not data", response.status === 200 && body?.result?.isError === true && !body?.result?.structuredContent, `${response.status} ${JSON.stringify(body?.result)?.slice(0, 120)}`);
   }
   {
     // Header/body agreement is required from 2026-07-28.

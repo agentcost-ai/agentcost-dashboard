@@ -30,7 +30,7 @@ export const ASSUMED_LEGACY_VERSION = "2025-03-26";
 export const SERVER_INFO = {
   name: "agentcost",
   title: "AgentCost",
-  version: "1.0.0",
+  version: "1.1.0",
 } as const;
 
 /**
@@ -39,9 +39,10 @@ export const SERVER_INFO = {
  * front of me", not "is this a nice product".
  */
 export const INSTRUCTIONS = [
-  "AgentCost exposes public LLM model pricing. No credentials, no sign-up.",
+  "AgentCost exposes public LLM model pricing, and the caller's own LLM spend",
+  "when a project API key is supplied.",
   "",
-  "Use these tools when you need to:",
+  "Without credentials, use these tools when you need to:",
   "- price a named model (per-1,000-token input, output, cached-input and cache-write rates)",
   "- find a cheaper model with comparable rates, across 50+ providers",
   "- work out what a call or a whole job will cost in dollars before running it",
@@ -51,8 +52,13 @@ export const INSTRUCTIONS = [
   "publishes none, and cached tokens bill at the full input rate — estimate_cost",
   "reports which happened via cached_billed_at_input_rate.",
   "",
-  "These tools do not read the caller's own spend; that needs an authenticated",
-  "AgentCost account. See https://agentcost.tech/docs/api.",
+  "With `Authorization: Bearer <project API key>` on the connection, also:",
+  "- read what the project has spent, and which agent, model, workflow, tool or user spent it",
+  "- check the budget position before starting an expensive job",
+  "- read the cost of one run, call by call, from its trace id",
+  "",
+  "The account tools are read-only and scoped to the key's project. Without a",
+  "key they return an error saying how to supply one.",
 ].join("\n");
 
 /** JSON-RPC 2.0 reserved codes. */

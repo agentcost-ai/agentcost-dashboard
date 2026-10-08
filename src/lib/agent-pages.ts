@@ -266,12 +266,13 @@ No credentials required. Schema: ${SITE_URL}/openapi.json`,
     route: "/docs/mcp",
     title: "AgentCost MCP Server",
     description:
-      "A remote MCP server giving any agent live LLM model pricing, cost estimation and retirement lookups as callable tools. No install, no credentials.",
+      "A remote MCP server giving any agent live LLM model pricing, cost estimation and retirement lookups as callable tools, plus your own project's spend when you supply its API key. No install.",
     section: "API for agents",
     body: `Endpoint: ${SITE_URL}/api/mcp (Streamable HTTP)
 
-Public. No credentials, no sign-up, no OAuth. Serves both the current stateless
-MCP revision (2026-07-28) and the older handshake era, so any client works.
+The pricing tools are public: no credentials, no sign-up, no OAuth. The account
+tools need your project API key. Serves both the current stateless MCP revision
+(2026-07-28) and the older handshake era, so any client works.
 
 ## Connect
 
@@ -287,6 +288,12 @@ Config-file clients (Claude Desktop and similar):
 { "mcpServers": { "agentcost": { "type": "http", "url": "${SITE_URL}/api/mcp" } } }
 \`\`\`
 
+To read your own spend, send the project API key as a bearer token:
+
+\`\`\`bash
+claude mcp add --transport http agentcost ${SITE_URL}/api/mcp --header "Authorization: Bearer sk_your_project_api_key"
+\`\`\`
+
 ## Tools
 
 - **list_models** — search the catalogue by provider and/or name substring, sorted cheapest-input-first. Use it to compare model costs or find a cheaper alternative.
@@ -294,9 +301,16 @@ Config-file clients (Claude Desktop and similar):
 - **estimate_cost** — dollars for a model and a token count, before you spend them. Multiply a single call out to a whole job with \`calls\`.
 - **list_model_deprecations** — models with an upstream-announced retirement date, soonest first.
 
-Every tool is read-only and needs no credentials, so they are safe to call
-speculatively. They read the public catalogue only — your own spend, projects
-and budgets need an authenticated account and the REST API.
+With a project API key:
+
+- **get_spend_overview** — total spend, calls, tokens and success rate for your project over a window.
+- **get_spend_breakdown** — spend grouped by agent, model, workflow, tool, user or session, most expensive first.
+- **get_budget_state** — month-to-date spend against the budget, what is left and when the period ends.
+- **get_run_cost** — every call in one run, by trace id, with the cost of each.
+
+Every tool is read-only, so they are safe to call speculatively. The account
+tools are scoped to the key's project and return an error saying how to supply
+a key when none is sent. Changing budgets, projects or members needs the REST API.
 
 Full reference: ${SITE_URL}/docs/mcp`,
   },

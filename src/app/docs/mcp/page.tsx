@@ -10,7 +10,7 @@ import { PageHeader, Section } from "@/components/docs/primitives";
 export const metadata: Metadata = {
   title: "AgentCost MCP Server — Model Pricing Tools for AI Agents",
   description:
-    "Connect any MCP client to the AgentCost MCP server and give your agent live LLM model pricing, cost estimation and deprecation lookups. Remote, no install, no credentials.",
+    "Connect any MCP client to the AgentCost MCP server and give your agent live LLM model pricing, cost estimation and deprecation lookups, plus your own project's spend with an API key. Remote, no install.",
   alternates: { canonical: `${SITE_URL}/docs/mcp` },
 };
 
@@ -36,8 +36,25 @@ const CLIENTS = [
   },
   {
     name: "Anything else that speaks MCP",
-    body: "Point any MCP client at the endpoint over Streamable HTTP. No install step, no API key, no OAuth flow.",
+    body: "Point any MCP client at the endpoint over Streamable HTTP. No install step, no OAuth flow.",
     code: ENDPOINT,
+  },
+  {
+    name: "With your project API key",
+    body: "The account tools read your own project, so they need its API key as a bearer token. The pricing tools keep working without one.",
+    code: `claude mcp add --transport http agentcost ${ENDPOINT} \\
+  --header "Authorization: Bearer sk_your_project_api_key"
+
+# config-file clients
+{
+  "mcpServers": {
+    "agentcost": {
+      "type": "http",
+      "url": "${ENDPOINT}",
+      "headers": { "Authorization": "Bearer sk_your_project_api_key" }
+    }
+  }
+}`,
   },
 ];
 
@@ -67,7 +84,8 @@ export default function McpDocsPage() {
           </h3>
           <p className="font-mono">{ENDPOINT}</p>
           <p>
-            Streamable HTTP. Public — no credentials, no sign-up. Protocol
+            Streamable HTTP. The pricing tools are public — no credentials,
+            no sign-up. The account tools need a project API key. Protocol
             revisions {SUPPORTED_VERSIONS.join(", ")}, so both the current
             stateless revision and the older handshake era work.
           </p>
@@ -135,9 +153,10 @@ export default function McpDocsPage() {
 
         <Section id="what-it-does-not-do" title="What it does not do">
           <p>
-            These tools read the public pricing catalogue only. They cannot see
-            your own spend, projects or budgets — that needs an authenticated
-            account and the{" "}
+            Without an API key the tools read the public pricing catalogue
+            only. With one, the account tools read that project&apos;s spend,
+            budget and runs, and nothing else. Changing budgets, projects or
+            members needs the{" "}
             <Link
               href="/docs/api"
              

@@ -110,7 +110,8 @@ track_costs.init(api_key="sk_your_project_key", project_id="your-project-uuid")`
           </Card>
           <Card href="/api/mcp" icon={<Bot size={22} strokeWidth={1.75} />} title="MCP endpoint" external>
             Streamable HTTP. Pricing capabilities as typed MCP tools for any
-            client that speaks the protocol.
+            client that speaks the protocol, and your own spend with an API
+            key.
           </Card>
           <Card href="/api/v1" icon={<Server size={22} strokeWidth={1.75} />} title="Public API" external>
             Model pricing and cost estimation, cached and always awake. No

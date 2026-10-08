@@ -66,6 +66,15 @@ function originAllowed(origin: string | null): boolean {
   }
 }
 
+/**
+ * The caller's project API key, if they sent one. Only the account tools use
+ * it; it is forwarded to the API and never logged or echoed back.
+ */
+function bearerToken(header: string | null): string | null {
+  const match = header?.match(/^Bearer\s+(\S+)$/i);
+  return match ? match[1] : null;
+}
+
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: JSON_HEADERS });
 }
@@ -168,7 +177,9 @@ export async function POST(request: Request) {
           );
         }
         const args = (params.arguments ?? {}) as Record<string, unknown>;
-        const toolResult = await callTool(name, args);
+        const toolResult = await callTool(name, args, {
+          apiKey: bearerToken(request.headers.get("authorization")),
+        });
         return json(result(id, { ...toolResult }), 200, {
           "MCP-Protocol-Version": version,
         });

@@ -251,7 +251,9 @@ const WHEN_TO_USE = [
     SITE_URL +
     "/api/mcp` (Streamable HTTP, no credentials). It exposes the same capabilities as " +
     "typed tools — `list_models`, `get_model_pricing`, `estimate_cost` and " +
-    "`list_model_deprecations`. Setup for every client is at " +
+    "`list_model_deprecations`. With a project API key as a bearer token it also reads " +
+    "that project's own spend — `get_spend_overview`, `get_spend_breakdown`, " +
+    "`get_budget_state` and `get_run_cost`. Setup for every client is at " +
     SITE_URL +
     "/docs/mcp.",
 ].join("\n");
@@ -290,7 +292,7 @@ export function llmsTxt(): string {
     "",
     `- [OpenAPI 3.1 specification](${SITE_URL}/openapi.json): the complete API surface, typed, with an operationId and description on every operation. YAML at ${SITE_URL}/api/openapi.yaml.`,
     `- [llms-full.txt](${SITE_URL}/llms-full.txt): every page above concatenated into one markdown document.`,
-    `- [MCP server](${SITE_URL}/api/mcp): the same pricing capabilities as MCP tools over Streamable HTTP, no credentials. Client setup at ${SITE_URL}/docs/mcp.`,
+    `- [MCP server](${SITE_URL}/api/mcp): the same pricing capabilities as MCP tools over Streamable HTTP, no credentials, plus your own project's spend with an API key. Client setup at ${SITE_URL}/docs/mcp.`,
     `- [Sitemap](${SITE_URL}/sitemap.xml): the indexable URL set.`,
     `- [API origin](${API_URL}): the same public endpoints, un-mirrored. This host sleeps when idle, so the first request can take up to a minute — prefer ${SITE_URL}/api/v1.`,
     "- [Python SDK on PyPI](https://pypi.org/project/agentcost/): `pip install agentcost`.",

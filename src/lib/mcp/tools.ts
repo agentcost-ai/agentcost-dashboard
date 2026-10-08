@@ -11,7 +11,7 @@
  * does not surface structured content.
  */
 
-import { fetchRawCatalog } from "@/lib/catalog";
+import { PRICING_API, fetchRawCatalog } from "@/lib/catalog";
 import {
   EstimateInputError,
   estimate,
@@ -35,8 +35,24 @@ export type ToolResult = {
   isError?: boolean;
 };
 
-/** Every tool here only reads public data — worth telling the client. */
+/** What a tool call may use beyond its arguments. */
+export type ToolContext = {
+  /** The caller's project API key, from the request's Authorization header. */
+  apiKey?: string | null;
+};
+
+/** No tool here writes anything — worth telling the client. */
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, openWorldHint: true };
+
+const RANGES = ["1h", "24h", "7d", "30d", "90d"] as const;
+const DIMENSIONS = ["agent", "model", "workflow", "tool", "user", "session"] as const;
+
+const RANGE_PROPERTY = {
+  type: "string",
+  enum: [...RANGES],
+  default: "7d",
+  description: "Time window ending now.",
+} as const;
 
 const RATE_PROPERTIES = {
   model: { type: "string", description: "Catalogue name for the model." },
@@ -199,6 +215,126 @@ export const TOOLS: McpTool[] = [
     },
     annotations: READ_ONLY,
   },
+
+  {
+    name: "get_spend_overview",
+    title: "Get your project's spend",
+    description:
+      "Total LLM spend, call count, tokens, average cost per call and success rate for the caller's own " +
+      "AgentCost project over a time window. Needs the project API key in the Authorization header.",
+    inputSchema: {
+      type: "object",
+      properties: { range: RANGE_PROPERTY },
+      additionalProperties: false,
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        total_cost: { type: "number", description: "USD spent in the window." },
+        total_calls: { type: "integer" },
+        total_tokens: { type: "integer" },
+        avg_cost_per_call: { type: "number" },
+        avg_latency_ms: { type: "number" },
+        success_rate: { type: "number" },
+        period_start: { type: "string" },
+        period_end: { type: "string" },
+      },
+      required: ["total_cost", "total_calls"],
+    },
+    annotations: READ_ONLY,
+  },
+
+  {
+    name: "get_spend_breakdown",
+    title: "Break your spend down by one dimension",
+    description:
+      "Cost and call volume for the caller's own project, grouped by agent, model, workflow, tool, user or " +
+      "session, most expensive first. Use this to find which agent or model is spending the money. " +
+      "Needs the project API key in the Authorization header.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        dimension: {
+          type: "string",
+          enum: [...DIMENSIONS],
+          description: "What to group by. user and session come from user_id and session_id in event metadata.",
+        },
+        range: RANGE_PROPERTY,
+        limit: { type: "integer", minimum: 1, maximum: 200, default: 20, description: "Maximum groups to return." },
+      },
+      required: ["dimension"],
+      additionalProperties: false,
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        dimension: { type: "string" },
+        range: { type: "string" },
+        groups: { type: "array", items: { type: "object" } },
+        returned: { type: "integer" },
+      },
+      required: ["dimension", "groups", "returned"],
+    },
+    annotations: READ_ONLY,
+  },
+
+  {
+    name: "get_budget_state",
+    title: "Get your project's budget position",
+    description:
+      "Month-to-date spend against the project's budget: the budget, what is left, utilisation, whether it " +
+      "is exhausted and when the period ends. Use this before starting an expensive job. " +
+      "Needs the project API key in the Authorization header.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    outputSchema: {
+      type: "object",
+      properties: {
+        enabled: { type: "boolean", description: "false means no budget is set for the project." },
+        mode: { type: "string" },
+        budget: { type: ["number", "null"] },
+        spend_mtd: { type: "number" },
+        remaining: { type: ["number", "null"] },
+        utilization_percent: { type: ["number", "null"] },
+        exhausted: { type: "boolean" },
+        period_ends_at: { type: "string" },
+        as_of: { type: "string" },
+      },
+      required: ["enabled", "spend_mtd", "exhausted"],
+    },
+    annotations: READ_ONLY,
+  },
+
+  {
+    name: "get_run_cost",
+    title: "Get the cost of one run",
+    description:
+      "Every model call in one run (trace) of the caller's own project, in execution order, with the cost of " +
+      "each and the run total. The trace id is the one the SDK's workflow() minted or an external system " +
+      "supplied. Needs the project API key in the Authorization header.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        trace_id: { type: "string", minLength: 1, maxLength: 64, description: "The run's trace id." },
+      },
+      required: ["trace_id"],
+      additionalProperties: false,
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        trace_id: { type: "string" },
+        workflow: { type: ["string", "null"] },
+        total_cost: { type: "number" },
+        total_calls: { type: "integer" },
+        total_tokens: { type: "integer" },
+        failed_calls: { type: "integer" },
+        duration_ms: { type: ["integer", "null"] },
+        spans: { type: "array", items: { type: "object" } },
+      },
+      required: ["trace_id", "total_cost", "total_calls", "spans"],
+    },
+    annotations: READ_ONLY,
+  },
 ];
 
 export const TOOLS_BY_NAME = new Map(TOOLS.map((tool) => [tool.name, tool]));
@@ -249,8 +385,17 @@ function clampLimit(value: unknown, fallback: number): number {
 export async function callTool(
   name: string,
   args: Record<string, unknown>,
+  context: ToolContext = {},
 ): Promise<ToolResult> {
   switch (name) {
+    case "get_spend_overview":
+      return spendOverview(args, context);
+    case "get_spend_breakdown":
+      return spendBreakdown(args, context);
+    case "get_budget_state":
+      return budgetState(context);
+    case "get_run_cost":
+      return runCost(args, context);
     case "list_models":
       return listModels(args);
     case "get_model_pricing":
@@ -414,4 +559,189 @@ async function listDeprecations(args: Record<string, unknown>): Promise<ToolResu
     [`${deprecations.length} of ${matched.length} models with announced retirement dates, soonest first:`, ...lines].join("\n"),
     { deprecations, returned: deprecations.length, matched: matched.length },
   );
+}
+
+const KEY_REQUIRED =
+  "This tool reads your own AgentCost project, so it needs the project API key. Configure the MCP client to send " +
+  "the header `Authorization: Bearer <project API key>` — see https://agentcost.tech/docs/mcp. " +
+  "The pricing tools work without one.";
+
+type AccountResponse<T> = { ok: true; data: T } | { ok: false; status: number };
+
+/**
+ * One authenticated read against the caller's own project. Never cached:
+ * the answer is private to the key, and spend moves between calls.
+ */
+async function accountFetch<T>(path: string, apiKey: string): Promise<AccountResponse<T>> {
+  try {
+    const res = await fetch(`${PRICING_API}${path}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(90_000),
+    });
+    if (!res.ok) return { ok: false, status: res.status };
+    return { ok: true, data: (await res.json()) as T };
+  } catch {
+    return { ok: false, status: 0 };
+  }
+}
+
+function accountError(status: number, notFound?: string): ToolResult {
+  if (status === 401 || status === 403) {
+    return toolError(
+      "AgentCost rejected the API key. Check that the Authorization header carries a current project API key.",
+    );
+  }
+  if (status === 404 && notFound) return toolError(notFound);
+  if (status === 429) return toolError("AgentCost rate-limited this key. Retry in a minute.");
+  return toolError(
+    "AgentCost is temporarily unreachable. The API host wakes from idle in about a minute — retry shortly.",
+  );
+}
+
+function pickRange(value: unknown): (typeof RANGES)[number] | null {
+  if (value === undefined || value === null) return "7d";
+  return (RANGES as readonly string[]).includes(value as string) ? (value as (typeof RANGES)[number]) : null;
+}
+
+const BAD_RANGE = `"range" must be one of ${RANGES.join(", ")}.`;
+
+type Overview = {
+  total_cost: number;
+  total_calls: number;
+  total_tokens: number;
+  avg_cost_per_call: number;
+  avg_latency_ms: number;
+  success_rate: number;
+};
+
+async function spendOverview(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult> {
+  if (!context.apiKey) return toolError(KEY_REQUIRED);
+  const range = pickRange(args.range);
+  if (!range) return toolError(BAD_RANGE);
+
+  const res = await accountFetch<Overview>(`/v1/analytics/overview?range=${range}`, context.apiKey);
+  if (!res.ok) return accountError(res.status);
+
+  const o = res.data;
+  const text = [
+    `${money(o.total_cost)} over the last ${range}.`,
+    `  calls        ${o.total_calls.toLocaleString("en-US")}`,
+    `  tokens       ${o.total_tokens.toLocaleString("en-US")}`,
+    `  per call     ${money(o.avg_cost_per_call)}`,
+    `  success rate ${o.success_rate}%`,
+  ].join("\n");
+
+  return ok(text, o);
+}
+
+type DimensionRow = { key: string; total_calls: number; total_cost: number };
+
+async function spendBreakdown(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult> {
+  if (!context.apiKey) return toolError(KEY_REQUIRED);
+
+  const dimension = args.dimension;
+  if (typeof dimension !== "string" || !(DIMENSIONS as readonly string[]).includes(dimension)) {
+    return toolError(`"dimension" is required and must be one of ${DIMENSIONS.join(", ")}.`);
+  }
+  const range = pickRange(args.range);
+  if (!range) return toolError(BAD_RANGE);
+  const limit = clampLimit(args.limit, 20);
+
+  const res = await accountFetch<DimensionRow[]>(
+    `/v1/analytics/by/${dimension}?range=${range}&limit=${limit}`,
+    context.apiKey,
+  );
+  if (!res.ok) return accountError(res.status);
+
+  const groups = [...res.data].sort((a, b) => b.total_cost - a.total_cost);
+  const structured = { dimension, range, groups, returned: groups.length };
+
+  if (groups.length === 0) {
+    return ok(`No events carry a ${dimension} in the last ${range}.`, structured);
+  }
+
+  const lines = groups.map(
+    (row) =>
+      `${money(row.total_cost)}  ${row.key} (${row.total_calls.toLocaleString("en-US")} call${row.total_calls === 1 ? "" : "s"})`,
+  );
+  return ok([`Spend by ${dimension} over the last ${range}, most expensive first:`, ...lines].join("\n"), structured);
+}
+
+type BudgetState = {
+  enabled: boolean;
+  budget: number | null;
+  spend_mtd: number;
+  remaining: number | null;
+  utilization_percent: number | null;
+  exhausted: boolean;
+  period_ends_at: string;
+};
+
+async function budgetState(context: ToolContext): Promise<ToolResult> {
+  if (!context.apiKey) return toolError(KEY_REQUIRED);
+
+  // The key identifies the project, so the caller never has to supply its id.
+  const me = await accountFetch<{ id: string }>("/v1/projects/me", context.apiKey);
+  if (!me.ok) return accountError(me.status);
+
+  const res = await accountFetch<BudgetState>(
+    `/v1/projects/${encodeURIComponent(me.data.id)}/budget-state`,
+    context.apiKey,
+  );
+  if (!res.ok) return accountError(res.status);
+
+  const b = res.data;
+  if (!b.enabled || b.budget === null) {
+    return ok(`No budget is set. ${money(b.spend_mtd)} spent so far this period.`, b);
+  }
+
+  const text = [
+    `${money(b.spend_mtd)} of ${money(b.budget)} spent this period (${b.utilization_percent ?? 0}%).`,
+    `  remaining    ${money(b.remaining ?? 0)}`,
+    `  exhausted    ${b.exhausted ? "yes" : "no"}`,
+    `  period ends  ${b.period_ends_at}`,
+  ].join("\n");
+
+  return ok(text, b);
+}
+
+type RunSpan = { step_name: string | null; tool_name: string | null; model: string; cost: number; success: boolean };
+type RunDetail = {
+  trace_id: string;
+  workflow: string | null;
+  total_cost: number;
+  total_calls: number;
+  failed_calls: number;
+  spans: RunSpan[];
+};
+
+async function runCost(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult> {
+  if (!context.apiKey) return toolError(KEY_REQUIRED);
+
+  const traceId = typeof args.trace_id === "string" ? args.trace_id.trim() : "";
+  if (!traceId) return toolError('The "trace_id" argument is required and must be a non-empty string.');
+
+  const res = await accountFetch<RunDetail>(
+    `/v1/analytics/traces/${encodeURIComponent(traceId)}`,
+    context.apiKey,
+  );
+  if (!res.ok) {
+    return accountError(res.status, `No run with trace id "${traceId}" exists in this project.`);
+  }
+
+  const run = res.data;
+  const lines = run.spans.map(
+    (span) =>
+      `  ${money(span.cost)}  ${span.step_name ?? span.tool_name ?? "(unnamed)"} — ${span.model}` +
+      (span.success ? "" : " — failed"),
+  );
+
+  const header =
+    `${money(run.total_cost)} for ${run.total_calls} call${run.total_calls === 1 ? "" : "s"}` +
+    (run.workflow ? ` in ${run.workflow}` : "") +
+    (run.failed_calls > 0 ? `, ${run.failed_calls} failed` : "") +
+    ".";
+
+  return ok([header, ...lines].join("\n"), run);
 }
