@@ -345,6 +345,7 @@ describe("account tools", () => {
       "/v1/analytics/traces/run-1": {
         body: {
           trace_id: "run-1", workflow: "refactor-run", total_cost: 0.05, total_calls: 2, failed_calls: 1,
+          outcome: null,
           spans: [
             { step_name: "plan", tool_name: null, model: "gpt-4o", cost: 0.02, success: true },
             { step_name: null, tool_name: "edit_file", model: "gpt-4o", cost: 0.03, success: false },
@@ -356,6 +357,23 @@ describe("account tools", () => {
     const text = res.content[0].text;
     expect(text).toContain("$0.05 for 2 calls in refactor-run, 1 failed.");
     expect(text).toMatch(/edit_file — gpt-4o — failed/);
+    expect(text).toContain("outcome      not reported");
+  });
+
+  it("shows a run that was refused before any model call", async () => {
+    withApi({
+      "/v1/analytics/traces/run-2": {
+        body: {
+          trace_id: "run-2", workflow: "refactor-run", total_cost: 0, total_calls: 0, failed_calls: 0,
+          outcome: { success: false, label: "refused:preflight" },
+          spans: [],
+        },
+      },
+    });
+    const res = await callTool("get_run_cost", { trace_id: "run-2" }, KEY);
+    expect(res.isError).toBeUndefined();
+    expect(res.content[0].text).toContain("$0 for 0 calls in refactor-run.");
+    expect(res.content[0].text).toContain("outcome      failed (refused:preflight)");
   });
 
   it("says plainly when the run does not exist", async () => {

@@ -1353,6 +1353,13 @@ curl -H "Authorization: Bearer your_jwt_token" \\
               a span whose parent never arrived cannot break the response.
               Returns 404 if the trace does not belong to your project.
             </p>
+            <p>
+              <code>outcome</code> is how the run ended, as the SDK or an
+              external system reported it, and <code>null</code> when nothing
+              was reported. A run that was refused before any model call has an
+              outcome and no spans; it is returned with zero calls rather than
+              as a 404.
+            </p>
             <CodeBlock
               language="json"
               code={`{
@@ -1362,6 +1369,11 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "total_calls": 11,
   "max_depth": 2,
   "duration_ms": 7420,
+  "outcome": {
+    "success": true,
+    "label": "resolved",
+    "recorded_at": "2026-08-13T09:14:02+00:00"
+  },
   "spans": [
     {
       "span_id": "1b40a23d06f0401f",

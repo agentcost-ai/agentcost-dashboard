@@ -309,7 +309,7 @@ export const TOOLS: McpTool[] = [
     title: "Get the cost of one run",
     description:
       "Every model call in one run (trace) of the caller's own project, in execution order, with the cost of " +
-      "each and the run total. The trace id is the one the SDK's workflow() minted or an external system " +
+      "each, the run total and how the run ended. The trace id is the one the SDK's workflow() minted or an external system " +
       "supplied. Needs the project API key in the Authorization header.",
     inputSchema: {
       type: "object",
@@ -329,6 +329,12 @@ export const TOOLS: McpTool[] = [
         total_tokens: { type: "integer" },
         failed_calls: { type: "integer" },
         duration_ms: { type: ["integer", "null"] },
+        outcome: {
+          type: ["object", "null"],
+          description:
+            "How the run ended, as the SDK or an external system reported it: success and an optional label. " +
+            "null means no outcome was reported. A run refused before any model call has an outcome and no spans.",
+        },
         spans: { type: "array", items: { type: "object" } },
       },
       required: ["trace_id", "total_cost", "total_calls", "spans"],
@@ -713,6 +719,8 @@ type RunDetail = {
   total_cost: number;
   total_calls: number;
   failed_calls: number;
+  /** null when no outcome was reported for the run: unknown, not failed. */
+  outcome?: { success: boolean; label: string | null } | null;
   spans: RunSpan[];
 };
 
@@ -743,5 +751,17 @@ async function runCost(args: Record<string, unknown>, context: ToolContext): Pro
     (run.failed_calls > 0 ? `, ${run.failed_calls} failed` : "") +
     ".";
 
-  return ok([header, ...lines].join("\n"), run);
+  // Absent on a backend that predates the field; say nothing rather than
+  // claim "not reported" about an outcome it never looked up.
+  const outcome =
+    run.outcome === undefined
+      ? []
+      : run.outcome === null
+        ? ["  outcome      not reported"]
+        : [
+            `  outcome      ${run.outcome.success ? "succeeded" : "failed"}` +
+              (run.outcome.label ? ` (${run.outcome.label})` : ""),
+          ];
+
+  return ok([header, ...outcome, ...lines].join("\n"), run);
 }

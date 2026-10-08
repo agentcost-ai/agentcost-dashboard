@@ -306,7 +306,7 @@ With a project API key:
 - **get_spend_overview** — total spend, calls, tokens and success rate for your project over a window.
 - **get_spend_breakdown** — spend grouped by agent, model, workflow, tool, user or session, most expensive first.
 - **get_budget_state** — month-to-date spend against the budget, what is left and when the period ends.
-- **get_run_cost** — every call in one run, by trace id, with the cost of each.
+- **get_run_cost** — every call in one run, by trace id, with the cost of each and how the run ended.
 
 Every tool is read-only, so they are safe to call speculatively. The account
 tools are scoped to the key's project and return an error saying how to supply

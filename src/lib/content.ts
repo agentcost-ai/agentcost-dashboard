@@ -66,6 +66,18 @@ export const blogPosts: BlogPost[] = [
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "v1.14.0",
+    date: "2026-10-08",
+    summary:
+      "Your own spend over MCP, and a run that reads back with how it ended",
+    changes: [
+      "The MCP server now reads your own project when you send its API key as a bearer token: get_spend_overview, get_spend_breakdown (by agent, model, workflow, tool, user or session), get_budget_state and get_run_cost. The four pricing tools are unchanged and still need no key.",
+      "The account tools are read-only and scoped to the key's project. Without a key they return an error that says how to supply one.",
+      "GET /v1/analytics/traces/{trace_id} now returns the run's outcome — success, label and when it was recorded — or null when none was reported.",
+      "A run that was refused before any model call, reported by an external control plane as an outcome with no events, is now returned with zero calls instead of a 404.",
+    ],
+  },
+  {
     version: "v1.13.0",
     date: "2026-09-08",
     summary:
