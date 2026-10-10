@@ -70,7 +70,7 @@ export function IntegrationSection() {
                                 {
                                     step: "02",
                                     title: "Add two lines",
-                                    desc: "import + init — done",
+                                    desc: "import + init, done",
                                 },
                                 {
                                     step: "03",

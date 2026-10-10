@@ -20,7 +20,7 @@ const PROOF: Array<[string, string]> = [
   ],
   [
     "Self-host for zero exposure",
-    "The same MIT-licensed stack runs on your infrastructure with Docker. Nothing leaves your environment — no telemetry, no phone-home.",
+    "The same MIT-licensed stack runs on your infrastructure with Docker. Nothing leaves your environment: no telemetry, no phone-home.",
   ],
 ];
 
@@ -41,7 +41,7 @@ export function TrustSection() {
             <p className="mt-5 text-[17px] leading-7 text-neutral-300">
               The SDK is a metadata-only tracker. An event is token counts,
               timings and cost. Open any field on the right to see exactly where
-              it comes from — and press <span className="text-white">+</span> for
+              it comes from, and press <span className="text-white">+</span> for
               everything that never leaves your process.
             </p>
 

@@ -75,7 +75,7 @@ export function AgentRankList({ data, limit = 7 }: AgentRankListProps) {
                     delay: index * 0.05,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className="absolute inset-y-0 left-0 rounded-full bg-sky-500"
+                  className="absolute inset-y-0 left-0 rounded-full bg-indigo-400"
                 />
               </div>
 
@@ -107,7 +107,7 @@ export function AgentRankList({ data, limit = 7 }: AgentRankListProps) {
 
       <Link
         href="/agents"
-        className="mt-2 inline-flex items-center gap-1 px-3 text-[12px] font-medium text-neutral-500 hover:text-sky-400 transition-colors"
+        className="mt-2 inline-flex items-center gap-1 px-3 text-[12px] font-medium text-neutral-500 hover:text-indigo-300 transition-colors"
       >
         All agents
         <ArrowUpRight className="w-3 h-3" />

@@ -10,7 +10,7 @@ const steps = [
     title: "Install the SDK",
     subtitle: "pip install agentcost",
     description:
-      "A lightweight Python package. Add the import and call init() with your API key. Your existing LangChain code continues to work unchanged — the SDK intercepts calls transparently via monkey-patching.",
+      "A lightweight Python package. Add the import and call init() with your API key. Your existing LangChain code continues to work unchanged: the SDK intercepts calls transparently via monkey-patching.",
     highlight: "No wrappers, no decorators, no middleware.",
     code: `from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="sk_...",\n    project_id="6b3f2e1d-9c4a-4f8e-b2d7-3a5c8e9f0a1b",\n)\n\n# That's it. Your code stays the same.`,
   },
@@ -20,7 +20,7 @@ const steps = [
     subtitle: "Automatic interception",
     description:
       "Every LLM invocation is intercepted in real-time. Token counts are calculated using tiktoken, costs are computed from a pricing database of 3,500+ models, and events are batched efficiently before sending.",
-    highlight: "Async delivery — never blocks your calls.",
+    highlight: "Async delivery that never blocks your calls.",
     code: `# Behind the scenes:\n► gpt-4o     1,247 tokens   $0.0124\n► claude-3.5  2,105 tokens   $0.0189\n\n✓ Batched & sent asynchronously`,
   },
   {
@@ -28,9 +28,9 @@ const steps = [
     title: "Data flows to the backend",
     subtitle: "FastAPI + PostgreSQL",
     description:
-      "The free hosted backend at api.agentcost.tech receives batched events, stores them in PostgreSQL, and runs analytics — or self-host the same MIT-licensed stack with Docker. It computes per-agent breakdowns, model comparisons, and cost optimization suggestions.",
-    highlight: "Free hosted cloud — or self-host with Docker.",
-    code: `# hosted (default):\n#   api.agentcost.tech — nothing to run\n\n# self-host: docker-compose up\n✓ FastAPI server ready\n✓ PostgreSQL connected\n✓ Analytics engine running`,
+      "The free hosted backend at api.agentcost.tech receives batched events, stores them in PostgreSQL, and computes per-agent breakdowns, model comparisons, and cost optimization suggestions. Or self-host the same MIT-licensed stack with Docker.",
+    highlight: "Free hosted cloud, or self-host with Docker.",
+    code: `# hosted (default):\n#   api.agentcost.tech, nothing to run\n\n# self-host: docker-compose up\n✓ FastAPI server ready\n✓ PostgreSQL connected\n✓ Analytics engine running`,
   },
   {
     id: "04",

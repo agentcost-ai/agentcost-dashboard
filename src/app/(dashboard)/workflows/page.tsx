@@ -199,14 +199,14 @@ export default function WorkflowsPage() {
             onClick={() => setShowPreDeploy((v) => !v)}
             aria-expanded={showPreDeploy}
             className={
-              "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors " +
+              "inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors sm:min-h-0 " +
               (showPreDeploy
-                ? "border-white/10 bg-white/8 text-white"
-                : "border-white/6 text-neutral-400 hover:bg-white/5 hover:text-neutral-200")
+                ? "bg-white text-[#0d0d14]"
+                : "bg-indigo-200 text-[#0d0d14] hover:bg-indigo-100")
             }
           >
             <TerminalSquare size={15} aria-hidden />
-            Pre-deploy check
+            {showPreDeploy ? "Hide pre-deploy check" : "Check cost before deploy"}
           </button>
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
         </div>
@@ -274,14 +274,16 @@ export default function WorkflowsPage() {
 
       {/* Run cost distribution */}
       {!loading && distribution && (
-        <Card padding="none">
-          <RunCostDistribution
-            data={distribution}
-            workflows={workflows.map((w) => w.workflow)}
-            selected={distribution.workflow}
-            onSelect={setFocusWorkflow}
-          />
-        </Card>
+        <div id="tour-run-cost">
+          <Card padding="none">
+            <RunCostDistribution
+              data={distribution}
+              workflows={workflows.map((w) => w.workflow)}
+              selected={distribution.workflow}
+              onSelect={setFocusWorkflow}
+            />
+          </Card>
+        </div>
       )}
 
       {/* Workflows */}
@@ -291,7 +293,7 @@ export default function WorkflowsPage() {
             Cost per workflow
           </h3>
           <p className="mt-1 text-sm text-neutral-500">
-            Averages are per run, not per call — a workflow with more steps
+            Averages are per run, not per call. A workflow with more steps
             is not automatically more expensive per run.
           </p>
         </div>
@@ -361,7 +363,7 @@ export default function WorkflowsPage() {
               Cost per completed outcome
             </h3>
             <p className="mt-1 text-sm text-neutral-500">
-              What a result costs, not what a run costs — failed runs were paid
+              What a result costs, not what a run costs. Failed runs were paid
               for too, so their spend is charged to the successes.
             </p>
           </div>
@@ -425,7 +427,7 @@ export default function WorkflowsPage() {
             </h3>
             <p className="mt-1 text-sm text-neutral-500">
               Calls per run above 1 means the step ran more than once inside a
-              single run — a retry, or a loop.
+              single run: a retry, or a loop.
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -491,7 +493,7 @@ export default function WorkflowsPage() {
             </h3>
             <p className="mt-1 text-sm text-neutral-500">
               The same call made more than once within one run. Unlike
-              duplicates across runs — which a cache fixes — this usually means
+              duplicates across runs, which a cache fixes, this usually means
               the control flow is looping.
             </p>
           </div>

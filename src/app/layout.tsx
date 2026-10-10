@@ -37,11 +37,11 @@ export const metadata: Metadata = {
   // `template` auto-brands every page that sets its own title; pages therefore
   // must NOT hand-write " | AgentCost" in their title strings (double-brand).
   title: {
-    default: "AgentCost — Track OpenAI, Anthropic, Gemini & LangChain Costs",
+    default: "AgentCost: See Which Agent Spiked Your AI Bill",
     template: "%s | AgentCost",
   },
   description:
-    "Track OpenAI, Anthropic, Gemini, and LangChain costs in real-time. At AgentCost, see which agents are expensive, set budget guardrails, and get optimization suggestions.",
+    "Never wonder which agent spiked your AI bill again. AgentCost traces every OpenAI, Anthropic, Gemini and LangChain call to the agent and step that made it.",
   keywords: [
     "langchain",
     "openai",

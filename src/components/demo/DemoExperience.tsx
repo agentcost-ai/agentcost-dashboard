@@ -4,26 +4,25 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Sparkles,
-  X,
-  ArrowRight,
-  LogOut,
-  TrendingDown,
-  Github,
-  Terminal,
-  Layers,
-} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackDemo } from "@/lib/demo/demo";
 import { track } from "@/lib/analytics";
 import { prewarmBackend } from "@/lib/prewarm";
 import { DEMO_SIGNUP_PROMPT_EVENT } from "@/lib/demo/demoApi";
 import { demoOptimizationSummary } from "@/lib/demo/demoData";
+import { DemoTour, DEMO_TOUR_START_EVENT, isDemoTourActive } from "@/components/demo/DemoTour";
+
+const BAR_PRIMARY =
+  "inline-flex min-h-11 items-center rounded-full bg-white px-5 text-[13px] font-medium text-[#0a0a0b] transition-colors hover:bg-neutral-200 sm:min-h-10";
+
+const MODAL_PRIMARY =
+  "inline-flex items-center rounded-full bg-white px-6 py-3 text-[13.5px] font-medium text-[#0a0a0b] transition-colors hover:bg-neutral-200";
 
 /**
  * Everything the demo visitor sees on top of the normal dashboard:
  *
+ * - A guided walkthrough (DemoTour) that opens on arrival, so nobody is
+ *   left alone on a full dashboard.
  * - A floating banner that labels the data as a demo and keeps a signup CTA
  *   one click away on every page.
  * - A conversion modal that opens when the visitor tries any write action
@@ -46,6 +45,7 @@ export function DemoExperience() {
     return {
       monthly: Math.round(summary.total_potential_savings_monthly),
       percent: Math.round(summary.total_potential_savings_percent),
+      count: summary.suggestion_count,
     };
   }, []);
 
@@ -57,7 +57,8 @@ export function DemoExperience() {
       trackDemo("page_view", { page: pathname });
 
       const nudged = sessionStorage.getItem("agentcost_demo_nudged");
-      if (visitedPages.current.size >= 4 && !nudged) {
+      // The tour moves through pages itself; that is not exploring.
+      if (visitedPages.current.size >= 4 && !nudged && !isDemoTourActive()) {
         sessionStorage.setItem("agentcost_demo_nudged", "true");
         // Defer one tick so we don't setState synchronously inside the effect.
         setTimeout(() => {
@@ -107,48 +108,45 @@ export function DemoExperience() {
 
   return (
     <>
-      {/* ── Floating demo banner (persistent — the signup CTA must never
+      <DemoTour hasParkedSession={hasParkedSession} />
+
+      {/* ── Floating demo bar (persistent: the signup route must never
           hide; the dashboard layout reserves bottom padding for it) ── */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3 rounded-2xl border border-sky-500/25 bg-[#0d1420]/95 backdrop-blur-md shadow-[0_8px_40px_rgba(2,132,199,0.18)]">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
-            <p className="text-[13px] text-neutral-300 truncate">
-              You&apos;re exploring{" "}
-              <span className="text-white font-medium">sample data</span>
-              {hasParkedSession ? " — your own project is one click away." : " — this could be your AI spend."}
-            </p>
-          </div>
-          <div className="flex w-full sm:w-auto items-center gap-2 shrink-0">
-            {hasParkedSession ? (
+      <div className="fixed bottom-5 left-1/2 z-40 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 print:hidden">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 rounded-[26px] border border-white/10 bg-[#0c0c0f]/95 py-2 pl-6 pr-2 shadow-[0_18px_50px_rgba(0,0,0,0.6)] backdrop-blur-md">
+          <p className="text-[13px] text-neutral-400">
+            <span className="text-white">Sample data</span>
+            <span className="hidden sm:inline"> from NovaDesk, a made-up company</span>
+          </p>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(DEMO_TOUR_START_EVENT))}
+              className="text-[13px] text-neutral-400 underline-offset-4 transition-colors hover:text-white hover:underline"
+            >
+              Replay tour
+            </button>
+            {!hasParkedSession && (
               <button
                 type="button"
                 onClick={exitDemo}
-                className="group inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-2 min-h-11 sm:min-h-0 text-[13px] font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-colors"
+                className="text-[13px] text-neutral-400 underline-offset-4 transition-colors hover:text-white hover:underline"
               >
+                Exit
+              </button>
+            )}
+            {hasParkedSession ? (
+              <button type="button" onClick={exitDemo} className={BAR_PRIMARY}>
                 Back to my dashboard
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </button>
             ) : (
-              <>
-                <Link
-                  href="/auth/register?from=demo"
-                  onClick={() => handleSignupClick("demo_banner")}
-                  className="group inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-2 min-h-11 sm:min-h-0 text-[13px] font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-full transition-colors"
-                >
-                  Create free account
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <button
-                  type="button"
-                  onClick={exitDemo}
-                  title="Exit demo"
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-11 sm:min-h-0 text-[13px] text-neutral-500 hover:text-white rounded-full border border-white/8 hover:border-white/15 transition-colors"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  Exit
-                </button>
-              </>
+              <Link
+                href="/auth/register?from=demo"
+                onClick={() => handleSignupClick("demo_banner")}
+                className={BAR_PRIMARY}
+              >
+                Start free
+              </Link>
             )}
           </div>
         </div>
@@ -161,141 +159,96 @@ export function DemoExperience() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             role="dialog"
             aria-modal="true"
+            aria-labelledby="demo-signup-title"
           >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-black/70 backdrop-blur-md"
+              className="absolute inset-0 bg-[#050507]/75 backdrop-blur-[3px]"
               onClick={() => setModalOpen(false)}
             />
 
             <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.98 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-105 max-h-full overflow-y-auto overflow-x-hidden rounded-3xl border border-white/10 bg-[#0c0c10] shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="relative max-h-full w-full max-w-[31rem] overflow-y-auto rounded-[22px] border border-white/10 bg-[#0c0c0f] px-8 pb-7 pt-8 shadow-[0_32px_80px_rgba(0,0,0,0.7)] sm:px-10 sm:pb-8 sm:pt-9"
             >
-              {/* Aurora header */}
-              <div className="relative px-6 sm:px-8 pt-9 pb-7 overflow-hidden">
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  aria-hidden
-                >
-                  <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-105 h-55 bg-sky-500/15 rounded-full blur-[80px]" />
-                  <div className="absolute -top-12 right-0 w-55 h-40 bg-indigo-500/10 rounded-full blur-[70px]" />
-                  <div
-                    className="absolute inset-0 opacity-[0.04]"
-                    style={{
-                      backgroundImage:
-                        "radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)",
-                      backgroundSize: "22px 22px",
-                    }}
-                  />
-                </div>
-
+              <div className="flex items-baseline justify-between gap-6">
+                <p className="text-[12px] text-neutral-500">NovaDesk, sample data</p>
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  aria-label="Close"
-                  className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:text-white hover:bg-white/5 transition-colors"
+                  className="text-[12px] text-neutral-500 underline-offset-4 transition-colors hover:text-white hover:underline"
                 >
-                  <X className="w-4 h-4" />
+                  Close
                 </button>
-
-                <div className="relative">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-5 rounded-full border border-emerald-500/20 bg-emerald-500/8">
-                    <TrendingDown className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-[11.5px] font-medium text-emerald-300 tracking-wide">
-                      Found in this demo
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap items-baseline gap-2.5 mb-1.5">
-                    <span className="text-4xl sm:text-[2.6rem] leading-none font-bold tracking-tight text-white tabular-nums">
-                      ${savings.monthly.toLocaleString()}
-                    </span>
-                    <span className="text-sm text-neutral-400 font-medium">
-                      /month in savings
-                    </span>
-                  </div>
-                  <p className="text-[13px] text-neutral-500">
-                    {savings.percent}% of NovaDesk&apos;s LLM spend, recovered
-                    by four changes.
-                  </p>
-                </div>
               </div>
 
-              {/* Body */}
-              <div className="px-6 sm:px-8 pb-8 pt-6 border-t border-white/6">
-                <h2 className="text-lg font-semibold text-white tracking-tight mb-1.5">
-                  {modalAction
-                    ? `Ready to ${modalAction}?`
-                    : "Now see what's hiding in your spend."}
-                </h2>
-                <p className="text-[13.5px] text-neutral-400 leading-relaxed mb-6">
-                  {modalAction
-                    ? "The demo is read-only. On your own data, this takes one click — and connecting takes two lines of Python."
-                    : "Connect your agents with two lines of Python — or paste an OpenAI/Anthropic admin key and see your real last-30-days spend in 60 seconds, no code."}
-                </p>
+              {/* The number the visitor has just been looking at, set as the
+                  headline rather than a badge. */}
+              <p className="mt-8 font-display text-[3.4rem] font-normal leading-none tracking-[-0.02em] text-white tabular-nums sm:text-[4rem]">
+                ${savings.monthly.toLocaleString()}
+                <span className="ml-2 font-sans text-[15px] tracking-normal text-neutral-500">a month</span>
+              </p>
+              <p className="mt-3 text-[14px] leading-relaxed text-neutral-400">
+                is what NovaDesk could stop spending: {savings.percent}% of its
+                bill, from {savings.count} changes.
+              </p>
 
-                {/* Proof chips */}
-                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-7">
-                  {[
-                    { icon: Terminal, top: "2 lines", bottom: "to integrate" },
-                    { icon: Layers, top: "3,500+", bottom: "models tracked" },
-                    { icon: Github, top: "MIT", bottom: "open source" },
-                  ].map(({ icon: Icon, top, bottom }) => (
-                    <div
-                      key={top}
-                      className="flex flex-col items-center gap-1 rounded-xl border border-white/6 bg-white/2 px-1.5 sm:px-2 py-3 text-center"
-                    >
-                      <Icon className="w-4 h-4 text-neutral-500 mb-0.5" />
-                      <span className="text-[13px] font-semibold text-white leading-none">
-                        {top}
-                      </span>
-                      <span className="text-[10.5px] text-neutral-500 leading-none">
-                        {bottom}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              <h2
+                id="demo-signup-title"
+                className="mt-9 font-display text-[1.75rem] font-normal leading-[1.15] tracking-[-0.01em] text-white"
+              >
+                {modalAction ? `To ${modalAction}, bring your own data.` : "Now find it in yours."}
+              </h2>
+              <p className="mt-3 text-[14px] leading-relaxed text-neutral-400">
+                {modalAction
+                  ? "The demo is read-only. On your own project this is one click, and connecting takes two lines of Python."
+                  : "Connect your agents with two lines of Python, or paste an OpenAI or Anthropic admin key and see your last 30 days in about a minute."}
+              </p>
 
+              <dl className="mt-7 divide-y divide-white/8 border-y border-white/8 text-[13px]">
+                {[
+                  ["To integrate", "two lines of Python"],
+                  ["Models priced", "3,500+"],
+                  ["Cost", "free cloud, MIT if you self-host"],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-baseline justify-between gap-6 py-2.5">
+                    <dt className="text-neutral-500">{label}</dt>
+                    <dd className="text-right text-neutral-200">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="mt-8 flex items-center justify-between gap-4">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="text-[13px] text-neutral-500 underline-offset-4 transition-colors hover:text-white hover:underline"
+                >
+                  Keep exploring
+                </button>
                 {hasParkedSession ? (
-                  <button
-                    type="button"
-                    onClick={exitDemo}
-                    className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-2xl transition-all duration-200 shadow-[0_1px_24px_rgba(255,255,255,0.12)]"
-                  >
+                  <button type="button" onClick={exitDemo} className={MODAL_PRIMARY}>
                     Back to my dashboard
-                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                   </button>
                 ) : (
                   <Link
                     href="/auth/register?from=demo"
                     onClick={() => handleSignupClick("demo_modal")}
-                    className="group relative w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-[#0a0a0b] bg-white hover:bg-neutral-100 rounded-2xl transition-all duration-200 shadow-[0_1px_24px_rgba(255,255,255,0.12)]"
+                    className={MODAL_PRIMARY}
                   >
-                    Start tracking free
-                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                    Start free
                   </Link>
                 )}
-
-                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 mt-4">
-                  <span className="text-[11.5px] text-neutral-600">
-                    No credit card · Free cloud · MIT open source
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setModalOpen(false)}
-                    className="text-[12px] text-neutral-500 hover:text-neutral-300 transition-colors underline-offset-4 hover:underline"
-                  >
-                    Keep exploring
-                  </button>
-                </div>
               </div>
+              {!hasParkedSession && (
+                <p className="mt-4 text-right text-[11.5px] text-neutral-600">No credit card.</p>
+              )}
             </motion.div>
           </div>
         )}

@@ -320,7 +320,7 @@ function StreamBody({ active }: VisualProps) {
         <span className="tabular-nums text-white">${(tokens * 0.00001).toFixed(4)}</span>
       </div>
       <p className="mt-1.5 text-neutral-500">
-        {done ? "Counted at the final chunk — same accuracy as a blocking call." : "Counting as chunks arrive…"}
+        {done ? "Counted at the final chunk, same accuracy as a blocking call." : "Counting as chunks arrive…"}
       </p>
     </>
   );
@@ -431,7 +431,7 @@ function GuardrailVisual({ active }: VisualProps) {
           <span className="ml-auto text-[11px] text-neutral-500">just now</span>
         </div>
         <p className="mt-1 text-neutral-300">
-          email-drafter called <span className="text-white">send_email</span> — a write tool on a read-only agent.
+          email-drafter called <span className="text-white">send_email</span>, a write tool on a read-only agent.
         </p>
         <p className="mt-1 text-[11px] text-neutral-500">Owners notified · webhook delivered</p>
       </motion.div>
@@ -544,7 +544,7 @@ const FEATURES: Feature[] = [
     id: "run-cost",
     label: "Cost per run",
     icon: Workflow,
-    description: "What one run actually cost — per step, per tool, with loops flagged.",
+    description: "What one run actually cost: per step, per tool, with loops flagged.",
     visual: RunCostVisual,
   },
   {
@@ -565,7 +565,7 @@ const FEATURES: Feature[] = [
     id: "two-lines",
     label: "Two lines, four SDKs",
     icon: Code2,
-    description: "OpenAI, Anthropic, Gemini and LangChain — no wrappers, no refactor.",
+    description: "OpenAI, Anthropic, Gemini and LangChain. No wrappers, no refactor.",
     visual: TwoLinesVisual,
   },
   {
@@ -579,7 +579,7 @@ const FEATURES: Feature[] = [
     id: "concurrency",
     label: "Concurrency-safe",
     icon: Layers,
-    description: "Parallel pipelines never mix their spend — attribution rides contextvars.",
+    description: "Parallel pipelines never mix their spend. Attribution rides contextvars.",
     visual: ConcurrencyVisual,
   },
   {
@@ -600,7 +600,7 @@ const FEATURES: Feature[] = [
     id: "metadata",
     label: "Metadata only",
     icon: Lock,
-    description: "Token counts and timings on the wire — never your prompts.",
+    description: "Token counts and timings on the wire, never your prompts.",
     visual: MetadataVisual,
   },
 ];

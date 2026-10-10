@@ -16,8 +16,8 @@ interface HeroStatCardProps {
   value: string;
   sub?: string | ReactNode;
   icon: ReactNode;
-  /** Tailwind classes for the icon tile, e.g. "bg-sky-500/10 text-sky-400". */
-  iconClassName: string;
+  /** Kept for callers; the icon is always drawn in the neutral chip. */
+  iconClassName?: string;
   delta?: Delta;
   /**
    * Whether an upward delta is bad news (costs) or good news (success rate).
@@ -32,7 +32,6 @@ export function HeroStatCard({
   value,
   sub,
   icon,
-  iconClassName,
   delta,
   upIsBad = false,
   sparkline,
@@ -45,24 +44,17 @@ export function HeroStatCard({
         : "text-emerald-400";
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/6 bg-linear-to-b from-white/[0.035] to-white/[0.012] p-4 transition-colors duration-300 hover:border-white/12 sm:p-5">
+    <div className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[#131317] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors duration-300 hover:border-white/16">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-3">
-            <div
-              className={cn(
-                "flex h-7 w-7 items-center justify-center rounded-lg",
-                iconClassName,
-              )}
-            >
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex size-7 items-center justify-center rounded-full border border-white/10 text-neutral-400">
               {icon}
-            </div>
-            <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-neutral-500">
-              {label}
             </span>
+            <span className="text-[12px] text-neutral-500">{label}</span>
           </div>
 
-          <p className="text-[1.7rem] leading-none font-semibold tracking-tight text-white tabular-nums">
+          <p className="text-[2rem] font-light leading-none tracking-[-0.02em] text-white tabular-nums">
             {value}
           </p>
 

@@ -62,14 +62,14 @@ const stats = [
     prefix: "~",
     suffix: "ms",
     label: "blocking overhead",
-    detail: "Events are batched and sent asynchronously — tracking never blocks your calls",
+    detail: "Events are batched and sent asynchronously, so tracking never blocks your calls",
     accent: "from-emerald-400/20 via-emerald-400/5 to-transparent",
   },
   {
     value: 100,
     suffix: "%",
     label: "open source (MIT)",
-    detail: "Free hosted cloud — or self-host the same stack with Docker. No lock-in.",
+    detail: "Free hosted cloud, or self-host the same stack with Docker. No lock-in.",
     accent: "from-violet-400/20 via-violet-400/5 to-transparent",
   },
 ];

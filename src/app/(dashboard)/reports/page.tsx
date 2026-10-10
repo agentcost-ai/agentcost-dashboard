@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileDown, Printer, RefreshCw, FileText } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { ChartSkeleton, MetricCardSkeleton } from "@/components/ui/Skeleton";
-import { ReportDocument } from "@/components/reports/ReportDocument";
+import { ReportDocument, type ReportTheme } from "@/components/reports/ReportDocument";
 import {
   ReportRangePicker,
   type ReportRange,
@@ -12,12 +12,23 @@ import {
 import { exportReportCsv } from "@/lib/reportCsv";
 import { downloadReportPdf } from "@/lib/reportPdf";
 import { api, ExecutiveReport } from "@/lib/api";
-import { parseApiError } from "@/lib/utils";
+import { cn, parseApiError } from "@/lib/utils";
 import {
   useApiConfiguration,
   OnboardingScreen,
   LoadingSpinner,
 } from "@/hooks/useApiConfiguration";
+
+const THEME_KEY = "agentcost_report_theme";
+
+function readTheme(): ReportTheme {
+  if (typeof window === "undefined") return "light";
+  try {
+    return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
 
 export default function ReportsPage() {
   const { isConfigured } = useApiConfiguration();
@@ -26,6 +37,17 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  // How the sheet looks on screen. Exports and print are always light.
+  const [theme, setTheme] = useState<ReportTheme>(readTheme);
+
+  const chooseTheme = (next: ReportTheme) => {
+    setTheme(next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // A blocked store only costs the preference, not the page.
+    }
+  };
 
   const fetchReport = useCallback(async () => {
     if (!api.hasProjectAccess()) {
@@ -67,16 +89,33 @@ export default function ReportsPage() {
       {/* Header / controls — excluded from print */}
       <div className="no-print flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 print:hidden">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-white">
-            <FileText size={22} className="text-sky-400" />
-            Reports
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white">Reports</h1>
           <p className="mt-1 text-sm text-neutral-500">
-            A board-ready breakdown of cost, usage, reliability and savings
+            Cost, usage, reliability and savings as one document you can hand over
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <ReportRangePicker value={range} onChange={setRange} />
+          <div
+            role="group"
+            aria-label="Report appearance"
+            className="flex items-center gap-1 rounded-xl border border-white/6 bg-white/2 p-1"
+          >
+            {(["light", "dark"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={theme === option}
+                onClick={() => chooseTheme(option)}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-[12.5px] font-medium capitalize transition-colors",
+                  theme === option ? "bg-white/8 text-white" : "text-neutral-500 hover:text-neutral-300",
+                )}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
           <button
             onClick={fetchReport}
             disabled={loading}
@@ -90,14 +129,14 @@ export default function ReportsPage() {
             disabled={!report}
             className="flex items-center gap-2 rounded-lg border border-white/6 px-3 py-1.5 text-[13px] text-neutral-300 transition-colors hover:border-white/12 hover:text-white disabled:opacity-50"
           >
-            <FileDown size={14} /> CSV
+            Export CSV
           </button>
           <button
             onClick={() => report && downloadReportPdf(report)}
             disabled={!report}
-            className="flex items-center gap-2 rounded-lg bg-sky-500/15 px-3 py-1.5 text-[13px] font-medium text-sky-300 transition-colors hover:bg-sky-500/25 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-white px-3.5 py-1.5 text-[13px] font-medium text-[#0a0a0b] transition-colors hover:bg-neutral-200 disabled:opacity-50"
           >
-            <Printer size={14} /> Export PDF
+            Export PDF
           </button>
         </div>
       </div>
@@ -123,7 +162,7 @@ export default function ReportsPage() {
           </Card>
         </div>
       ) : report ? (
-        <ReportDocument report={report} />
+        <ReportDocument report={report} theme={theme} />
       ) : null}
     </div>
   );

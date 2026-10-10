@@ -24,7 +24,7 @@ import {
 } from "@/components/docs/primitives";
 
 export const metadata: Metadata = {
-  title: "AgentCost Documentation — SDK, REST API, CLI & Model Catalog",
+  title: "AgentCost Documentation: SDK, REST API, CLI & Model Catalog",
   description:
     "Every AgentCost developer resource in one index: the Python SDK, the REST API reference, the CLI, the model catalog with live pricing, the MCP server, the OpenAPI specification and the data privacy architecture.",
   alternates: { canonical: `${SITE_URL}/docs` },

@@ -42,9 +42,9 @@ export function organizationSchema() {
     alternateName: ["Agent Cost", "AgentCost.tech"],
     url: SITE_URL,
     logo: `${SITE_URL}/icon.svg`,
-    slogan: "Real-time LLM cost observability",
+    slogan: "Never wonder which agent spiked your AI bill again",
     description:
-      "AgentCost is an open-source LLM cost observability platform with a free hosted cloud. Track, analyze, and optimize OpenAI, Anthropic, Gemini, and LangChain spending in real time across 3,500+ models.",
+      "AgentCost traces every LLM call to the agent, run and step that made it, so a spike in your AI bill always has a name. Open source with a free hosted cloud, covering OpenAI, Anthropic, Gemini and LangChain across 3,500+ models.",
     foundingDate: "2026-02",
     email: CONTACT_EMAIL,
     knowsAbout: [
@@ -114,7 +114,7 @@ export function softwareApplicationSchema() {
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Any",
     description:
-      "Real-time LLM cost tracking and optimization for OpenAI, Anthropic, Gemini, and LangChain across 3,500+ models.",
+      "Traces every LLM call to the agent, run and step that made it, for OpenAI, Anthropic, Gemini and LangChain across 3,500+ models.",
     downloadUrl: "https://pypi.org/project/agentcost/",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     publisher: { "@id": ORGANIZATION_ID },

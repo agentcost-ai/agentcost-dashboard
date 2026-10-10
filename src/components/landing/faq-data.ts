@@ -7,11 +7,11 @@ export const faqs = [
         questions: [
             {
                 q: "How long does it take to set up AgentCost?",
-                a: "Under two minutes. Create a free account (a project with an API key is set up for you), install the Python SDK with pip, and add two lines to your application (import + init) — the free hosted cloud does the rest. Prefer to run everything yourself? The same MIT-licensed stack starts with Docker. Either way, your existing LangChain code works completely unchanged — no refactoring needed.",
+                a: "Under two minutes. Create a free account (a project with an API key is set up for you), install the Python SDK with pip, and add two lines to your application (import + init). The free hosted cloud does the rest. Prefer to run everything yourself? The same MIT-licensed stack starts with Docker. Either way, your existing LangChain code works completely unchanged, with no refactoring needed.",
             },
             {
                 q: "Do I need to modify my existing LangChain code?",
-                a: "No. AgentCost uses monkey-patching to transparently intercept LLM calls. You add two lines at the top of your application — an import and an init call — and every LLM invocation is automatically tracked. Your agents, chains, and prompts stay exactly as they are.",
+                a: "No. AgentCost uses monkey-patching to transparently intercept LLM calls. You add two lines at the top of your application (an import and an init call) and every LLM invocation is automatically tracked. Your agents, chains, and prompts stay exactly as they are.",
             },
             {
                 q: "What LLM providers and models are supported?",
@@ -24,15 +24,15 @@ export const faqs = [
         questions: [
             {
                 q: "What overhead does the SDK add to my LLM calls?",
-                a: "Near-zero. The SDK uses async batching to accumulate events and send them in bulk, so delivery never blocks your LLM calls. Token counting is done locally using tiktoken, and cost calculation is a simple lookup — neither blocks your application.",
+                a: "Near-zero. The SDK uses async batching to accumulate events and send them in bulk, so delivery never blocks your LLM calls. Token counting is done locally using tiktoken, and cost calculation is a simple lookup. Neither blocks your application.",
             },
             {
                 q: "What data does the SDK actually send? Are my prompts private?",
-                a: "The SDK is a metadata-only tracker. Each event carries the agent name, model, token counts, cost, latency, timestamp, and a success flag — never your prompts, completions, system instructions, or files, and there is no setting that transmits them. For duplicate detection the prompt is hashed locally with SHA-256, so only the one-way hash leaves your process. The full wire payload is documented field-by-field at agentcost.tech/docs/privacy, with links to the open-source SDK code so you can verify every claim.",
+                a: "The SDK is a metadata-only tracker. Each event carries the agent name, model, token counts, cost, latency, timestamp, and a success flag. It never carries your prompts, completions, system instructions, or files, and there is no setting that transmits them. For duplicate detection the prompt is hashed locally with SHA-256, so only the one-way hash leaves your process. The full wire payload is documented field-by-field at agentcost.tech/docs/privacy, with links to the open-source SDK code so you can verify every claim.",
             },
             {
                 q: "Is AgentCost hosted or self-hosted? Where does my data go?",
-                a: "Both — you choose. By default you use the free hosted cloud: sign up, and your usage events are stored securely at api.agentcost.tech; you can delete your data or your account at any time. Because the whole stack is MIT-licensed, you can instead self-host the FastAPI backend and PostgreSQL database on your own infrastructure with Docker — in that mode, nothing leaves your environment and there is no telemetry or phone-home behavior.",
+                a: "Both, and you choose. By default you use the free hosted cloud: sign up, and your usage events are stored securely at api.agentcost.tech; you can delete your data or your account at any time. Because the whole stack is MIT-licensed, you can instead self-host the FastAPI backend and PostgreSQL database on your own infrastructure with Docker. In that mode, nothing leaves your environment and there is no telemetry or phone-home behavior.",
             },
             {
                 q: "How are costs calculated?",
@@ -49,11 +49,11 @@ export const faqs = [
         questions: [
             {
                 q: "Is AgentCost free?",
-                a: "Yes. The hosted cloud — what you get when you sign up — is free, with no usage limits, tiers, or premium features hidden behind a paywall. The code is also fully open-source under the MIT License, so you can use it commercially, modify it, and deploy it on your own infrastructure at no cost.",
+                a: "Yes. The hosted cloud, which is what you get when you sign up, is free, with no usage limits, tiers, or premium features hidden behind a paywall. The code is also fully open-source under the MIT License, so you can use it commercially, modify it, and deploy it on your own infrastructure at no cost.",
             },
             {
                 q: "How does AgentCost compare to Helicone, Langfuse, or LiteLLM?",
-                a: "Helicone and Langfuse are hosted platforms with free tiers and paid plans — Helicone from $79/month, Langfuse from $29/month — and Langfuse covers evaluations and prompt management as well as tracing. LiteLLM is a gateway that routes traffic rather than a cost tracker, and AgentCost actually sources its model pricing from LiteLLM's database. AgentCost is free at any scale — a free hosted cloud plus MIT-licensed code you can self-host — and focused only on attributing spend to the agent that caused it. There are detailed side-by-side comparisons at agentcost.tech/compare.",
+                a: "Helicone and Langfuse are hosted platforms with free tiers and paid plans (Helicone from $79/month, Langfuse from $29/month), and Langfuse covers evaluations and prompt management as well as tracing. LiteLLM is a gateway that routes traffic rather than a cost tracker, and AgentCost actually sources its model pricing from LiteLLM's database. AgentCost is free at any scale (a free hosted cloud plus MIT-licensed code you can self-host) and focused only on attributing spend to the agent that caused it. There are detailed side-by-side comparisons at agentcost.tech/compare.",
             },
             {
                 q: "What's the tech stack?",

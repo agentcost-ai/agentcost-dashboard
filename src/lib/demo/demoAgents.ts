@@ -15,8 +15,11 @@ import type {
 } from "../api";
 import {
   AGENTS,
+  REPEAT_SHARE,
   WORKFLOWS,
+  dailyAgentCost,
   dayMultiplier,
+  demoDayKey,
   demoAgentStats,
   demoGuardrailCompliance,
   demoRepeatedWork,
@@ -48,12 +51,6 @@ const CACHE_SHARE: Record<string, number> = {
   "research-agent": 41,
   "code-review-agent": 27,
   "support-triage-agent": 18,
-};
-
-// Share of spend lost to identical calls repeated inside one run.
-const REPEAT_SHARE: Record<string, number> = {
-  "support-triage-agent": 0.108,
-  "research-agent": 0.03,
 };
 
 const DEVELOPERS = ["maya.chen", "dev.patel", "ci-bot"];
@@ -158,12 +155,10 @@ export function demoAgentSummaries(range: string, limit: number): AgentSummary[]
     // Daily series; the retry loop lands on the day before today.
     const daily = [];
     for (let d = days - 1; d >= 0; d--) {
-      const ts = new Date(now - d * 86_400_000);
       const base = p.callsPerDay * dayMultiplier(d) * perCallCost(p);
-      const spike = d === 1 && repeatedCost > 0 ? repeatedCost : 0;
       daily.push({
-        day: ts.toISOString().slice(0, 10),
-        cost: round6(base + spike),
+        day: demoDayKey(d),
+        cost: round6(dailyAgentCost(p, d, days)),
         calls: Math.round(p.callsPerDay * dayMultiplier(d)),
         failed_cost: round6(base * p.errorRate),
       });

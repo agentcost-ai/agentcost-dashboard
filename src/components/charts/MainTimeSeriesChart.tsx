@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import {
   ComposedChart,
   Area,
+  Line,
+  ReferenceDot,
   XAxis,
   YAxis,
   Tooltip,
@@ -14,7 +16,7 @@ import {
 import { format } from "date-fns";
 import { formatCurrency, formatNumber, cn, dayBucketDate } from "@/lib/utils";
 import type { TimeSeriesPoint } from "@/lib/api";
-import { METRIC_COLORS, CHART_CHROME } from "@/lib/palette";
+import { ACCENT, ACCENT_SOFT, CHART_CHROME } from "@/lib/palette";
 
 type Metric = "cost" | "calls" | "tokens";
 
@@ -24,9 +26,11 @@ const METRICS: {
   color: string;
   format: (v: number) => string;
 }[] = [
-  { key: "cost", label: "Spend", color: METRIC_COLORS.cost, format: formatCurrency },
-  { key: "calls", label: "Calls", color: METRIC_COLORS.calls, format: formatNumber },
-  { key: "tokens", label: "Tokens", color: METRIC_COLORS.tokens, format: formatNumber },
+  // One series is on screen at a time, so they share the page accent rather
+  // than each bringing a hue of its own.
+  { key: "cost", label: "Spend", color: ACCENT_SOFT, format: formatCurrency },
+  { key: "calls", label: "Calls", color: ACCENT_SOFT, format: formatNumber },
+  { key: "tokens", label: "Tokens", color: ACCENT_SOFT, format: formatNumber },
 ];
 
 function axisTickFormat(metric: Metric, value: number): string {
@@ -63,10 +67,6 @@ function ChartTooltip({
         {METRICS.map((m) => (
           <div key={m.key} className="flex items-center justify-between gap-6">
             <span className="flex items-center gap-1.5 text-[12px] text-neutral-400">
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ backgroundColor: m.color }}
-              />
               {m.label}
             </span>
             <span className="text-[12.5px] font-medium text-white tabular-nums">
@@ -116,22 +116,23 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
   }, [data, metric]);
 
   const maxValue = Math.max(...data.map((d) => d[metric]), 0);
+  const peak = maxValue > 0 ? formattedData.find((d) => d[metric] === maxValue) : undefined;
 
   return (
     <div>
       {/* Metric switcher */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-5">
-        <div className="flex items-center gap-1 rounded-xl border border-white/6 bg-white/2 p-1">
+        <div className="flex items-center gap-1.5">
           {METRICS.map((m) => (
             <button
               key={m.key}
               type="button"
               onClick={() => setMetric(m.key)}
               className={cn(
-                "px-3.5 py-1.5 text-[12.5px] font-medium rounded-lg transition-all duration-200",
+                "rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors",
                 metric === m.key
-                  ? "bg-white/8 text-white shadow-sm"
-                  : "text-neutral-500 hover:text-neutral-300",
+                  ? "bg-white text-[#0d0d14]"
+                  : "border border-white/10 text-neutral-400 hover:border-white/25 hover:text-white",
               )}
             >
               {m.label}
@@ -147,7 +148,7 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
         </div>
       </div>
 
-      <div className="h-64 min-w-0 sm:h-80">
+      <div className="h-52 min-w-0 sm:h-60">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={formattedData}
@@ -155,9 +156,9 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
           >
             <defs>
               <linearGradient id="mainChartFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={active.color} stopOpacity={0.28} />
-                <stop offset="55%" stopColor={active.color} stopOpacity={0.06} />
-                <stop offset="100%" stopColor={active.color} stopOpacity={0} />
+                <stop offset="0%" stopColor={ACCENT} stopOpacity={0.4} />
+                <stop offset="60%" stopColor={ACCENT} stopOpacity={0.07} />
+                <stop offset="100%" stopColor={ACCENT} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid
@@ -177,10 +178,10 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
               axisLine={false}
               tickLine={false}
               tick={{ fill: CHART_CHROME.axisTick, fontSize: 11 }}
-              domain={[0, maxValue > 0 ? maxValue * 1.12 : 1]}
+              domain={[0, maxValue > 0 ? maxValue * 1.22 : 1]}
               tickFormatter={(v) => axisTickFormat(metric, v as number)}
               width={56}
-              tickCount={5}
+              tickCount={4}
             />
             <Tooltip
               content={<ChartTooltip />}
@@ -198,16 +199,55 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
             <Area
               type="monotone"
               dataKey={metric}
-              stroke={active.color}
-              strokeWidth={2}
+              stroke="none"
               fill="url(#mainChartFill)"
+              activeDot={false}
+              tooltipType="none"
+            />
+            {/* Soft halo under the line, then the line itself */}
+            <Line
+              type="monotone"
+              dataKey={metric}
+              stroke={ACCENT}
+              strokeWidth={9}
+              strokeOpacity={0.3}
+              strokeLinecap="round"
+              dot={false}
+              activeDot={false}
+              tooltipType="none"
+              style={{ filter: "blur(5px)" }}
+            />
+            <Line
+              type="monotone"
+              dataKey={metric}
+              stroke={active.color}
+              strokeWidth={2.25}
+              strokeLinecap="round"
+              dot={false}
               activeDot={{
-                r: 4,
-                fill: active.color,
-                stroke: CHART_CHROME.dotStroke,
-                strokeWidth: 2,
+                r: 5,
+                fill: CHART_CHROME.dotStroke,
+                stroke: active.color,
+                strokeWidth: 2.5,
               }}
             />
+            {peak && (
+              <ReferenceDot
+                x={peak.tick}
+                y={peak[metric]}
+                r={5}
+                fill={CHART_CHROME.dotStroke}
+                stroke={active.color}
+                strokeWidth={2.5}
+                label={{
+                  value: `${active.format(peak[metric])} peak`,
+                  position: "top",
+                  offset: 12,
+                  fill: "#e5e5e5",
+                  fontSize: 11.5,
+                }}
+              />
+            )}
           </ComposedChart>
         </ResponsiveContainer>
       </div>

@@ -8,7 +8,7 @@ import { breadcrumbList, jsonLd } from "@/lib/structured-data";
 import { PageHeader, Section } from "@/components/docs/primitives";
 
 export const metadata: Metadata = {
-  title: "AgentCost MCP Server — Model Pricing Tools for AI Agents",
+  title: "AgentCost MCP Server: Model Pricing Tools for AI Agents",
   description:
     "Connect any MCP client to the AgentCost MCP server and give your agent live LLM model pricing, cost estimation and deprecation lookups, plus your own project's spend with an API key. Remote, no install.",
   alternates: { canonical: `${SITE_URL}/docs/mcp` },

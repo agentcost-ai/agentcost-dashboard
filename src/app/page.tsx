@@ -16,7 +16,7 @@ import { Footer } from "@/components/landing/Footer";
 export const metadata: Metadata = {
   // `absolute` opts out of the root title.template — the homepage title is
   // already brand-first and must not become "AgentCost — … | AgentCost".
-  title: { absolute: "AgentCost — Track OpenAI, Anthropic, Gemini & LangChain Costs" },
+  title: { absolute: "AgentCost: See Which Agent Spiked Your AI Bill" },
   alternates: { canonical: "/" },
 };
 

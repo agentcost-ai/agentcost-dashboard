@@ -96,7 +96,7 @@ const FIELDS: Field[] = [
     note: "The provider exception message",
     detail: "Set only when a call fails, so the failure is visible on the dashboard.",
     caveat:
-      "Some provider errors — content-policy rejections in particular — can quote part of the input in their message. If that matters for your workload, use local mode or self-host.",
+      "Some provider errors, content-policy rejections in particular, can quote part of the input in their message. If that matters for your workload, use local mode or self-host.",
   },
   {
     name: "input_hash",
@@ -119,7 +119,7 @@ const FIELDS: Field[] = [
     type: "object",
     example: "{ \"user_id\": \"u_8f3\" }",
     note: "Only what you explicitly attach",
-    detail: "Keys you attach yourself, sent verbatim. Attach identifiers such as user_id or session_id — not content.",
+    detail: "Keys you attach yourself, sent verbatim. Attach identifiers such as user_id or session_id, not content.",
   },
 ];
 

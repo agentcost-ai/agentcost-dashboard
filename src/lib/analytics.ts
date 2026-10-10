@@ -19,6 +19,8 @@
  *   openai_import_started                 — OpenAI spend import submitted
  *   openai_import_succeeded { total_usd } — import rendered (rounded total)
  *   openai_import_failed                  — import errored
+ *   demo_tour               { action, step } — guided demo tour progress
+ *                                           (step | skip | finish | restart)
  *   github_clicked          { location }  — outbound click to the GitHub repo
  *   sdk_install_started     { location }  — pip-install command copied
  *   booking_clicked         { location }  — outbound click to the Cal.com page

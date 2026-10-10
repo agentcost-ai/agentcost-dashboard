@@ -17,7 +17,7 @@ type LedgerRow = {
 const LEDGER: LedgerRow[] = [
   {
     ours: true,
-    who: "Us — one retry loop",
+    who: "Us · one retry loop",
     figure: (
       <>
         <span className="text-white">$800</span>
@@ -30,7 +30,7 @@ const LEDGER: LedgerRow[] = [
     href: "https://dev.to/kushagra125/launching-agentcost-14lf",
   },
   {
-    who: "Microsoft — Copilot",
+    who: "Microsoft · Copilot",
     figure: <span className="text-white">−$20 / user / mo</span>,
     line: "Reported losses under flat pricing, with some users costing $80 a month, until the WSJ ran the numbers.",
     source: "The Register",
@@ -38,7 +38,7 @@ const LEDGER: LedgerRow[] = [
     external: true,
   },
   {
-    who: "Uber — engineering",
+    who: "Uber · engineering",
     figure: <span className="text-white">Built a gateway</span>,
     line: "LLM cost attribution took a dedicated internal service between every team and every model.",
     source: "Uber Engineering",
@@ -46,7 +46,7 @@ const LEDGER: LedgerRow[] = [
     external: true,
   },
   {
-    who: "Gartner — forecasts",
+    who: "Gartner · forecasts",
     figure: <span className="text-white">500–1,000%</span>,
     line: "The error range on GenAI cost estimates made without usage visibility.",
     source: "Gartner",
@@ -54,7 +54,7 @@ const LEDGER: LedgerRow[] = [
     external: true,
   },
   {
-    who: "Claude Code — developers",
+    who: "Claude Code · developers",
     figure: <span className="text-white">90% under $30 / day</span>,
     line: "The average looks safe. The overruns live in the tail an average never shows.",
     source: "Weilliptic",

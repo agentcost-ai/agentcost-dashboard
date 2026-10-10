@@ -19,7 +19,7 @@ export function FeaturesSection() {
             <span className="text-neutral-500">It never says what you spent it on.</span>
           </h2>
           <p className="mt-5 text-[17px] leading-7 text-neutral-300">
-            Nine things AgentCost tells you that a token total cannot — for
+            Nine things AgentCost tells you that a token total cannot, for
             what already ran, and for what you are about to ship.
           </p>
         </div>

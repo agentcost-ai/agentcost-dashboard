@@ -2,7 +2,16 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { Card, MetricCard } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
+import {
+  SURFACE,
+  usd,
+  Money,
+  Eyebrow,
+  AccentPanel,
+  PanelSkeleton,
+} from "@/components/dashboard/OverviewPanels";
+import { seriesColor } from "@/lib/palette";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackDemo } from "@/lib/demo/demo";
 import { demoOptimizationSummary } from "@/lib/demo/demoData";
@@ -15,11 +24,10 @@ import {
   OptimizationSummary,
   Recommendation,
 } from "@/lib/api";
-import { formatCurrency, formatPercentage, parseApiError } from "@/lib/utils";
+import { formatCurrency, formatPercentage, parseApiError, cn } from "@/lib/utils";
 import {
   Zap,
   TrendingDown,
-  DollarSign,
   Lightbulb,
   AlertTriangle,
   CheckCircle2,
@@ -46,18 +54,23 @@ import {
   FeedbackDialog,
 } from "@/components/optimizations";
 
+// An impact value outside these three has no label, and used to render as an
+// empty pill.
+const KNOWN_IMPACT = new Set(["minimal", "moderate", "significant"]);
+
 // Priority badge colors
 function PriorityBadge({ priority }: { priority: string }) {
   const config = {
-    high: { color: "red", label: "High Priority" },
-    medium: { color: "yellow", label: "Medium Priority" },
-    low: { color: "green", label: "Low Priority" },
-  }[priority] || { color: "gray", label: priority };
+    high: { dot: "bg-red-400", label: "High priority" },
+    medium: { dot: "bg-amber-300", label: "Medium priority" },
+    low: { dot: "bg-emerald-400", label: "Low priority" },
+  }[priority] || { dot: "bg-neutral-500", label: priority };
 
   return (
-    <Badge variant={config.color as "red" | "yellow" | "green" | "gray"}>
+    <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/10 px-2.5 py-1 text-[11.5px] text-neutral-300">
+      <span className={`size-1.5 rounded-full ${config.dot}`} aria-hidden />
       {config.label}
-    </Badge>
+    </span>
   );
 }
 
@@ -121,17 +134,17 @@ function ConfidenceBadge({
 // Optimization type icons - expanded to include all types
 function OptimizationTypeIcon({ type }: { type: string }) {
   const icons: Record<string, React.ReactNode> = {
-    model_downgrade: <Cpu size={20} className="text-sky-400" />,
-    caching: <Database size={20} className="text-violet-400" />,
-    prompt_optimization: <Lightbulb size={20} className="text-pink-400" />,
-    batching: <RefreshCw size={20} className="text-emerald-400" />,
-    token_reduction: <TrendingDown size={20} className="text-orange-400" />,
-    error_reduction: <XCircle size={20} className="text-red-400" />,
-    anomaly_alert: <AlertCircle size={20} className="text-amber-400" />,
-    latency: <Timer size={20} className="text-indigo-400" />,
-    non_llm_candidate: <Binary size={20} className="text-teal-400" />,
+    model_downgrade: <Cpu size={18} strokeWidth={1.75} className="text-indigo-200" />,
+    caching: <Database size={18} strokeWidth={1.75} className="text-indigo-200" />,
+    prompt_optimization: <Lightbulb size={18} strokeWidth={1.75} className="text-indigo-200" />,
+    batching: <RefreshCw size={18} strokeWidth={1.75} className="text-indigo-200" />,
+    token_reduction: <TrendingDown size={18} strokeWidth={1.75} className="text-indigo-200" />,
+    error_reduction: <XCircle size={18} strokeWidth={1.75} className="text-indigo-200" />,
+    anomaly_alert: <AlertCircle size={18} strokeWidth={1.75} className="text-indigo-200" />,
+    latency: <Timer size={18} strokeWidth={1.75} className="text-indigo-200" />,
+    non_llm_candidate: <Binary size={18} strokeWidth={1.75} className="text-indigo-200" />,
   };
-  return icons[type] || <Zap size={20} className="text-neutral-400" />;
+  return icons[type] || <Zap size={18} strokeWidth={1.75} className="text-indigo-200" />;
 }
 
 // Single optimization card with action buttons
@@ -202,34 +215,36 @@ function OptimizationCard({
   })();
 
   return (
-    <Card className="hover:border-neutral-700 transition-colors">
+    <Card className="transition-colors hover:border-white/16">
       <div className="flex items-start gap-4">
         {/* Icon */}
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-neutral-800">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-300/15 bg-indigo-300/8">
           <OptimizationTypeIcon type={suggestion.type} />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-start justify-between gap-2 sm:gap-4">
-            <div className="min-w-0">
-              <h3 className="font-medium text-white">{suggestion.title}</h3>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-[16px] font-medium tracking-tight text-white">{suggestion.title}</h3>
               <p className="mt-1 text-sm text-neutral-400 line-clamp-2">
                 {suggestion.description}
               </p>
             </div>
-            <PriorityBadge priority={suggestion.priority} />
+            <span className="shrink-0">
+              <PriorityBadge priority={suggestion.priority} />
+            </span>
           </div>
 
           {/* Savings and Model Info */}
           <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
             {showMonetary && (
               <div>
-                <span className="text-xs text-neutral-500 uppercase">
+                <span className="text-[11px] uppercase tracking-[0.1em] text-neutral-500">
                   Est. Monthly Savings
                 </span>
-                <p className="text-lg font-semibold text-emerald-400">
-                  {formatCurrency(estimatedMonthlySavings ?? 0)}
+                <p className="mt-0.5 text-[1.6rem] font-light leading-tight tracking-tight text-white">
+                  <Money value={estimatedMonthlySavings ?? 0} />
                 </p>
                 {suggestion.metrics?.savings_estimated && (
                   <p className="text-xs text-neutral-500">Estimated</p>
@@ -241,7 +256,7 @@ function OptimizationCard({
                 suggestion.type,
               ) && (
                 <div>
-                  <span className="text-xs text-neutral-500 uppercase">
+                  <span className="text-[11px] uppercase tracking-[0.1em] text-neutral-500">
                     Savings
                   </span>
                   <p className="text-sm text-neutral-400">
@@ -251,17 +266,17 @@ function OptimizationCard({
               )}
             {secondaryMetric && (
               <div>
-                <span className="text-xs text-neutral-500 uppercase">
+                <span className="text-[11px] uppercase tracking-[0.1em] text-neutral-500">
                   {secondaryMetric.label}
                 </span>
-                <p className="text-lg font-semibold text-emerald-400">
+                <p className="mt-0.5 text-[1.6rem] font-light leading-tight tracking-tight text-emerald-300 tabular-nums">
                   {secondaryMetric.value}
                 </p>
               </div>
             )}
             {suggestion.agent_name && (
               <div>
-                <span className="text-xs text-neutral-500 uppercase">
+                <span className="text-[11px] uppercase tracking-[0.1em] text-neutral-500">
                   Agent
                 </span>
                 <p className="text-sm font-mono text-white break-all">
@@ -274,16 +289,16 @@ function OptimizationCard({
               suggestion.model &&
               suggestion.alternative_model && (
                 <div>
-                  <span className="text-xs text-neutral-500 uppercase">
+                  <span className="text-[11px] uppercase tracking-[0.1em] text-neutral-500">
                     Switch Model
                   </span>
                   <p className="text-sm text-white wrap-break-word">
                     <span className="text-neutral-400">{suggestion.model}</span>
                     <ArrowRight
                       size={14}
-                      className="inline mx-1 text-emerald-400"
+                      className="inline mx-1 text-neutral-500"
                     />
-                    <span className="text-emerald-400 font-medium">
+                    <span className="font-medium text-indigo-200">
                       {suggestion.alternative_model}
                     </span>
                   </p>
@@ -313,7 +328,8 @@ function OptimizationCard({
                 })()}
 
               {/* Quality Impact Badge - only shown for learned alternatives */}
-              {suggestion.metrics?.quality_impact && (
+              {suggestion.metrics?.quality_impact &&
+            KNOWN_IMPACT.has(suggestion.metrics.quality_impact) && (
                 <Badge
                   variant={
                     suggestion.metrics.quality_impact === "minimal"
@@ -345,7 +361,8 @@ function OptimizationCard({
 
           {/* Quality Impact Badge for non-model_downgrade types */}
           {suggestion.type !== "model_downgrade" &&
-            suggestion.metrics?.quality_impact && (
+            suggestion.metrics?.quality_impact &&
+            KNOWN_IMPACT.has(suggestion.metrics.quality_impact) && (
               <div className="mt-3">
                 <Badge
                   variant={
@@ -380,7 +397,7 @@ function OptimizationCard({
             <div className="mt-4">
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1 text-sm text-primary-400 hover:text-primary-300"
+                className="flex items-center gap-1 text-[13px] text-neutral-400 transition-colors hover:text-white"
               >
                 <ChevronRight
                   size={16}
@@ -408,11 +425,11 @@ function OptimizationCard({
 
           {/* Action Buttons */}
           {recommendation && onImplement && onDismiss && (
-            <div className="mt-4 flex flex-wrap items-center gap-3 pt-4 border-t border-neutral-800">
+            <div className="mt-5 flex flex-wrap items-center gap-2.5 border-t border-white/6 pt-4">
               <button
                 onClick={() => onImplement(recommendation)}
                 disabled={isActioning}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-indigo-200 px-4 py-2.5 text-[13px] font-semibold text-[#0d0d14] transition-colors hover:bg-indigo-100 disabled:opacity-50"
               >
                 <Check size={16} />
                 Implement
@@ -420,7 +437,7 @@ function OptimizationCard({
               <button
                 onClick={() => onDismiss(recommendation.id)}
                 disabled={isActioning}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-700 text-neutral-300 text-sm font-medium hover:bg-neutral-600 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl border border-white/12 bg-white/4 px-4 py-2.5 text-[13px] text-neutral-300 transition-colors hover:border-white/25 hover:text-white disabled:opacity-50"
               >
                 <X size={16} />
                 Dismiss
@@ -457,30 +474,30 @@ function DemoOptimizationsCTA() {
   };
 
   return (
-    <Card className="border-emerald-900/50 bg-emerald-950/20">
+    <Card className="border-indigo-300/20">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-900/30 text-emerald-400">
-            <TrendingDown size={22} />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-300/15 bg-indigo-300/8 text-indigo-200">
+            <TrendingDown size={18} strokeWidth={1.75} />
           </div>
           <div>
             <h3 className="font-medium text-white">
               These {demoSavings.count} changes would save NovaDesk{" "}
-              <span className="text-emerald-400">
+              <span className="text-indigo-200">
                 {formatCurrency(demoSavings.monthly)}/mo
               </span>
               .
             </h3>
             <p className="mt-1 text-sm text-neutral-400">
-              See what&apos;s hiding in your spend — connect your agents with
-              two lines of Python.
+              See what&apos;s hiding in your spend. Connect your agents with two
+              lines of Python.
             </p>
           </div>
         </div>
         <Link
           href="/auth/register?from=demo"
           onClick={handleClick}
-          className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-white hover:bg-neutral-100 px-5 py-2.5 text-sm font-semibold text-[#0a0a0b] transition-colors"
+          className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-200 hover:bg-indigo-100 px-5 py-2.5 text-sm font-semibold text-[#0d0d14] transition-colors"
         >
           Create free account
           <ArrowRight
@@ -630,25 +647,38 @@ export default function OptimizationsPage() {
   const mediumPriority = suggestions.filter((s) => s.priority === "medium");
   const lowPriority = suggestions.filter((s) => s.priority === "low");
 
+  const monthlySpend = summary?.current_monthly_spend || 0;
+  const slices = suggestions
+    .filter((s) => (s.estimated_savings_monthly ?? 0) > 0)
+    .sort((a, b) => (b.estimated_savings_monthly ?? 0) - (a.estimated_savings_monthly ?? 0))
+    .slice(0, 8)
+    .map((s, i) => ({
+      key: `${s.type}-${s.agent_name}-${s.title}`,
+      title: s.title,
+      savings: s.estimated_savings_monthly ?? 0,
+      color: seriesColor(i),
+    }));
+  const slicesTotal = slices.reduce((sum, s) => sum + s.savings, 0);
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-white">
-            Cost Optimizations
+          <h1 className="text-2xl font-semibold tracking-tight text-white">
+            Optimizations
           </h1>
-          <p className="mt-1 text-sm text-neutral-400">
-            Recommendations derived from your own usage — no model calls, no
-            prompt content
+          <p className="mt-1 text-sm text-neutral-500">
+            What to change, derived from your own usage. No model calls, no
+            prompt content.
           </p>
         </div>
         <button
           onClick={fetchData}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-800 text-white text-sm hover:bg-neutral-700 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg border border-white/6 px-3 py-1.5 text-[13px] text-neutral-400 transition-colors hover:border-white/12 hover:text-white disabled:opacity-50"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           Refresh
         </button>
       </div>
@@ -684,94 +714,148 @@ export default function OptimizationsPage() {
         </div>
       )}
 
-      {/* Summary Cards */}
+      {/* What is recoverable, and where it comes from */}
       {!loading && summary && (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            title="Potential Monthly Savings"
-            value={formatCurrency(summary.total_potential_savings_monthly || 0)}
-            subtitle="If all suggestions applied"
-            icon={<DollarSign size={20} />}
-          />
-          <MetricCard
-            title="Savings Percentage"
-            value={formatPercentage(
-              summary.total_potential_savings_percent || 0,
+        <div id="tour-savings" className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
+          <section className={cn(SURFACE, "p-5 sm:p-7")}>
+            <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
+              <div>
+                <Eyebrow>Recoverable each month</Eyebrow>
+                <div className="mt-2.5 flex flex-wrap items-end gap-x-4 gap-y-2">
+                  <Money
+                    value={summary.total_potential_savings_monthly || 0}
+                    className="text-[3.25rem] font-light leading-none tracking-[-0.03em] text-white sm:text-[4rem]"
+                  />
+                  {monthlySpend > 0 && (
+                    <span className="pb-1.5 text-[13px] text-neutral-500">
+                      <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[12.5px] font-medium tabular-nums text-emerald-300">
+                        {formatPercentage(summary.total_potential_savings_percent || 0)}
+                      </span>{" "}
+                      of {usd(monthlySpend)} a month
+                    </span>
+                  )}
+                </div>
+              </div>
+              <dl className="flex gap-8 sm:gap-10">
+                {[
+                  ["Suggestions", String(summary.suggestion_count || 0), `${summary.high_priority_count || 0} high priority`],
+                  [
+                    "Pending",
+                    String(recommendations.length),
+                    recommendations.length === 0 ? "all reviewed" : "awaiting a decision",
+                  ],
+                  ...(summary.effectiveness && summary.effectiveness.total_recommendations > 0
+                    ? [
+                        [
+                          "Acted on",
+                          `${summary.effectiveness.implemented} of ${summary.effectiveness.total_recommendations}`,
+                          `${summary.effectiveness.dismissed} dismissed`,
+                        ],
+                      ]
+                    : []),
+                ].map(([label, value, sub]) => (
+                  <div key={label}>
+                    <dt className="text-[11.5px] text-neutral-500">{label}</dt>
+                    <dd className="mt-1 text-[17px] font-medium tabular-nums text-white">{value}</dd>
+                    <dd className="mt-0.5 text-[11.5px] text-neutral-600">{sub}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* The monthly bill as one bar: each change's slice lit, the rest
+                is what the bill becomes. */}
+            {slices.length > 0 && monthlySpend > 0 && (
+              <div className="mt-8 border-t border-white/6 pt-6">
+                <div className="flex items-baseline justify-between gap-4 text-[12px] text-neutral-500">
+                  <span>Each change as a slice of the monthly bill</span>
+                  <span className="tabular-nums">{usd(monthlySpend)}</span>
+                </div>
+                <div className="mt-3 flex h-4 gap-[3px]">
+                  {slices.map((s) => (
+                    <span
+                      key={s.key}
+                      title={`${s.title}: ${usd(s.savings)} a month`}
+                      className="min-w-1.5 rounded-[5px]"
+                      style={{
+                        flexGrow: s.savings,
+                        flexBasis: 0,
+                        backgroundColor: s.color,
+                        boxShadow: `0 0 14px ${s.color}80`,
+                      }}
+                    />
+                  ))}
+                  {monthlySpend > slicesTotal && (
+                    <span
+                      className="rounded-[5px] bg-white/8"
+                      style={{ flexGrow: monthlySpend - slicesTotal, flexBasis: 0 }}
+                    />
+                  )}
+                </div>
+                <ul className="mt-5 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
+                  {slices.map((s) => (
+                    <li key={s.key} className="flex items-center justify-between gap-3 text-[12.5px]">
+                      <span className="flex min-w-0 items-center gap-2.5">
+                        <span className="size-2 shrink-0 rounded-[3px]" style={{ backgroundColor: s.color }} aria-hidden />
+                        <span className="truncate text-neutral-300">{s.title}</span>
+                      </span>
+                      <span className="shrink-0 tabular-nums text-neutral-400">{usd(s.savings)}</span>
+                    </li>
+                  ))}
+                  <li className="flex items-center justify-between gap-3 text-[12.5px]">
+                    <span className="flex items-center gap-2.5">
+                      <span className="size-2 shrink-0 rounded-[3px] bg-white/15" aria-hidden />
+                      <span className="text-neutral-500">What the bill becomes</span>
+                    </span>
+                    <span className="shrink-0 tabular-nums text-neutral-500">{usd(Math.max(monthlySpend - slicesTotal, 0))}</span>
+                  </li>
+                </ul>
+              </div>
             )}
-            subtitle={`Of ${formatCurrency(summary.current_monthly_spend || 0)}/mo spend`}
-            icon={<TrendingDown size={20} />}
-          />
-          <MetricCard
-            title="Total Suggestions"
-            value={(summary.suggestion_count || 0).toString()}
-            subtitle={`${summary.high_priority_count || 0} high priority`}
-            icon={<Lightbulb size={20} />}
-          />
-          <MetricCard
-            title="Pending Actions"
-            value={recommendations.length.toString()}
-            subtitle={
-              recommendations.length === 0
-                ? "All reviewed!"
-                : "Awaiting your decision"
-            }
-            icon={
-              recommendations.length === 0 ? (
-                <CheckCircle2 size={20} />
+          </section>
+
+          <AccentPanel>
+            <p className="text-[1.5rem] font-light tracking-tight text-white">
+              {monthlySpend > 0 ? "The bill after these changes" : "Share of spend recoverable"}
+            </p>
+            <p className="mt-3 text-[2.75rem] font-light leading-none tracking-[-0.03em] text-white">
+              {monthlySpend > 0 ? (
+                <Money value={Math.max(monthlySpend - (summary.total_potential_savings_monthly || 0), 0)} />
               ) : (
-                <Clock size={20} />
-              )
-            }
-          />
+                formatPercentage(summary.total_potential_savings_percent || 0)
+              )}
+            </p>
+            {monthlySpend > 0 && (
+              <p className="mt-2 text-[13px] text-neutral-300">a month, down from {usd(monthlySpend)}</p>
+            )}
+            <p className="mt-4 max-w-[34ch] text-[13.5px] leading-relaxed text-neutral-400">
+              If every suggestion below is applied. Each one is an estimate
+              from your own usage, and you decide which to take.
+            </p>
+            <div className="mt-auto space-y-2.5 pt-10">
+              <a
+                href="#suggestions"
+                className="group flex items-center justify-center gap-2 rounded-xl bg-indigo-100 px-4 py-3.5 text-[13.5px] font-semibold text-[#0d0d14] shadow-[0_8px_30px_rgba(30,27,75,0.35)] transition-colors hover:bg-white"
+              >
+                Review the changes
+                <ArrowRight className="size-3.5 transition-transform group-hover:translate-y-0.5 rotate-90" aria-hidden />
+              </a>
+              <Link
+                href="/guardrails"
+                className="flex items-center justify-center rounded-xl border border-white/25 bg-[#1e1b4b]/35 px-4 py-3.5 text-[13.5px] font-medium text-white backdrop-blur-md transition-colors hover:bg-[#1e1b4b]/50"
+              >
+                Set a limit per agent
+              </Link>
+            </div>
+          </AccentPanel>
         </div>
       )}
 
-      {/* Effectiveness Stats */}
-      {!loading &&
-        summary?.effectiveness &&
-        summary.effectiveness.total_recommendations > 0 && (
-          <Card className="border-neutral-700">
-            <h3 className="font-medium text-white mb-3">
-              Recommendation Effectiveness
-            </h3>
-            <div className="flex flex-wrap gap-6 text-sm">
-              <div>
-                <span className="text-neutral-500">Total:</span>{" "}
-                <span className="text-white">
-                  {summary.effectiveness.total_recommendations}
-                </span>
-              </div>
-              <div>
-                <span className="text-neutral-500">Implemented:</span>{" "}
-                <span className="text-emerald-400">
-                  {summary.effectiveness.implemented}
-                </span>
-              </div>
-              <div>
-                <span className="text-neutral-500">Dismissed:</span>{" "}
-                <span className="text-red-400">
-                  {summary.effectiveness.dismissed}
-                </span>
-              </div>
-              <div>
-                <span className="text-neutral-500">Implementation Rate:</span>{" "}
-                <span className="text-sky-400">
-                  {formatPercentage(summary.effectiveness.implementation_rate)}
-                </span>
-              </div>
-            </div>
-          </Card>
-        )}
-
       {/* Loading State */}
       {loading && (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <div className="h-4 w-24 rounded bg-neutral-700" />
-              <div className="mt-2 h-8 w-32 rounded bg-neutral-700" />
-            </Card>
-          ))}
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
+          <PanelSkeleton className="h-80" />
+          <PanelSkeleton className="h-80" />
         </div>
       )}
 
@@ -900,11 +984,15 @@ export default function OptimizationsPage() {
       )}
 
       {/* High Priority Suggestions */}
+      <span id="suggestions" className="block scroll-mt-6" />
       {highPriority.length > 0 && (
         <div>
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-medium text-white">
-            <AlertTriangle size={18} className="text-red-400" />
-            High Priority ({highPriority.length})
+          <h2 className="mb-4 flex items-center gap-3 text-[1.35rem] font-light tracking-tight text-white">
+            <span className="size-2 rounded-full bg-red-400" aria-hidden />
+            High priority
+            <span className="rounded-full bg-white/6 px-2 py-0.5 text-[11.5px] font-normal text-neutral-300">
+              {highPriority.length}
+            </span>
           </h2>
           <div className="space-y-4">
             {highPriority.map((suggestion, idx) => (
@@ -924,9 +1012,12 @@ export default function OptimizationsPage() {
       {/* Medium Priority Suggestions */}
       {mediumPriority.length > 0 && (
         <div>
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-medium text-white">
-            <Clock size={18} className="text-amber-400" />
-            Medium Priority ({mediumPriority.length})
+          <h2 className="mb-4 flex items-center gap-3 text-[1.35rem] font-light tracking-tight text-white">
+            <span className="size-2 rounded-full bg-amber-400" aria-hidden />
+            Medium priority
+            <span className="rounded-full bg-white/6 px-2 py-0.5 text-[11.5px] font-normal text-neutral-300">
+              {mediumPriority.length}
+            </span>
           </h2>
           <div className="space-y-4">
             {mediumPriority.map((suggestion, idx) => (
@@ -946,9 +1037,12 @@ export default function OptimizationsPage() {
       {/* Low Priority Suggestions */}
       {lowPriority.length > 0 && (
         <div>
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-medium text-white">
-            <Lightbulb size={18} className="text-emerald-400" />
-            Low Priority ({lowPriority.length})
+          <h2 className="mb-4 flex items-center gap-3 text-[1.35rem] font-light tracking-tight text-white">
+            <span className="size-2 rounded-full bg-emerald-400" aria-hidden />
+            Low priority
+            <span className="rounded-full bg-white/6 px-2 py-0.5 text-[11.5px] font-normal text-neutral-300">
+              {lowPriority.length}
+            </span>
           </h2>
           <div className="space-y-4">
             {lowPriority.map((suggestion, idx) => (
@@ -969,11 +1063,11 @@ export default function OptimizationsPage() {
       {isDemo && !loading && suggestions.length > 0 && <DemoOptimizationsCTA />}
 
       {/* Info Card */}
-      <Card className="border-sky-900/50 bg-sky-950/10">
+      <Card>
         <div className="flex items-start gap-4">
-          <Zap size={20} className="mt-0.5 shrink-0 text-sky-400" />
+          <Zap size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-indigo-200" />
           <div>
-            <h3 className="font-medium text-sky-400">
+            <h3 className="font-medium text-white">
               How Optimization Suggestions Work
             </h3>
             <p className="mt-1 text-sm text-neutral-400">
@@ -982,35 +1076,35 @@ export default function OptimizationsPage() {
             </p>
             <ul className="mt-3 space-y-1 text-sm text-neutral-400">
               <li className="flex items-center gap-2">
-                <Cpu size={14} className="shrink-0 text-sky-400" />
+                <Cpu size={14} className="shrink-0 text-neutral-500" />
                 <span>
                   <strong>Model Downgrades:</strong> Suggests cheaper models for
                   simple tasks
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <Database size={14} className="shrink-0 text-violet-400" />
+                <Database size={14} className="shrink-0 text-neutral-500" />
                 <span>
                   <strong>Caching:</strong> Identifies repeated queries that can
                   be cached
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <AlertCircle size={14} className="shrink-0 text-amber-400" />
+                <AlertCircle size={14} className="shrink-0 text-neutral-500" />
                 <span>
                   <strong>Anomaly Alerts:</strong> Detects unusual spending
                   spikes
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <XCircle size={14} className="shrink-0 text-red-400" />
+                <XCircle size={14} className="shrink-0 text-neutral-500" />
                 <span>
                   <strong>Error Patterns:</strong> Highlights agents with high
                   failure rates
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <Timer size={14} className="shrink-0 text-indigo-400" />
+                <Timer size={14} className="shrink-0 text-neutral-500" />
                 <span>
                   <strong>Latency Issues:</strong> Flags slow calls that may
                   benefit from optimization
@@ -1020,7 +1114,7 @@ export default function OptimizationsPage() {
             <p className="mt-3 text-sm text-neutral-500 flex items-start gap-2">
               <Lightbulb
                 size={14}
-                className="mt-0.5 shrink-0 text-amber-400"
+                className="mt-0.5 shrink-0 text-neutral-500"
               />
               <span>
                 Your decisions help the system learn and provide better

@@ -191,8 +191,8 @@ export function Footer() {
               columns. Flex so the meta line centers in the leftover height. */}
           <div className="col-span-2 flex flex-col">
             <p className="text-sm text-neutral-500 leading-relaxed max-w-xs">
-              Open-source LLM cost observability. Track, analyze, and optimize
-              your AI spending.
+              Never wonder which agent spiked your AI bill again. Open source,
+              free in the cloud or self-hosted.
             </p>
 
             {/* Meta — one row: year, then the two chips */}

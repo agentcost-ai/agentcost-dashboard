@@ -42,7 +42,7 @@ import type {
 } from "@/lib/api";
 
 export const DEMO_PROJECT_ID = "demo-project";
-export const DEMO_PROJECT_NAME = "NovaDesk AI — Production";
+export const DEMO_PROJECT_NAME = "NovaDesk AI · Production";
 
 // ── Deterministic PRNG so the demo looks alive but stays consistent ──────
 function mulberry32(seed: number) {
@@ -88,6 +88,33 @@ export function perCallCost(p: AgentProfile): number {
   return (p.inTokens * inP + p.outTokens * outP) / 1_000_000;
 }
 
+/** Share of an agent's spend lost to identical calls repeated inside one run. */
+export const REPEAT_SHARE: Record<string, number> = {
+  "support-triage-agent": 0.108,
+  "research-agent": 0.03,
+};
+
+/** Calendar date (UTC) of the day `daysAgo`, the key every daily series shares. */
+export function demoDayKey(daysAgo: number): string {
+  return new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10);
+}
+
+/**
+ * One agent's spend on the day `daysAgo` of a `days`-long window. The
+ * repeated-work share comes out of every day and lands on the day before
+ * today, where the retry loop ran, so the days still add up to the agent's
+ * total and every chart built from this agrees on the peak.
+ */
+export function dailyAgentCost(p: AgentProfile, daysAgo: number, days: number): number {
+  const base = p.callsPerDay * dayMultiplier(daysAgo) * perCallCost(p);
+  const share = REPEAT_SHARE[p.name] ?? 0;
+  if (share === 0 || days < 2) return base;
+  let windowMult = 0;
+  for (let d = 0; d < days; d++) windowMult += dayMultiplier(d);
+  const total = p.callsPerDay * windowMult * perCallCost(p);
+  return base * (1 - share) + (daysAgo === 1 ? total * share : 0);
+}
+
 export function rangeToDays(range: string): number {
   const map: Record<string, number> = { "1h": 1, "24h": 1, "7d": 7, "30d": 30, "90d": 90 };
   return map[range] ?? 7;
@@ -122,7 +149,9 @@ export function demoOverview(range: string): AnalyticsOverview {
   for (const p of AGENTS) {
     const c = p.callsPerDay * mult;
     calls += c;
-    cost += c * perCallCost(p);
+    // Rounded per agent, exactly as the agent and model tables round it, so
+    // the headline total is the sum of the rows beneath it to the cent.
+    cost += round2(Math.round(c) * perCallCost(p));
     inTok += c * p.inTokens;
     outTok += c * p.outTokens;
     latWeighted += c * p.avgLatencyMs;
@@ -182,7 +211,7 @@ export function demoModelStats(range: string, limit: number): ModelStats[] {
     const latencyTotal =
       existing.avg_latency_ms * existing.total_calls + p.avgLatencyMs * calls;
     existing.total_calls += calls;
-    existing.total_cost = round2(existing.total_cost + calls * perCallCost(p));
+    existing.total_cost = round2(existing.total_cost + round2(calls * perCallCost(p)));
     existing.input_tokens += Math.round(calls * p.inTokens);
     existing.output_tokens += Math.round(calls * p.outTokens);
     existing.total_tokens = existing.input_tokens + existing.output_tokens;
@@ -217,10 +246,11 @@ export function demoTimeSeries(range: string): TimeSeriesPoint[] {
   }
 
   for (let d = days - 1; d >= 0; d--) {
-    const ts = new Date();
-    ts.setDate(ts.getDate() - d);
-    ts.setHours(0, 0, 0, 0);
-    points.push(buildPoint(ts, dayMultiplier(d)));
+    // Same day keys and per-agent costs as the Agents data, so the total
+    // here is exactly the sum of what each agent shows for the day.
+    const point = buildPoint(new Date(`${demoDayKey(d)}T00:00:00.000Z`), dayMultiplier(d));
+    point.cost = round2(AGENTS.reduce((sum, p) => sum + dailyAgentCost(p, d, days), 0));
+    points.push(point);
   }
   return points;
 }
@@ -424,7 +454,7 @@ export function demoOptimizationSuggestions(): OptimizationSuggestion[] {
     },
     {
       type: "caching",
-      title: "Cache faq-bot responses — 38% duplicate prompts",
+      title: "Cache faq-bot responses: 38% duplicate prompts",
       description:
         "38% of faq-bot calls in the last 30 days were byte-identical prompts (top repeats: password reset, billing cycle, plan limits). A response cache with a 24h TTL eliminates most of them.",
       estimated_savings_monthly: round2(monthly(faq) * 0.38),

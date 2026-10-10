@@ -20,7 +20,7 @@ export function Card({
     <div
       style={style}
       className={cn(
-        "rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm",
+        "rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#131317] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
         padding === "sm" && "p-4",
         padding === "md" && "p-4 sm:p-6",
         padding === "lg" && "p-5 sm:p-8",
@@ -54,8 +54,8 @@ export function MetricCard({
     <Card className="animate-fade-in">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-neutral-400">{title}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-white">
+          <p className="text-[12px] text-neutral-500">{title}</p>
+          <p className="mt-2 text-[2rem] font-light leading-none tracking-[-0.02em] text-white tabular-nums">
             {value}
           </p>
           {subtitle && (
@@ -74,7 +74,7 @@ export function MetricCard({
           )}
         </div>
         {icon && (
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800 text-neutral-400">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-neutral-400">
             {icon}
           </div>
         )}

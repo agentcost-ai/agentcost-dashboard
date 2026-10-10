@@ -3,7 +3,7 @@ import ModelCatalogContent from "./content";
 import { getCatalog } from "@/lib/catalog";
 
 export const metadata: Metadata = {
-  title: "Model Catalog — Supported LLMs & Live Pricing",
+  title: "Model Catalog: Supported LLMs & Live Pricing",
   description:
     "Browse and search every model AgentCost supports, with live per-token pricing across OpenAI, Anthropic, Google, and more.",
   alternates: { canonical: "https://agentcost.tech/docs/models" },

@@ -258,6 +258,7 @@ export default function AgentsPage() {
       />
 
       <SectionCard
+        id="tour-agents"
         title="Ranked by spend"
         description="Signal is the most expensive thing we can prove about the agent in this window. Open a row for the full picture."
         action={

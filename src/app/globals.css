@@ -178,9 +178,72 @@ html {
   font-family: var(--font-caveat), "Comic Sans MS", ui-rounded, cursive;
 }
 
+/* ── Executive Report sheet ───────────────────────────────────────────────
+   One document, two themes. Light is a warm paper sheet with ink; dark keeps
+   the same shapes on the app's own ground, and the contrast card flips from
+   ink to pale lavender so it still reads as the loudest thing on the page. */
+.report-sheet {
+  background-image: var(--rp-sheet);
+}
+.report-sheet,
+.report-sheet[data-theme="light"] {
+  --rp-sheet: linear-gradient(140deg, #f6f5f2 0%, #f1f0f4 45%, #e3e3fa 100%);
+  --rp-ink: #17171c;
+  --rp-on-ink: #ffffff;
+  --rp-muted: #73737f;
+  --rp-hair: rgba(23, 23, 28, 0.08);
+  --rp-line: rgba(23, 23, 28, 0.15);
+  --rp-line-strong: rgba(23, 23, 28, 0.55);
+  --rp-track: rgba(23, 23, 28, 0.08);
+  --rp-tick: rgba(23, 23, 28, 0.55);
+  --rp-hatch: rgba(23, 23, 28, 0.22);
+  --rp-card: rgba(255, 255, 255, 0.75);
+  --rp-card-border: #ffffff;
+  --rp-card-shadow: 0 14px 34px -22px rgba(40, 40, 90, 0.35);
+  --rp-contrast: #17171c;
+  --rp-on-contrast: #ffffff;
+  --rp-on-contrast-muted: rgba(255, 255, 255, 0.55);
+  --rp-contrast-track: rgba(255, 255, 255, 0.12);
+  --rp-contrast-line: rgba(255, 255, 255, 0.28);
+  --rp-contrast-accent: #b9bbf7;
+  --rp-accent: #b9bbf7;
+  --rp-accent-strong: #6466e9;
+  --rp-on-accent: #17171c;
+  --rp-marker-ring: #ffffff;
+  --rp-good: #1c8f62;
+  --rp-bad: #cf4747;
+}
+.report-sheet[data-theme="dark"] {
+  --rp-sheet: linear-gradient(140deg, #141418 0%, #15151b 45%, #1d1c36 100%);
+  --rp-ink: #f3f3f6;
+  --rp-on-ink: #17171c;
+  --rp-muted: #8e8e9b;
+  --rp-hair: rgba(255, 255, 255, 0.08);
+  --rp-line: rgba(255, 255, 255, 0.16);
+  --rp-line-strong: rgba(255, 255, 255, 0.5);
+  --rp-track: rgba(255, 255, 255, 0.09);
+  --rp-tick: rgba(255, 255, 255, 0.45);
+  --rp-hatch: rgba(255, 255, 255, 0.3);
+  --rp-card: rgba(255, 255, 255, 0.045);
+  --rp-card-border: rgba(255, 255, 255, 0.09);
+  --rp-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --rp-contrast: #dedffb;
+  --rp-on-contrast: #17171c;
+  --rp-on-contrast-muted: rgba(23, 23, 28, 0.6);
+  --rp-contrast-track: rgba(23, 23, 28, 0.12);
+  --rp-contrast-line: rgba(23, 23, 28, 0.3);
+  --rp-contrast-accent: #6466e9;
+  --rp-accent: #b9bbf7;
+  --rp-accent-strong: #9d9ff5;
+  --rp-on-accent: #17171c;
+  --rp-marker-ring: #17171c;
+  --rp-good: #5fd3a2;
+  --rp-bad: #f08a8a;
+}
+
 /* ── Print / PDF export for the Executive Report ──────────────────────────
-   Hide the app chrome, flatten the dark theme to a clean white page, and keep
-   accent fills (bars, charts) visible. Triggered by window.print(). */
+   Hide the app chrome and print the report sheet as designed. Triggered by
+   window.print(). */
 @media print {
   @page {
     size: A4;
@@ -204,21 +267,47 @@ html {
     background: #ffffff !important;
   }
 
-  /* Force dark, legible text across the whole report and keep fills printing. */
+  /* The report is already a light document: print it as designed, keep its
+     fills, and drop the sheet's own tint and padding so it meets the page. */
   .report-print-root,
   .report-print-root * {
-    color: #18181b !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /* Flatten translucent dark cards to bordered white blocks. */
-  .report-print-root .rounded-xl,
-  .report-print-root .rounded-2xl,
-  .report-print-root .rounded-lg {
+  .report-print-root {
     background: #ffffff !important;
-    border-color: #e4e4e7 !important;
-    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Paper is light whichever theme is on screen. */
+  .report-sheet[data-theme] {
+    --rp-sheet: linear-gradient(140deg, #f6f5f2 0%, #f1f0f4 45%, #e3e3fa 100%) !important;
+    --rp-ink: #17171c !important;
+    --rp-on-ink: #ffffff !important;
+    --rp-muted: #73737f !important;
+    --rp-hair: rgba(23, 23, 28, 0.08) !important;
+    --rp-line: rgba(23, 23, 28, 0.15) !important;
+    --rp-line-strong: rgba(23, 23, 28, 0.55) !important;
+    --rp-track: rgba(23, 23, 28, 0.08) !important;
+    --rp-tick: rgba(23, 23, 28, 0.55) !important;
+    --rp-hatch: rgba(23, 23, 28, 0.22) !important;
+    --rp-card: rgba(255, 255, 255, 0.75) !important;
+    --rp-card-border: #ffffff !important;
+    --rp-card-shadow: 0 14px 34px -22px rgba(40, 40, 90, 0.35) !important;
+    --rp-contrast: #17171c !important;
+    --rp-on-contrast: #ffffff !important;
+    --rp-on-contrast-muted: rgba(255, 255, 255, 0.55) !important;
+    --rp-contrast-track: rgba(255, 255, 255, 0.12) !important;
+    --rp-contrast-line: rgba(255, 255, 255, 0.28) !important;
+    --rp-contrast-accent: #b9bbf7 !important;
+    --rp-accent: #b9bbf7 !important;
+    --rp-accent-strong: #6466e9 !important;
+    --rp-on-accent: #17171c !important;
+    --rp-marker-ring: #ffffff !important;
+    --rp-good: #1c8f62 !important;
+    --rp-bad: #cf4747 !important;
   }
 
   /* Each section stays whole across page breaks. */
@@ -376,3 +465,4 @@ html {
 .gradient-blur > div:nth-of-type(6) { backdrop-filter: blur(32px); mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%); }
 .gradient-blur > div:nth-of-type(7) { backdrop-filter: blur(64px); mask-image: linear-gradient(to bottom, transparent 75%, #000 87.5%, #000 100%); }
 .gradient-blur > div:nth-of-type(8) { backdrop-filter: blur(96px); mask-image: linear-gradient(to bottom, transparent 87.5%, #000 100%); }
+

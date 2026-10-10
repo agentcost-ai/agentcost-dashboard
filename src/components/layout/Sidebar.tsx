@@ -25,6 +25,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { seriesColor } from "@/lib/palette";
 import { api, type AgentStats } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
@@ -81,21 +82,55 @@ function NavItem({
       title={collapsed ? item.name : undefined}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex h-8 items-center gap-2.5 rounded-md text-[13px] font-medium transition-colors",
-        collapsed ? "justify-center px-0" : "px-2",
-        active ? "bg-white/8 text-white" : "text-neutral-300 hover:bg-white/5 hover:text-white",
+        "group relative flex h-9 items-center gap-3 rounded-xl text-[13.5px] transition-colors",
+        collapsed ? "justify-center px-0" : "px-3",
+        active
+          ? collapsed
+            ? "bg-indigo-300/15 text-white ring-1 ring-inset ring-indigo-300/30"
+            : "bg-white/[0.07] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+          : "text-neutral-400 hover:bg-white/[0.04] hover:text-white",
       )}
     >
+      {/* The one mark that says where you are. With no label beside it the
+          collapsed rail leans on it harder: a taller pill and a tinted tile. */}
+      {active && (
+        <span
+          aria-hidden
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 rounded-full bg-indigo-300",
+            collapsed ? "-left-2 h-6 w-1 shadow-[0_0_10px_rgba(165,180,252,0.8)]" : "-left-2 h-4 w-[3px]",
+          )}
+        />
+      )}
       <item.icon
-        size={18}
-        strokeWidth={1.75}
-        className={cn("shrink-0", active ? "text-neutral-100" : "text-neutral-400 group-hover:text-neutral-200")}
+        size={17}
+        strokeWidth={1.6}
+        className={cn(
+          "shrink-0",
+          active ? (collapsed ? "text-indigo-200" : "text-white") : "text-neutral-500 group-hover:text-neutral-300",
+        )}
       />
       {!collapsed && <span className="truncate">{item.name}</span>}
       {!collapsed && count ? (
-        <span className="ml-auto text-[12px] tabular-nums text-red-300">{count}</span>
+        <span className="ml-auto rounded-full bg-red-400/15 px-1.5 py-px text-[11px] font-medium tabular-nums text-red-300">
+          {count}
+        </span>
+      ) : null}
+      {/* Collapsed, the count has no room: a dot keeps the warning visible. */}
+      {collapsed && count ? (
+        <span aria-hidden className="absolute right-2 top-1.5 size-1.5 rounded-full bg-red-400" />
       ) : null}
     </Link>
+  );
+}
+
+/** Small caps heading over a group of links. A hairline when collapsed. */
+function GroupLabel({ children, collapsed }: { children: string; collapsed: boolean }) {
+  if (collapsed) return <div className="mx-1.5 my-3 border-t border-white/8" />;
+  return (
+    <p className="mb-1.5 mt-6 px-3 text-[10.5px] font-medium uppercase tracking-[0.16em] text-neutral-600">
+      {children}
+    </p>
   );
 }
 
@@ -170,24 +205,25 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       style={{ transition: "width 0.18s ease-out, transform 0.18s ease-out" }}
     >
       {/* Brand */}
-      <div className={cn("flex h-12 items-center", isCollapsed ? "justify-center px-0" : "justify-between pl-4 pr-2")}>
-        <Link href="/dashboard" className="flex items-center gap-2" aria-label="AgentCost home">
-          <Grid2x2Plus size={18} className="text-sky-400" strokeWidth={1.75} />
-          {!isCollapsed && <span className="text-[14px] font-semibold tracking-tight text-white">AgentCost</span>}
+      <div className={cn("flex h-16 items-center", isCollapsed ? "justify-center px-0" : "justify-between pl-4 pr-2.5")}>
+        <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="AgentCost home">
+          {/* The mark as it is everywhere else: the glyph in brand sky, no tile. */}
+          <Grid2x2Plus size={22} strokeWidth={2} className="text-sky-400" />
+          {!isCollapsed && <span className="text-[15px] font-semibold tracking-tight text-white">AgentCost</span>}
         </Link>
         {!isCollapsed && (
           <>
             <button
               onClick={() => setCollapsed(true)}
               aria-label="Collapse sidebar"
-              className="hidden size-7 items-center justify-center rounded-md text-neutral-500 hover:bg-white/5 hover:text-neutral-200 lg:flex"
+              className="hidden size-8 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-white/5 hover:text-neutral-200 lg:flex"
             >
-              <PanelLeftClose size={15} strokeWidth={1.75} />
+              <PanelLeftClose size={16} strokeWidth={1.6} />
             </button>
             <button
               onClick={onMobileClose}
               aria-label="Close navigation"
-              className="flex size-9 items-center justify-center rounded-md text-neutral-400 hover:bg-white/5 hover:text-white lg:hidden"
+              className="flex size-9 items-center justify-center rounded-lg text-neutral-400 hover:bg-white/5 hover:text-white lg:hidden"
             >
               <X size={18} />
             </button>
@@ -205,19 +241,23 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       )}
 
       {/* Workspace */}
-      <div className={cn("pb-2", isCollapsed ? "px-1" : "px-2")}>
-        <ProjectSwitcher collapsed={isCollapsed} />
+      <div className={cn("pb-1", isCollapsed ? "px-1.5" : "px-3")}>
+        <div className={cn(!isCollapsed && "rounded-xl border border-white/8 bg-white/[0.03]")}>
+          <ProjectSwitcher collapsed={isCollapsed} />
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className={cn("flex-1 overflow-y-auto", isCollapsed ? "px-1.5" : "px-2")}>
-        <div className="space-y-px">
+      <nav className={cn("flex-1 overflow-y-auto pb-3", isCollapsed ? "px-2" : "px-3")}>
+        <GroupLabel collapsed={isCollapsed}>Watch</GroupLabel>
+        <div className="space-y-0.5">
           {READ.map((item) => (
             <div key={item.href}>
               <NavItem item={item} active={isActive(item.href)} collapsed={isCollapsed} onClick={onMobileClose} />
+              {/* The top spenders, in the colours they carry on the charts */}
               {item.href === "/agents" && !isCollapsed && topAgents.length > 0 && (
-                <div className="relative my-px ml-4 border-l border-white/8 pl-2">
-                  {topAgents.map((a) => {
+                <div className="my-1 ml-[1.35rem] border-l border-white/8 pl-2">
+                  {topAgents.map((a, i) => {
                     const active = activeAgent === a.agent_name;
                     return (
                       <Link
@@ -226,11 +266,19 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                         onClick={onMobileClose}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "flex h-7 items-center rounded-md px-2 text-[12.5px] transition-colors",
-                          active ? "bg-white/8 text-white" : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100",
+                          "flex h-8 items-center gap-2.5 rounded-lg px-2 text-[12.5px] transition-colors",
+                          active ? "bg-white/[0.07] text-white" : "text-neutral-400 hover:bg-white/[0.04] hover:text-white",
                         )}
                       >
-                        <span className="truncate">{a.agent_name}</span>
+                        <span
+                          aria-hidden
+                          className="size-2 shrink-0 rounded-[3px]"
+                          style={{ backgroundColor: seriesColor(i) }}
+                        />
+                        <span className="min-w-0 flex-1 truncate">{a.agent_name}</span>
+                        <span className={cn("shrink-0 text-[11px] tabular-nums", active ? "text-neutral-300" : "text-neutral-600")}>
+                          ${a.total_cost >= 100 ? a.total_cost.toFixed(0) : a.total_cost.toFixed(2)}
+                        </span>
                       </Link>
                     );
                   })}
@@ -240,9 +288,8 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
           ))}
         </div>
 
-        <div className={cn("my-3 border-t border-white/6", !isCollapsed && "mx-2")} />
-
-        <div className="space-y-px">
+        <GroupLabel collapsed={isCollapsed}>Act</GroupLabel>
+        <div className="space-y-0.5">
           {ACT.map((item) => (
             <NavItem
               key={item.href}
@@ -257,25 +304,27 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       </nav>
 
       {/* Footer links */}
-      <div className={cn("space-y-px pb-1 pt-2", isCollapsed ? "px-1.5" : "px-2")}>
+      <div className={cn("space-y-0.5 border-t border-white/6 pb-2 pt-3", isCollapsed ? "px-2" : "px-3")}>
         {FOOTER.map((item) => (
           <NavItem key={item.href} item={item} active={isActive(item.href)} collapsed={isCollapsed} onClick={onMobileClose} />
         ))}
       </div>
 
       {/* Account */}
-      <div ref={menuRef} className={cn("relative border-t border-white/6", isCollapsed ? "p-1.5" : "p-2")}>
+      <div ref={menuRef} className={cn("relative", isCollapsed ? "p-2 pt-0" : "p-3 pt-1")}>
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           title={isCollapsed ? displayName : undefined}
           className={cn(
-            "flex w-full items-center gap-2.5 rounded-md text-left transition-colors hover:bg-white/5",
-            isCollapsed ? "justify-center px-0 py-1.5" : "px-2 py-1.5",
+            "flex w-full items-center gap-3 rounded-xl text-left transition-colors",
+            isCollapsed
+              ? "justify-center px-0 py-1.5 hover:bg-white/5"
+              : "border border-white/8 bg-white/[0.03] px-2.5 py-2 hover:border-white/14",
           )}
         >
-          <span className="grid size-6 shrink-0 place-items-center rounded-md bg-white/10 text-[10px] font-semibold text-neutral-100">
+          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-indigo-200 text-[11px] font-semibold text-[#0d0d14]">
             {initials}
           </span>
           {!isCollapsed && (
@@ -293,8 +342,8 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
           <div
             role="menu"
             className={cn(
-              "absolute bottom-full z-50 mb-1 overflow-hidden rounded-lg border border-white/8 bg-[#141417] p-1 shadow-2xl shadow-black/60",
-              isCollapsed ? "left-1.5 w-52" : "left-2 right-2",
+              "absolute bottom-full z-50 mb-1.5 overflow-hidden rounded-xl border border-white/10 bg-[#141417] p-1.5 shadow-2xl shadow-black/60",
+              isCollapsed ? "left-2 w-52" : "left-3 right-3",
             )}
           >
             <div className="px-2 py-1.5">

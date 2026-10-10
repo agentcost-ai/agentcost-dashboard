@@ -21,7 +21,7 @@ import { BOOKING_URL } from "@/lib/site";
 import { comparisons } from "@/lib/comparisons";
 
 export const metadata: Metadata = {
-  title: "Pricing — Free & Open Source",
+  title: "Pricing: Free & Open Source",
   description:
     "AgentCost is free, open-source LLM cost observability under the MIT License — no tiers, no seat limits, no paywalls. Estimate what you could recover from your AI spend.",
   alternates: { canonical: "https://agentcost.tech/pricing" },

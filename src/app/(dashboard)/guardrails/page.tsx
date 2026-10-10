@@ -604,6 +604,7 @@ export default function GuardrailsPage() {
 
       {/* Agents */}
       <SectionCard
+        id="tour-guardrails"
         title="Agents"
         description="Breaches first, then by spend. Open a row for what the agent used, how its runs are distributed, and every breach in the window."
       >

@@ -15,7 +15,7 @@ import {
 } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
-  title: "Contact AgentCost — Support, Security & Data Requests",
+  title: "Contact AgentCost: Support, Security & Data Requests",
   description:
     "How to reach AgentCost: support and setup questions, bug reports, security disclosures, data handling and deletion requests, press and partnerships.",
   alternates: { canonical: `${SITE_URL}/contact` },

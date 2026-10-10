@@ -12,7 +12,7 @@ import {
 } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
-  title: "About AgentCost — Open-Source LLM Cost Observability",
+  title: "About AgentCost: Open-Source LLM Cost Observability",
   description:
     "AgentCost is an open-source LLM cost observability platform: a Python SDK, a FastAPI backend and a dashboard that attribute every model call to the agent that made it. Free hosted or self-hosted, MIT licensed.",
   alternates: { canonical: `${SITE_URL}/about` },
