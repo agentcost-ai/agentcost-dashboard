@@ -230,7 +230,16 @@ export const TOOLS: McpTool[] = [
     outputSchema: {
       type: "object",
       properties: {
-        total_cost: { type: "number", description: "USD spent in the window." },
+        total_cost: {
+          type: "number",
+          description: "USD value of all usage in the window, metered and subscription-covered together.",
+        },
+        subscription_cost: {
+          type: "number",
+          description:
+            "The part of total_cost covered by a flat subscription (a coding agent on a plan): what the usage " +
+            "is worth at API rates, not money owed. total_cost minus this is metered spend.",
+        },
         total_calls: { type: "integer" },
         total_tokens: { type: "integer" },
         avg_cost_per_call: { type: "number" },
@@ -614,6 +623,8 @@ const BAD_RANGE = `"range" must be one of ${RANGES.join(", ")}.`;
 
 type Overview = {
   total_cost: number;
+  /** Absent on a backend that predates the field. */
+  subscription_cost?: number;
   total_calls: number;
   total_tokens: number;
   avg_cost_per_call: number;
@@ -630,13 +641,21 @@ async function spendOverview(args: Record<string, unknown>, context: ToolContext
   if (!res.ok) return accountError(res.status);
 
   const o = res.data;
+  const covered = o.subscription_cost ?? 0;
   const text = [
     `${money(o.total_cost)} over the last ${range}.`,
+    // Without this a model reads plan usage as a bill and reports it as one.
+    covered > 0
+      ? `  of which     ${money(covered)} is usage covered by a subscription, valued at API rates; ` +
+        `metered spend is ${money(o.total_cost - covered)}`
+      : null,
     `  calls        ${o.total_calls.toLocaleString("en-US")}`,
     `  tokens       ${o.total_tokens.toLocaleString("en-US")}`,
     `  per call     ${money(o.avg_cost_per_call)}`,
     `  success rate ${o.success_rate}%`,
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return ok(text, o);
 }

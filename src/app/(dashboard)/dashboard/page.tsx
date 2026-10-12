@@ -384,6 +384,21 @@ export default function DashboardPage() {
                 )}
               </div>
 
+              {/* A coding agent on a flat plan has usage but no per-token bill. */}
+              {(overview.subscription_cost ?? 0) > 0 && (
+                <p className="mt-3 text-[12.5px] text-neutral-500">
+                  <span className="tabular-nums text-neutral-300">
+                    {usd(overview.subscription_cost ?? 0)}
+                  </span>{" "}
+                  of this is usage covered by a subscription, valued at API rates. Metered
+                  spend is{" "}
+                  <span className="tabular-nums text-neutral-300">
+                    {usd(overview.total_cost - (overview.subscription_cost ?? 0))}
+                  </span>
+                  , and only that counts against the budget.
+                </p>
+              )}
+
               <div className="mt-7 flex-1">
                 {timeSeries.length > 0 ? (
                   <MainTimeSeriesChart data={timeSeries} range={timeRange} />

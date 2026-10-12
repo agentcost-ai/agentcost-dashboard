@@ -280,6 +280,17 @@ describe("account tools", () => {
     expect(init.cache).toBe("no-store");
   });
 
+  it("says how much of the total is subscription usage rather than a bill", async () => {
+    withApi({
+      "/v1/analytics/overview?range=7d": {
+        body: { total_cost: 830.39, subscription_cost: 830.37, total_calls: 4089, total_tokens: 1, avg_cost_per_call: 0.2, avg_latency_ms: 0, success_rate: 100 },
+      },
+    });
+    const res = await callTool("get_spend_overview", {}, KEY);
+    expect(res.content[0].text).toContain("$830.37 is usage covered by a subscription");
+    expect(res.content[0].text).toContain("metered spend is $0.02");
+  });
+
   it("rejects a range the API does not have instead of silently defaulting", async () => {
     withApi({});
     const res = await callTool("get_spend_overview", { range: "1y" }, KEY);

@@ -10,6 +10,8 @@ const DEFAULT_API_BASE_URL =
 
 export interface AnalyticsOverview {
   total_cost: number;
+  /** The part of total_cost covered by a flat plan. Absent on an older backend. */
+  subscription_cost?: number;
   total_calls: number;
   total_tokens: number;
   total_input_tokens: number;
