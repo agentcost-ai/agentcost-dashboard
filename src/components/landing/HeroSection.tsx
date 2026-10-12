@@ -68,13 +68,15 @@ export function HeroSection() {
           </div>
 
           <Link
-            href="/docs/api#guardrails"
-            onClick={() => track("announcement_clicked", { feature: "guardrails", location: "hero" })}
+            href="/docs/coding-agents"
+            onClick={() => track("announcement_clicked", { feature: "coding_agents", location: "hero" })}
             className="group inline-flex items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-200"
           >
             <span className="font-medium text-neutral-200">New</span>
-            <span className="sm:hidden">Guardrails</span>
-            <span className="hidden sm:inline">Guardrails: per-agent limits on tools, models and runs</span>
+            <span className="sm:hidden">Claude Code &amp; Codex tracking</span>
+            <span className="hidden sm:inline">
+              Track Claude Code, Codex and Antigravity, with guardrails that block
+            </span>
             <ArrowRight
               className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
               aria-hidden
