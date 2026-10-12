@@ -66,6 +66,21 @@ export const blogPosts: BlogPost[] = [
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "v1.15.0",
+    date: "2026-10-12",
+    summary:
+      "Claude Code, Codex and Antigravity tracked with one command, and guardrails that block instead of report",
+    changes: [
+      "Coding agents need no instrumentation: agentcost connect claude-code (or codex, or antigravity) reads the session logs those tools already keep and sends each model call as an event. A session is a run; spend breaks down by model, tool, subagent, session and developer. SDK 0.3.0.",
+      "Guardrails can now stop a call. Connect with --enforce and a disallowed tool, a disallowed model, a session over its tool-call or cost limit, or a prompt after a spent hard budget cap is refused before it runs, in Claude Code and Codex, and the agent is told why. Everything else is still reported after the fact.",
+      "Subscriptions are not spend: usage on a Claude or ChatGPT plan is priced at its API value, marked billing: subscription, shown separately on the Overview as subscription_cost, and left out of the budget, its alerts and its hard cap.",
+      "New API: POST /v1/otlp/v1/logs accepts the OpenTelemetry export Claude Code and Codex already have, so an organisation can report every session, including cloud sessions, from managed settings alone. GET /v1/guardrails/policy serves guardrails, tool tags and budget position in one read for anything that enforces locally. GET /v1/analytics/by/billing groups spend by how it was paid for.",
+      "More accurate numbers for cache-heavy work: one-hour prompt-cache writes are priced at twice the input rate, calls with no measured latency no longer pull latency averages toward zero, and a model-downgrade suggestion can no longer claim to save more than was spent.",
+      "Antigravity publishes no usage export, so its figures are read from an undocumented local format and marked as estimates.",
+      "New docs page: Coding agents. The CLI reference, API reference, privacy page and llms.txt cover the new commands and endpoints, and agentcost on its own now lists every command.",
+    ],
+  },
+  {
     version: "v1.14.0",
     date: "2026-10-08",
     summary:

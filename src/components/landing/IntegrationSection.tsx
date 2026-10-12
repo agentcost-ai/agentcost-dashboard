@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 import { useState } from "react";
@@ -58,6 +59,20 @@ export function IntegrationSection() {
                             No wrappers, no decorators, no middleware. AgentCost uses
                             lightweight interception to instrument OpenAI, Anthropic,
                             Gemini, and LangChain calls transparently. Your code stays clean.
+                        </p>
+
+                        <p className="text-neutral-400 text-[15px] leading-relaxed mb-8 max-w-md border-l border-white/10 pl-4">
+                            Using Claude Code, Codex or Antigravity? No code at all:{" "}
+                            <code className="font-mono text-[13px] text-neutral-200">
+                                agentcost connect claude-code
+                            </code>{" "}
+                            tracks every session and can block what your guardrails forbid.{" "}
+                            <Link
+                                href="/docs/coding-agents"
+                                className="text-sky-400 hover:text-sky-300 whitespace-nowrap"
+                            >
+                                How it works →
+                            </Link>
                         </p>
 
                         <div className="space-y-5">

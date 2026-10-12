@@ -14,6 +14,10 @@ export const faqs = [
                 a: "No. AgentCost uses monkey-patching to transparently intercept LLM calls. You add two lines at the top of your application (an import and an init call) and every LLM invocation is automatically tracked. Your agents, chains, and prompts stay exactly as they are.",
             },
             {
+                q: "Can AgentCost track Claude Code, Codex and Antigravity?",
+                a: "Yes, with no code. Run agentcost connect claude-code (or codex, or antigravity) once per machine and every session is tracked: cost per session, model, tool, subagent and developer. It reads the usage numbers those tools already log locally and never your prompts or replies. Usage on a Claude or ChatGPT subscription is shown at its API value and kept out of your budget. Add --enforce and your guardrails block a disallowed tool, model, or an over-limit session before the call runs, in Claude Code and Codex. Whole organisations can report through OpenTelemetry with nothing installed. Antigravity figures are estimates, because it publishes no usage export.",
+            },
+            {
                 q: "What LLM providers and models are supported?",
                 a: "AgentCost supports pricing for 3,500+ models across 50+ providers including OpenAI (GPT-4, GPT-4o, o1), Anthropic (Claude 3/4), Google (Gemini), Mistral, DeepSeek, Groq, Cohere, Together AI, AWS Bedrock, Azure OpenAI, and many more. Pricing data is synced from LiteLLM's continuously updated database.",
             },
