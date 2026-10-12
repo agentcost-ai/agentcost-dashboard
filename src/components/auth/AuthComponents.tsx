@@ -124,11 +124,19 @@ export function Checkbox({
         id={id}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="sr-only"
+        className="peer sr-only"
       />
+      {/* Every caller wraps this in a <label>, and a click inside a label is
+          forwarded to the input. Toggling here as well meant a click on the
+          box flipped the value twice and left it unchanged, while a click on
+          the label text worked. preventDefault stops the forwarded click, so
+          the box toggles exactly once, inside a label or outside one. */}
       <div
-        onClick={() => onChange(!checked)}
-        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 cursor-pointer ${
+        onClick={(e) => {
+          e.preventDefault();
+          onChange(!checked);
+        }}
+        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-white/60 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#0a0a0b] ${
           checked
             ? "bg-white border-white"
             : "border-neutral-600 hover:border-neutral-500 bg-transparent"
