@@ -26,6 +26,9 @@ export function formatNumber(value: number): string {
 }
 
 export function formatLatency(ms: number): string {
+  // Zero is not a fast call: it is how the API reports that none of the calls
+  // carried a latency, as with a coding agent read from its session log.
+  if (!ms || ms <= 0) return "—";
   if (ms < 1000) {
     return `${Math.round(ms)}ms`;
   }

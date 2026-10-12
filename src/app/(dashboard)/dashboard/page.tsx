@@ -545,7 +545,12 @@ export default function DashboardPage() {
             {
               label: "Latency",
               value: formatLatency(overview.avg_latency_ms),
-              sub: insights.slowestAgent ? `slowest: ${insights.slowestAgent.agent_name}` : "average",
+              sub:
+                overview.avg_latency_ms > 0
+                  ? insights.slowestAgent
+                    ? `slowest: ${insights.slowestAgent.agent_name}`
+                    : "average"
+                  : "not measured for these calls",
             },
             {
               label: "Agents",

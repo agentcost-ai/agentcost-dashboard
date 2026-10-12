@@ -37,7 +37,8 @@ import {
    Guardrails — a declared boundary per agent,
    judged against what the events table saw.
    Four boundaries: tools, read-only, models,
-   per-run limits. Observe-and-alert, not block.
+   per-run limits. Observe-and-alert here; blocking
+   happens in the SDK gate on a connected machine.
    ───────────────────────────────────────────── */
 
 const BREACH_COPY: Record<GuardrailBreach["kind"], string> = {
@@ -775,10 +776,13 @@ export default function GuardrailsPage() {
             shows p50, p95 and max so a limit can be set from what the agent actually does.
           </li>
           <li>
-            <span className="text-neutral-200">Breaches alert, they do not block.</span> Owners and admins get a
-            notification and the project webhook receives{" "}
+            <span className="text-neutral-200">Breaches alert; for coding agents they can also block.</span>{" "}
+            Owners and admins get a notification and the project webhook receives{" "}
             <code className="text-neutral-300">guardrail.breach</code>, once per agent, subject and kind per
-            hour. Blocking at the call site is on the SDK roadmap.
+            hour. A guardrail declared for <code className="text-neutral-300">claude-code</code> or{" "}
+            <code className="text-neutral-300">codex</code> is refused before the call runs on machines
+            connected with <code className="text-neutral-300">agentcost connect --enforce</code>: tools, models,
+            per-run limits and the budget. Everything else is reported after the fact.
           </li>
         </ul>
       </SectionCard>
