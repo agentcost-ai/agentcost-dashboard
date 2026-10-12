@@ -5,6 +5,15 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { PageHeader, Section, CodeBlock } from "@/components/docs/primitives";
 
+const COMMANDS: Array<[string, string]> = [
+  ["agentcost analyze <path>", "Estimate what an agent will cost before deploying it. Offline; sends nothing."],
+  ["agentcost sync --dry-run", "Show what coding-agent usage would be sent. Needs no API key; sends nothing."],
+  ["agentcost connect <agent>", "Track claude-code, codex or antigravity on this machine: imports 30 days, then syncs after every turn. Add --enforce to block calls that break the project's guardrails or budget."],
+  ["agentcost status", "What is connected, whether its hooks are in place, and what is waiting to sync."],
+  ["agentcost sync", "Send what is new right now. The hook does this after every turn."],
+  ["agentcost disconnect <agent>", "Remove the hook. Data already sent stays."],
+];
+
 const FLAGS: Array<{ flag: string; value: string; note: string }> = [
   {
     flag: "--model",
@@ -121,7 +130,34 @@ export default function CliDocsContent() {
               The CLI ships with the SDK. Installing the package registers the{" "}
               <code>agentcost</code> command.
             </p>
-            <CodeBlock code={`pip install agentcost\nagentcost --version`} />
+            <CodeBlock code={`pip install agentcost\nagentcost`} />
+            <p>
+              Run <code>agentcost</code> on its own for a list of every command
+              and what it does.
+            </p>
+          </Section>
+
+          <Section id="commands" title="All commands">
+            <p>
+              <code>analyze</code>, the subject of this page, runs offline. The
+              other four track Claude Code, Codex and Antigravity sessions and
+              do send usage to AgentCost; they are covered in{" "}
+              <Link href="/docs/coding-agents">Coding agents</Link>.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[13.5px]">
+                <tbody>
+                  {COMMANDS.map(([command, purpose]) => (
+                    <tr key={command} className="border-b border-white/6">
+                      <td className="py-2 pr-4 font-mono text-neutral-200 whitespace-nowrap">
+                        {command}
+                      </td>
+                      <td className="py-2">{purpose}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Section>
 
           <Section id="files" title="Analysing your files">

@@ -745,6 +745,37 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "timestamp": "2026-08-15T10:30:46.001Z"
 }`}
             />
+            <p>
+              Set <code>metadata.billing</code> to <code>subscription</code> on a
+              call covered by a flat plan (a coding agent on a Claude or ChatGPT
+              plan) or <code>api</code> on metered usage. A subscription event is
+              priced and shown, but left out of the budget, its alerts and its
+              hard cap. Unstated is treated as metered.
+            </p>
+          </Endpoint>
+
+          <Endpoint
+            method="POST"
+            path="/v1/otlp/v1/logs"
+            description="Ingest the OpenTelemetry log export of Claude Code or Codex"
+          >
+            <p>
+              OTLP over HTTP with JSON, optionally gzipped, authenticated with the
+              project API key. Each model call in the export becomes one event
+              and takes the same pricing, deduplication, budget and guardrail
+              path as <code>/v1/events/batch</code>. Every other record is
+              discarded unread. Returns <code>{"{}"}</code>, OTLP&apos;s &quot;all
+              accepted&quot;. <code>/v1/otlp/v1/metrics</code> and{" "}
+              <code>/v1/otlp/v1/traces</code> accept and discard, so one endpoint
+              setting covers all three signals; a protobuf body gets a 415.
+              Setup is in <Link href="/docs/coding-agents#opentelemetry">Coding agents</Link>.
+            </p>
+            <CodeBlock
+              code={`OTEL_EXPORTER_OTLP_ENDPOINT=${apiBaseUrl || "https://api.agentcost.tech"}/v1/otlp
+OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer sk_your_project_api_key"
+OTEL_RESOURCE_ATTRIBUTES="agentcost.billing=subscription"`}
+            />
           </Endpoint>
 
           <Endpoint
@@ -841,6 +872,7 @@ curl -H "Authorization: Bearer your_jwt_token" \\
               language="json"
               code={`{
   "total_cost": 45.32,
+  "subscription_cost": 12.10,
   "total_calls": 2150,
   "total_tokens": 1250000,
   "avg_cost_per_call": 0.021,
@@ -850,6 +882,12 @@ curl -H "Authorization: Bearer your_jwt_token" \\
   "period_end": "2024-01-23T00:00:00Z"
 }`}
             />
+            <p>
+              <code>subscription_cost</code> is the part of{" "}
+              <code>total_cost</code> covered by a flat plan: what that usage is
+              worth at API rates, not money owed. <code>total_cost</code> minus it
+              is metered spend, which is what the budget counts.
+            </p>
           </Endpoint>
 
           <Endpoint
@@ -1070,9 +1108,11 @@ curl -H "Authorization: Bearer your_jwt_token" \\
           <Endpoint
             method="GET"
             path="/v1/analytics/by/{dimension}"
-            description="Cost and volume grouped by user, session, workflow, tool, model or agent"
+            description="Cost and volume grouped by user, session, workflow, tool, model, agent or billing"
           >
             <p>
+              <code>billing</code> splits spend into <code>api</code> (metered)
+              and <code>subscription</code> (covered by a plan).{" "}
               <code>user</code> and{" "}
               <code>session</code> read the{" "}
               <code>user_id</code> /{" "}
@@ -1430,6 +1470,44 @@ curl -H "Authorization: Bearer your_jwt_token" \\
     "updated_at": "2026-08-30T16:02:10Z"
   }
 ]`}
+            />
+          </Endpoint>
+
+          <Endpoint
+            method="GET"
+            path="/v1/guardrails/policy"
+            description="Enabled guardrails, tool tags and budget position in one read"
+          >
+            <p>
+              For something that sits in front of the call and can refuse it: a
+              coding agent&apos;s pre-tool hook, a gateway, a control plane. Fetch
+              it occasionally and hold it; the decision itself should not wait on
+              this request. Authenticated with the project API key. The
+              SDK&apos;s gate (<code>agentcost connect --enforce</code>) is built
+              on it.
+            </p>
+            <CodeBlock
+              language="json"
+              code={`{
+  "guardrails": [
+    {
+      "agent_name": "claude-code",
+      "allowed_tools": ["Read", "Grep", "Glob", "Bash"],
+      "read_only": false,
+      "allowed_models": null,
+      "max_tool_calls_per_run": null,
+      "max_cost_per_run_usd": 5.0,
+      "enabled": true
+    }
+  ],
+  "tool_tags": { "Bash": "write" },
+  "budget": {
+    "enabled": true, "mode": "hard_cap", "currency": "USD",
+    "budget": 5000.0, "spend_mtd": 4820.15, "exhausted": false,
+    "period_ends_at": "2026-09-01T00:00:00+00:00"
+  },
+  "as_of": "2026-08-13T09:14:02+00:00"
+}`}
             />
           </Endpoint>
 

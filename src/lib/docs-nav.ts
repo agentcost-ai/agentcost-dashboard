@@ -94,6 +94,7 @@ export const DOCS_PAGES: DocsPage[] = [
       ep("POST", "/v1/projects/{project_id}/leave", "Leave project"),
       { id: "events", label: "Events" },
       ep("POST", "/v1/events/batch", "Ingest events"),
+      ep("POST", "/v1/otlp/v1/logs", "Ingest OTLP logs"),
       ep("GET", "/v1/events", "List events"),
       { id: "analytics", label: "Analytics" },
       ep("GET", "/v1/analytics/overview", "Overview"),
@@ -116,6 +117,7 @@ export const DOCS_PAGES: DocsPage[] = [
       ep("GET", "/v1/analytics/traces/{trace_id}", "Retrieve trace"),
       { id: "guardrails", label: "Guardrails" },
       ep("GET", "/v1/guardrails", "List guardrails"),
+      ep("GET", "/v1/guardrails/policy", "Enforcement policy"),
       ep("GET", "/v1/guardrails/compliance", "Compliance"),
       ep("PUT", "/v1/projects/{project_id}/guardrails", "Upsert guardrail"),
       ep("DELETE", "/v1/projects/{project_id}/guardrails/{agent_name}", "Delete guardrail"),
@@ -142,6 +144,7 @@ export const DOCS_PAGES: DocsPage[] = [
     label: "CLI",
     sections: [
       { id: "install", label: "Install" },
+      { id: "commands", label: "All commands" },
       { id: "files", label: "Analysing your files" },
       { id: "run", label: "Analysing a test run" },
       { id: "report", label: "Reading the report" },
@@ -149,6 +152,19 @@ export const DOCS_PAGES: DocsPage[] = [
       { id: "flags", label: "Flags" },
       { id: "ci", label: "CI usage" },
       { id: "privacy", label: "What it reads and sends" },
+    ],
+  },
+  {
+    href: "/docs/coding-agents",
+    label: "Coding agents",
+    sections: [
+      { id: "connect", label: "Connect a machine" },
+      { id: "what-you-get", label: "What you get" },
+      { id: "subscriptions", label: "Subscriptions are not spend" },
+      { id: "enforce", label: "Enforce guardrails" },
+      { id: "opentelemetry", label: "OpenTelemetry" },
+      { id: "ask-the-agent", label: "MCP" },
+      { id: "what-leaves-the-machine", label: "What leaves the machine" },
     ],
   },
   {
@@ -182,6 +198,7 @@ export const DOCS_PAGES: DocsPage[] = [
     label: "Privacy",
     sections: [
       { id: "transmitted", label: "What the SDK transmits" },
+      { id: "coding-agents", label: "Coding agents" },
       { id: "hashing", label: "How prompts are handled" },
       { id: "modes", label: "Deployment modes" },
       { id: "credentials", label: "Credentials and secrets" },

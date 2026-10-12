@@ -94,6 +94,7 @@ track_costs.init(api_key="sk_your_project_key", project_id="your-project-uuid")`
           <Card href="/docs/sdk" icon={<Code2 size={22} strokeWidth={1.75} />} title="Python SDK" />
           <Card href="/docs/api" icon={<Braces size={22} strokeWidth={1.75} />} title="REST API reference" />
           <Card href="/docs/cli" icon={<TerminalSquare size={22} strokeWidth={1.75} />} title="CLI reference" />
+          <Card href="/docs/coding-agents" icon={<Bot size={22} strokeWidth={1.75} />} title="Claude Code, Codex & Antigravity" />
           <Card href="/docs/models" icon={<Database size={22} strokeWidth={1.75} />} title="Model catalog" />
           <Card href="/docs/mcp" icon={<Plug size={22} strokeWidth={1.75} />} title="MCP server" />
           <Card href="/docs/privacy" icon={<ShieldCheck size={22} strokeWidth={1.75} />} title="Data & privacy" />
