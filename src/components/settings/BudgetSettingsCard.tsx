@@ -75,7 +75,7 @@ const ENFORCEMENT_OPTIONS: {
     value: "hard_cap",
     label: "Block when budget is reached",
     description:
-      "Same alerts as Notify, plus reject new events once month-to-date spend hits the budget.",
+      "Same alerts as Notify, plus reject new events once month-to-date spend hits the budget. Coding agents connected with --enforce also refuse new prompts.",
     icon: Ban,
     iconClass: "text-red-300 bg-red-500/10",
   },
@@ -487,6 +487,12 @@ export function BudgetSettingsCard({ projectId }: BudgetSettingsCardProps) {
                     {utilization != null
                       ? `${utilization.toFixed(1)}% of monthly budget used`
                       : "Set a budget to track utilization."}
+                  </p>
+                  {/* Otherwise a plan user sees $0 here beside a large total on the Overview. */}
+                  <p className="mt-2 text-xs leading-relaxed text-neutral-500">
+                    Counts metered usage only. Calls covered by a subscription, such as
+                    Claude Code or Codex on a plan, are shown on the Overview at their API
+                    value and are never counted against this budget.
                   </p>
                 </div>
               )}

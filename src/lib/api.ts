@@ -244,6 +244,8 @@ export interface RunCostDistribution {
 
 export interface TraceSummary {
   trace_id: string;
+  /** A coding agent's chat title, when the client shared it. */
+  name?: string | null;
   workflow: string | null;
   calls: number;
   total_cost: number;
@@ -387,6 +389,8 @@ export interface AgentOutcomes {
 
 export interface DimensionStat {
   key: string;
+  /** Session dimension only: what the session is called, when the client shared it. */
+  name?: string | null;
   total_calls: number;
   total_tokens: number;
   total_cost: number;
@@ -556,6 +560,10 @@ export interface OptimizationSuggestion {
     repeat_rate?: number;
     max_output_tokens?: number;
     window_cost?: number;
+    // session_* (coding-agent habits): the one figure the card shows
+    headline_label?: string;
+    headline_value?: string;
+    share_percent?: number;
     /** True when the saving is this line's whole cost, not a modelled delta. */
     savings_is_ceiling?: boolean;
     savings_estimated?: boolean;
@@ -1147,6 +1155,9 @@ class ApiClient {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        // The viewer's clock, in minutes east of UTC, so the API cuts days at
+        // the viewer's midnight rather than UTC's.
+        "X-Timezone-Offset": String(-new Date().getTimezoneOffset()),
         ...(authHeader && { Authorization: authHeader }),
         ...options.headers,
       },

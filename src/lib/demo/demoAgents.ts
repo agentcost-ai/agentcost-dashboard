@@ -45,12 +45,22 @@ const DRIFT: Record<string, number> = {
   "faq-bot": 1.056,
   "sentiment-classifier": 1.012,
   "email-drafter": 0.995,
+  "claude-code": 1.214,
+  "codex": 1.083,
+};
+
+// A coding agent's run is a chat session, not a workflow() block.
+const CODING_SESSIONS_PER_DAY: Record<string, number> = {
+  "claude-code": 11,
+  "codex": 8,
 };
 
 const CACHE_SHARE: Record<string, number> = {
   "research-agent": 41,
   "code-review-agent": 27,
   "support-triage-agent": 18,
+  "claude-code": 94,
+  "codex": 81,
 };
 
 const DEVELOPERS = ["maya.chen", "dev.patel", "ci-bot"];
@@ -141,7 +151,12 @@ export function demoAgentSummaries(range: string, limit: number): AgentSummary[]
     const p = AGENTS.find((x) => x.name === a.agent_name)!;
     const workflow = WORKFLOWS.find((w) => w.name === AGENT_WORKFLOW[a.agent_name]);
     const callsPerRun = workflow ? workflow.steps.reduce((sum, st) => sum + st.callsPerRun, 0) : 0;
-    const runs = workflow ? Math.round(a.total_calls / callsPerRun) : 0;
+    const sessionsPerDay = CODING_SESSIONS_PER_DAY[a.agent_name];
+    const runs = workflow
+      ? Math.round(a.total_calls / callsPerRun)
+      : sessionsPerDay
+        ? Math.max(1, Math.round((a.total_calls / p.callsPerDay) * sessionsPerDay))
+        : 0;
     const cost = a.total_cost;
     const previous = round2((p.callsPerDay * prevMult * perCallCost(p)) / (DRIFT[a.agent_name] ?? 1));
     const repeatedCost = round6(cost * (REPEAT_SHARE[a.agent_name] ?? 0));
@@ -192,7 +207,7 @@ export function demoAgentSummaries(range: string, limit: number): AgentSummary[]
       repeated_cost: repeatedCost,
       repeated_runs: repeatedRuns,
       developers: workflow ? 3 : 2,
-      sessions: workflow ? Math.round(runs * 0.84) : 0,
+      sessions: workflow ? Math.round(runs * 0.84) : sessionsPerDay ? runs : 0,
       first_seen: new Date(now - 56 * 86_400_000).toISOString(),
       last_seen: new Date(now - (3 + (a.total_calls % 7)) * 60_000).toISOString(),
       daily,

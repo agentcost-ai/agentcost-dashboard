@@ -8,7 +8,7 @@ import { PageHeader, Section, CodeBlock } from "@/components/docs/primitives";
 const COMMANDS: Array<[string, string]> = [
   ["agentcost analyze <path>", "Estimate what an agent will cost before deploying it. Offline; sends nothing."],
   ["agentcost sync --dry-run", "Show what coding-agent usage would be sent. Needs no API key; sends nothing."],
-  ["agentcost connect <agent>", "Track claude-code, codex or antigravity on this machine: imports 30 days, then syncs after every turn. Add --enforce to block calls that break the project's guardrails or budget."],
+  ["agentcost connect <agent>", "Track claude-code, codex or antigravity on this machine: imports 30 days, then syncs after every turn. Add --enforce to block calls that break the project's guardrails or budget, and --session-names to list sessions by their chat title."],
   ["agentcost status", "What is connected, whether its hooks are in place, and what is waiting to sync."],
   ["agentcost sync", "Send what is new right now. The hook does this after every turn."],
   ["agentcost disconnect <agent>", "Remove the hook. Data already sent stays."],

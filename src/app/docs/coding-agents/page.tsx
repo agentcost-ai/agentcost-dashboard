@@ -137,6 +137,18 @@ export default function CodingAgentsDocsPage() {
         </Callout>
       </Section>
 
+      <Section id="habits" title="Where the usage goes">
+        <p>
+          The <Link href="/optimizations">Optimizations</Link> page gives coding
+          agents their own advice. Swapping the model or caching a prompt is not
+          yours to do in Claude Code or Codex; how you use sessions is. It reports
+          the share of usage spent re-sending very long conversations, prompt-cache
+          rebuilds after you return to an old session, a single session taking most
+          of the usage, and how often the plan limit was hit, each with what to
+          change. These are shares of usage, not savings in dollars.
+        </p>
+      </Section>
+
       <Section id="subscriptions" title="Subscriptions are not spend">
         <p>
           On a Claude or ChatGPT plan, or in Antigravity, nothing is billed per
@@ -212,6 +224,12 @@ export default function CodingAgentsDocsPage() {
           replies, tool arguments and tool output are never sent or kept. The working
           folder&apos;s name and git branch are sent only if you pass{" "}
           <code>--include-repo</code>, and never the path or the remote URL.
+        </p>
+        <p>
+          To list sessions by name, connect with <code>--session-names</code>. That
+          sends the title Claude Code gives each chat and the thread name Codex
+          gives each thread. It is off by default, because a title is a short
+          summary of what was asked.
         </p>
       </Section>
 

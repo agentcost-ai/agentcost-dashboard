@@ -92,7 +92,7 @@ export function HeroSection() {
               sizes="(min-width: 1280px) 1216px, 100vw"
               width={1600}
               height={750}
-              alt="AgentCost Agents page: seven agents ranked by spend over the last 7 days, support-triage-agent first at 24.8%"
+              alt="AgentCost Agents page: nine agents ranked by spend over the last 7 days, support-triage-agent first and Claude Code second"
               fetchPriority="high"
               decoding="async"
               className="hidden w-full sm:block"
@@ -100,8 +100,8 @@ export function HeroSection() {
             <img
               src="/hero/agents-mobile.webp"
               width={358}
-              height={687}
-              alt="AgentCost Agents page: seven agents ranked by spend, support-triage-agent first at 24.8%"
+              height={810}
+              alt="AgentCost Agents page: nine agents ranked by spend, including Claude Code and Codex"
               fetchPriority="high"
               decoding="async"
               className="w-full sm:hidden"

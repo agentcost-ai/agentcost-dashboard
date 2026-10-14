@@ -144,6 +144,10 @@ function OptimizationTypeIcon({ type }: { type: string }) {
     latency: <Timer size={18} strokeWidth={1.75} className="text-indigo-200" />,
     non_llm_candidate: <Binary size={18} strokeWidth={1.75} className="text-indigo-200" />,
   };
+  // Session habits: advice for coding agents, about how sessions are used.
+  if (type.startsWith("session_")) {
+    return <Timer size={18} strokeWidth={1.75} className="text-indigo-200" />;
+  }
   return icons[type] || <Zap size={18} strokeWidth={1.75} className="text-indigo-200" />;
 }
 
@@ -210,7 +214,13 @@ function OptimizationCard({
             }
           : null;
       default:
-        return null;
+        // A session habit carries its own headline: a share of usage, or a count.
+        return suggestion.metrics?.headline_value
+          ? {
+              label: suggestion.metrics.headline_label ?? "Share of usage",
+              value: suggestion.metrics.headline_value,
+            }
+          : null;
     }
   })();
 

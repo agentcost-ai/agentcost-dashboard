@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { ChartSkeleton, MetricCardSkeleton } from "@/components/ui/Skeleton";
@@ -21,6 +21,19 @@ import {
 
 const THEME_KEY = "agentcost_report_theme";
 
+const RANGE_LABELS: Record<string, string> = {
+  "24h": "the last 24 hours",
+  "7d": "the last 7 days",
+  "30d": "the last 30 days",
+  "90d": "the last 90 days",
+  mtd: "month to date",
+};
+
+function describeRange(range: ReportRange): string {
+  if (range.start && range.end) return `${range.start} to ${range.end}`;
+  return RANGE_LABELS[range.range ?? "30d"] ?? range.range ?? "the selected range";
+}
+
 function readTheme(): ReportTheme {
   if (typeof window === "undefined") return "light";
   try {
@@ -37,6 +50,12 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  // When the report on screen was built, and for which range.
+  const [builtAt, setBuiltAt] = useState<Date | null>(null);
+  const [builtFor, setBuiltFor] = useState<ReportRange | null>(null);
+  // Only the newest request may replace the report: switching range quickly
+  // must not let a slower, older answer land last.
+  const latestRequest = useRef(0);
   // How the sheet looks on screen. Exports and print are always light.
   const [theme, setTheme] = useState<ReportTheme>(readTheme);
 
@@ -54,13 +73,18 @@ export default function ReportsPage() {
       setLoading(false);
       return;
     }
+    const request = ++latestRequest.current;
     setLoading(true);
     setError(null);
     try {
       const data = await api.getExecutiveReport(range);
+      if (request !== latestRequest.current) return;
       setReport(data);
+      setBuiltAt(new Date());
+      setBuiltFor(range);
       setShowOnboarding(false);
     } catch (err) {
+      if (request !== latestRequest.current) return;
       const msg = parseApiError(err);
       if (
         msg.includes("401") ||
@@ -73,7 +97,7 @@ export default function ReportsPage() {
         setError(msg);
       }
     } finally {
-      setLoading(false);
+      if (request === latestRequest.current) setLoading(false);
     }
   }, [range]);
 
@@ -92,6 +116,13 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-semibold tracking-tight text-white">Reports</h1>
           <p className="mt-1 text-sm text-neutral-500">
             Cost, usage, reliability and savings as one document you can hand over
+          </p>
+          <p className="mt-1 text-xs text-neutral-500" aria-live="polite">
+            {loading
+              ? `Building the report for ${describeRange(range)}…`
+              : builtAt && builtFor
+                ? `Showing ${describeRange(builtFor)} · updated ${builtAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                : null}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -162,7 +193,21 @@ export default function ReportsPage() {
           </Card>
         </div>
       ) : report ? (
-        <ReportDocument report={report} theme={theme} />
+        // A new range is loading: keep the old report readable but plainly
+        // out of date, rather than unchanged and indistinguishable.
+        <div className="relative" aria-busy={loading}>
+          {loading && (
+            <div className="no-print sticky top-3 z-10 mb-3 flex justify-center print:hidden">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#141416]/95 px-3.5 py-1.5 text-[12.5px] text-neutral-200 shadow-lg">
+                <RefreshCw size={13} className="animate-spin" />
+                Updating to {describeRange(range)}
+              </span>
+            </div>
+          )}
+          <div className={cn("transition-opacity duration-200", loading && "pointer-events-none opacity-40")}>
+            <ReportDocument report={report} theme={theme} />
+          </div>
+        </div>
       ) : null}
     </div>
   );

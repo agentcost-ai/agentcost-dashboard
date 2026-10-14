@@ -2,7 +2,7 @@
  * Demo mode dataset — a realistic, internally-consistent story.
  *
  * "NovaDesk AI" is a fictional customer-support AI startup running 7 agents
- * in production, spending ~$3.4k/month on LLM calls, with ~$1.5k/month of
+ * in production, plus Claude Code and Codex for its own developers, spending ~$3.4k/month on LLM calls, with ~$1.5k/month of
  * discoverable savings on the Optimizations page (the demo's proof moment).
  *
  * All aggregates (overview, timeseries, agents, models) are derived from the
@@ -61,6 +61,7 @@ const PRICING: Record<string, [number, number]> = {
   "gpt-4.1": [2.0, 8.0],
   "claude-sonnet-4-5": [3.0, 15.0],
   "claude-opus-4-1": [15.0, 75.0],
+  "gpt-5-codex": [1.25, 10.0],
 };
 
 interface AgentProfile {
@@ -81,6 +82,10 @@ export const AGENTS: AgentProfile[] = [
   { name: "code-review-agent", model: "claude-opus-4-1", callsPerDay: 90, inTokens: 7000, outTokens: 1400, avgLatencyMs: 6300, errorRate: 0.011 },
   { name: "email-drafter", model: "gpt-4o-mini", callsPerDay: 2500, inTokens: 700, outTokens: 300, avgLatencyMs: 880, errorRate: 0.007 },
   { name: "sentiment-classifier", model: "gpt-4o", callsPerDay: 5500, inTokens: 280, outTokens: 12, avgLatencyMs: 340, errorRate: 0.004 },
+  // Coding agents, tracked from their session logs: no latency is recorded
+  // for them, exactly as on the real product.
+  { name: "claude-code", model: "claude-sonnet-4-5", callsPerDay: 300, inTokens: 26000, outTokens: 700, avgLatencyMs: 0, errorRate: 0.006 },
+  { name: "codex", model: "gpt-5-codex", callsPerDay: 260, inTokens: 22000, outTokens: 600, avgLatencyMs: 0, errorRate: 0.004 },
 ];
 
 export function perCallCost(p: AgentProfile): number {
@@ -145,10 +150,11 @@ export function demoOverview(range: string): AnalyticsOverview {
   if (range === "1h") mult = dayMultiplier(0) / 24;
   if (range === "24h") mult = dayMultiplier(0);
 
-  let cost = 0, calls = 0, inTok = 0, outTok = 0, latWeighted = 0, errWeighted = 0;
+  let cost = 0, calls = 0, inTok = 0, outTok = 0, latWeighted = 0, latCalls = 0, errWeighted = 0;
   for (const p of AGENTS) {
     const c = p.callsPerDay * mult;
     calls += c;
+    if (p.avgLatencyMs > 0) latCalls += c;
     // Rounded per agent, exactly as the agent and model tables round it, so
     // the headline total is the sum of the rows beneath it to the cent.
     cost += round2(Math.round(c) * perCallCost(p));
@@ -166,7 +172,8 @@ export function demoOverview(range: string): AnalyticsOverview {
     total_output_tokens: Math.round(outTok),
     avg_cost_per_call: calls > 0 ? cost / calls : 0,
     avg_tokens_per_call: calls > 0 ? Math.round(totalTokens / calls) : 0,
-    avg_latency_ms: calls > 0 ? Math.round(latWeighted / calls) : 0,
+    // Calls with no measured latency are left out, as the API does.
+    avg_latency_ms: latCalls > 0 ? Math.round(latWeighted / latCalls) : 0,
     success_rate: calls > 0 ? round2(100 * (1 - errWeighted / calls)) : 100,
   };
 }

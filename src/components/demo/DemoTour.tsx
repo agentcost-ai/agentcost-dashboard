@@ -38,7 +38,7 @@ const STEPS: Step[] = [
   {
     label: "Start",
     title: "NovaDesk's AI bill went up. Find out why.",
-    body: "This is sample data from NovaDesk, a fictional AI support company running seven agents. Five stops show how AgentCost answers the question.",
+    body: "This is sample data from NovaDesk, a fictional AI support company running seven product agents, plus Claude Code and Codex for its developers. Five stops show how AgentCost answers the question.",
   },
   {
     path: "/dashboard",

@@ -301,6 +301,7 @@ export default function PrivacyArchitectureContent() {
                 "Sent: token counts, model, the names of tools called, the session id, timestamps, the tool's version, and whether the usage is metered or covered by a subscription.",
                 "Never sent or kept: prompts, replies, tool arguments, tool output, file contents. Codex wraps each tool call in a short script; that script is scanned for the tool name and nothing else is taken from it.",
                 "Opt-in only: the working folder's name and git branch, with --include-repo. The full path and the remote URL are never sent.",
+                "Opt-in only: each chat's title, with --session-names, so sessions are listed by name. A title is a short summary of what was asked, so it is never sent unless you ask for it.",
                 "Opt-in only: a developer id, with --user. Over OpenTelemetry, the account email the tool itself puts in its export is used instead.",
                 "Local files: your API key, sync cursors and a cached guardrail policy live in ~/.agentcost. The gate decides from those and makes no network call.",
                 "Over OpenTelemetry, the tool sends its whole export. AgentCost reads the per-call usage records and discards the rest unread; prompt records are redacted by the tool unless you turn that off.",

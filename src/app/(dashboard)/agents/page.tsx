@@ -167,8 +167,13 @@ export default function AgentsPage() {
     const tracedCost = agents.filter((a) => a.runs > 0).reduce((s, a) => s + a.total_cost, 0);
     const runs = agents.reduce((s, a) => s + a.runs, 0);
     const cacheSavings = agents.reduce((s, a) => s + a.cache_savings, 0);
-    const calls = agents.reduce((s, a) => s + a.total_calls, 0);
-    const latency = calls ? agents.reduce((s, a) => s + a.avg_latency_ms * a.total_calls, 0) / calls : 0;
+    // Agents with no measured latency (coding agents) would pull the average
+    // toward zero; weight only the calls that have one.
+    const timed = agents.filter((a) => a.avg_latency_ms > 0);
+    const timedCalls = timed.reduce((s, a) => s + a.total_calls, 0);
+    const latency = timedCalls
+      ? timed.reduce((s, a) => s + a.avg_latency_ms * a.total_calls, 0) / timedCalls
+      : 0;
     const breaching = agents.filter((a) => a.signal.kind === "breach").length;
     const cachedInputs = agents.filter((a) => a.cached_share !== null);
     return {

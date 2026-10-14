@@ -148,8 +148,13 @@ function Column({ title, sub, rows, total, empty, keyLabel }: { title: string; s
           {rows.map((r) => (
             <div key={r.key} className="grid grid-cols-[minmax(0,1fr)_5rem_3.25rem] items-baseline gap-3 border-b border-white/5 py-2.5 text-[13px] last:border-0">
               <span className="min-w-0">
-                <span className="block truncate font-medium text-neutral-100">{keyLabel ? keyLabel(r.key) : r.key}</span>
-                <span className="block text-[12px] text-neutral-500">{formatNumber(r.total_calls)} calls</span>
+                <span className="block truncate font-medium text-neutral-100" title={r.name ? r.key : undefined}>
+                  {r.name || (keyLabel ? keyLabel(r.key) : r.key)}
+                </span>
+                <span className="block truncate text-[12px] text-neutral-500">
+                  {formatNumber(r.total_calls)} calls
+                  {r.name ? <span className="font-mono"> · {r.key.slice(0, 8)}</span> : null}
+                </span>
               </span>
               <span className="text-right tabular-nums text-neutral-200">{formatCurrency(r.total_cost)}</span>
               <span className="text-right text-[12px] tabular-nums text-neutral-500">{pct(r.total_cost, total)}</span>
@@ -602,7 +607,7 @@ export default function AgentPage() {
               <div className="min-w-130 px-5 py-1">
                 <div className={cn("grid grid-cols-[6.5rem_minmax(0,1fr)_3rem_5rem_3.5rem] gap-3 border-b border-white/6 py-2", TH)}>
                   <span>Run</span>
-                  <span>Started</span>
+                  <span>Name · started</span>
                   <span className="text-right">Calls</span>
                   <span className="text-right">Cost</span>
                   <span className="text-right">Failed</span>
@@ -610,7 +615,10 @@ export default function AgentPage() {
                 {detail.traces.map((t) => (
                   <div key={t.trace_id} className="grid grid-cols-[6.5rem_minmax(0,1fr)_3rem_5rem_3.5rem] items-baseline gap-3 border-b border-white/5 py-2.5 text-[13px] last:border-0">
                     <span className="truncate font-mono text-[12px] text-neutral-200">{t.trace_id}</span>
-                    <span className="truncate text-neutral-500">{stamp(t.started_at)}</span>
+                    <span className="min-w-0 truncate text-neutral-500">
+                      {t.name ? <span className="text-neutral-100">{t.name} · </span> : null}
+                      {stamp(t.started_at)}
+                    </span>
                     <span className="text-right tabular-nums text-neutral-300">{t.calls}</span>
                     <span className="text-right tabular-nums text-neutral-200">{small(t.total_cost)}</span>
                     <span className={cn("text-right tabular-nums", t.failed_calls > 0 ? "text-red-300" : "text-neutral-500")}>{t.failed_calls}</span>

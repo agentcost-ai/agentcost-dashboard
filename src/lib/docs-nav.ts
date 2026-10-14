@@ -160,6 +160,7 @@ export const DOCS_PAGES: DocsPage[] = [
     sections: [
       { id: "connect", label: "Connect a machine" },
       { id: "what-you-get", label: "What you get" },
+      { id: "habits", label: "Where the usage goes" },
       { id: "subscriptions", label: "Subscriptions are not spend" },
       { id: "enforce", label: "Enforce guardrails" },
       { id: "opentelemetry", label: "OpenTelemetry" },

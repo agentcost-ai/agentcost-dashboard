@@ -342,7 +342,9 @@ only; enforcement needs the hook.
 
 Token counts, model, tool names, session id and timestamps. Prompts, replies,
 tool arguments and tool output are never sent or kept. The working folder's name and git
-branch only with \`--include-repo\`; never the path or remote URL.
+branch only with \`--include-repo\`; never the path or remote URL. Chat titles
+(session names) only with \`--session-names\`, since a title summarises what
+was asked.
 
 Full page: ${SITE_URL}/docs/coding-agents`,
   },

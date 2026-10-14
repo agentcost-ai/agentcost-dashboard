@@ -660,7 +660,7 @@ async function spendOverview(args: Record<string, unknown>, context: ToolContext
   return ok(text, o);
 }
 
-type DimensionRow = { key: string; total_calls: number; total_cost: number };
+type DimensionRow = { key: string; name?: string | null; total_calls: number; total_cost: number };
 
 async function spendBreakdown(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult> {
   if (!context.apiKey) return toolError(KEY_REQUIRED);
@@ -688,7 +688,8 @@ async function spendBreakdown(args: Record<string, unknown>, context: ToolContex
 
   const lines = groups.map(
     (row) =>
-      `${money(row.total_cost)}  ${row.key} (${row.total_calls.toLocaleString("en-US")} call${row.total_calls === 1 ? "" : "s"})`,
+      // A session that was given a name reads better by it; the id stays for get_run_cost.
+      `${money(row.total_cost)}  ${row.name ? `${row.name} [${row.key}]` : row.key} (${row.total_calls.toLocaleString("en-US")} call${row.total_calls === 1 ? "" : "s"})`,
   );
   return ok([`Spend by ${dimension} over the last ${range}, most expensive first:`, ...lines].join("\n"), structured);
 }
