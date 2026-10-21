@@ -20,6 +20,14 @@ export interface AnalyticsOverview {
   avg_tokens_per_call: number;
   avg_latency_ms: number;
   success_rate: number;
+  period_start?: string;
+  period_end?: string;
+  /** Every agent and model in the window. Absent on an older backend. */
+  distinct_agents?: number;
+  distinct_models?: number;
+  /** The equal-length window before this one. Absent on an older backend. */
+  previous_total_cost?: number | null;
+  previous_subscription_cost?: number | null;
 }
 
 export interface AgentStats {
@@ -272,6 +280,13 @@ export interface TimeSeriesPoint {
   cost: number;
   calls: number;
   tokens: number;
+  /** The part of cost covered by a flat plan. Absent on an older backend. */
+  subscription_cost?: number;
+}
+
+/** Hour buckets for the ranges measured in hours, day buckets otherwise. */
+export function timeSeriesGranularity(range: string): "hour" | "day" {
+  return range === "1h" || range === "24h" ? "hour" : "day";
 }
 
 // ── Executive Report ──────────────────────────────────────────────────────
@@ -585,6 +600,8 @@ export interface OptimizationSummary {
   total_potential_savings_monthly: number;
   total_potential_savings_percent: number;
   current_monthly_spend?: number;
+  /** Days of history the suggestions were computed over. */
+  window_days?: number;
   suggestion_count: number;
   high_priority_count: number;
   by_type?: Record<string, { count: number; savings: number }>;
@@ -1311,7 +1328,11 @@ class ApiClient {
   }
 
   async getTimeSeries(range: string = "7d"): Promise<TimeSeriesPoint[]> {
-    return this.request(`/v1/analytics/timeseries?range=${range}`);
+    // Without a granularity the API returns day buckets, which drew "Last 24
+    // hours" as two points.
+    return this.request(
+      `/v1/analytics/timeseries?range=${range}&granularity=${timeSeriesGranularity(range)}`,
+    );
   }
 
   /**

@@ -22,7 +22,7 @@ const MAX_SLICES = 6;
 
 type Slice = { model: string; cost: number; calls: number; share: number; color: string };
 
-export function ModelShare({ data }: { data: ModelStats[] }) {
+export function ModelShare({ data, totalModels }: { data: ModelStats[]; totalModels?: number }) {
   const [hovered, setHovered] = useState<number | null>(null);
 
   const { slices, total } = useMemo(() => {
@@ -111,7 +111,10 @@ export function ModelShare({ data }: { data: ModelStats[] }) {
             {usd(active ? active.cost : total)}
           </p>
           <p className="mt-1.5 text-[11.5px] tabular-nums text-neutral-500">
-            {active ? `${(active.share * 100).toFixed(1)}% of spend` : `${slices.length} in use`}
+            {active
+              ? `${(active.share * 100).toFixed(1)}% of spend`
+              : // Count models, not ring slices: the tail folds into one "Other".
+                `${totalModels ?? data.length} in use`}
           </p>
         </div>
       </div>

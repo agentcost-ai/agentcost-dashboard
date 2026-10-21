@@ -47,7 +47,9 @@ import {
  */
 const LOOP_WARN_CALLS_PER_RUN = 2;
 
-function EmptyState() {
+/** `withPreDeploy` is false while the header's full pre-deploy card is open,
+ *  so the same commands are not shown twice. */
+function EmptyState({ withPreDeploy = true }: { withPreDeploy?: boolean }) {
   return (
     <div className="px-6 py-12 text-center">
       <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-white/5 text-neutral-400">
@@ -71,9 +73,11 @@ function EmptyState() {
         llm.invoke(...)`}</code>
       </pre>
 
-      <div className="mx-auto mt-8 max-w-2xl border-t border-white/6 pt-2 text-left">
-        <PreDeploymentCard compact />
-      </div>
+      {withPreDeploy && (
+        <div className="mx-auto mt-8 max-w-2xl border-t border-white/6 pt-2 text-left">
+          <PreDeploymentCard compact />
+        </div>
+      )}
     </div>
   );
 }
@@ -300,7 +304,7 @@ export default function WorkflowsPage() {
         {loading ? (
           <TableSkeleton rows={4} />
         ) : !hasData ? (
-          <EmptyState />
+          <EmptyState withPreDeploy={!showPreDeploy} />
         ) : (
           <div className="overflow-x-auto">
             <Table>

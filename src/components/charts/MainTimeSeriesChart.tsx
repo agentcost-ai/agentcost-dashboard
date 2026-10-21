@@ -36,8 +36,10 @@ const METRICS: {
 function axisTickFormat(metric: Metric, value: number): string {
   if (metric === "cost") {
     if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
-    if (value >= 1) return `$${value.toFixed(0)}`;
-    return value === 0 ? "$0" : `$${value.toFixed(2)}`;
+    // Whole dollars only where rounding cannot move a gridline's label: a
+    // tick at 1.65 read "$2".
+    if (value >= 10 || Number.isInteger(value)) return `$${value.toFixed(0)}`;
+    return `$${value.toFixed(2)}`;
   }
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
@@ -52,9 +54,11 @@ interface TooltipPayloadEntry {
 function ChartTooltip({
   active,
   payload,
+  spendLabel,
 }: {
   active?: boolean;
   payload?: TooltipPayloadEntry[];
+  spendLabel: string;
 }) {
   if (!active || !payload?.length || !payload[0].payload) return null;
   const point = payload[0].payload;
@@ -67,7 +71,7 @@ function ChartTooltip({
         {METRICS.map((m) => (
           <div key={m.key} className="flex items-center justify-between gap-6">
             <span className="flex items-center gap-1.5 text-[12px] text-neutral-400">
-              {m.label}
+              {m.key === "cost" ? spendLabel : m.label}
             </span>
             <span className="text-[12.5px] font-medium text-white tabular-nums">
               {m.format(point[m.key])}
@@ -83,6 +87,8 @@ interface MainTimeSeriesChartProps {
   data: TimeSeriesPoint[];
   /** Active range, e.g. "24h" — controls x-axis label format. */
   range: string;
+  /** What the cost series is, e.g. "Metered spend" when plan usage is left out. */
+  spendLabel?: string;
 }
 
 /**
@@ -90,7 +96,7 @@ interface MainTimeSeriesChartProps {
  * period-average reference line, and a tooltip that always shows all three
  * metrics regardless of the selected series.
  */
-export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
+export function MainTimeSeriesChart({ data, range, spendLabel = "Spend" }: MainTimeSeriesChartProps) {
   const [metric, setMetric] = useState<Metric>("cost");
   const active = METRICS.find((m) => m.key === metric)!;
   const hourly = range === "1h" || range === "24h";
@@ -98,8 +104,8 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
   const formattedData = useMemo(
     () =>
       data.map((item) => {
-        // Hour buckets read naturally in the viewer's zone; day buckets must
-        // keep their UTC calendar date (see dayBucketDate).
+        // Hour buckets read naturally in the viewer's zone; day buckets go
+        // through dayBucketDate, which handles both bucket forms the API sends.
         const d = hourly ? new Date(item.timestamp) : dayBucketDate(item.timestamp);
         return {
           ...item,
@@ -135,7 +141,7 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
                   : "border border-white/10 text-neutral-400 hover:border-white/25 hover:text-white",
               )}
             >
-              {m.label}
+              {m.key === "cost" ? spendLabel : m.label}
             </button>
           ))}
         </div>
@@ -184,7 +190,7 @@ export function MainTimeSeriesChart({ data, range }: MainTimeSeriesChartProps) {
               tickCount={4}
             />
             <Tooltip
-              content={<ChartTooltip />}
+              content={<ChartTooltip spendLabel={spendLabel} />}
               cursor={{
                 stroke: CHART_CHROME.cursorStroke,
                 strokeDasharray: "4 4",

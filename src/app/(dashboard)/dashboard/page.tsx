@@ -30,8 +30,16 @@ import {
   ModelStats,
   OptimizationSummary,
   TimeSeriesPoint,
+  timeSeriesGranularity,
 } from "@/lib/api";
-import { formatNumber, formatLatency, formatPercentage, parseApiError, cn } from "@/lib/utils";
+import {
+  formatNumber,
+  formatLatency,
+  formatPercentage,
+  parseApiError,
+  cn,
+  fillTimeSeries,
+} from "@/lib/utils";
 import { useAutoRefresh, formatLastRefresh } from "@/hooks/useAutoRefresh";
 import {
   useApiConfiguration,
@@ -41,6 +49,28 @@ import {
 import { OpenAIImportModal } from "@/components/onboarding/OpenAIImportModal";
 import { isDemoMode } from "@/lib/demo/demo";
 import { track } from "@/lib/analytics";
+
+/** Which money the Overview headline shows. */
+type SpendBasis = "metered" | "plan";
+
+/** Names the headline figure, so a plan's API-rate value is never read as a bill. */
+function SpendKind({ basis }: { basis: SpendBasis }) {
+  return basis === "metered" ? (
+    <span
+      title="Billed by the provider per token. This is what counts against the budget."
+      className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[12px] font-medium text-emerald-200"
+    >
+      Billed per token
+    </span>
+  ) : (
+    <span
+      title="Usage covered by a flat subscription, priced at API rates. Not billed per token and never counted against the budget."
+      className="rounded-full border border-sky-400/25 bg-sky-400/10 px-2.5 py-1 text-[12px] font-medium text-sky-200"
+    >
+      Not billed · covered by a subscription
+    </span>
+  );
+}
 
 /**
  * Zero-events snippet card: the user's REAL credentials, copy-paste-run.
@@ -143,8 +173,10 @@ export default function DashboardPage() {
       const [overviewData, agentsData, modelsData, timeSeriesData, summaryData, savingsData] =
         await Promise.all([
           api.getOverview(timeRange),
-          api.getAgentStats(timeRange),
-          api.getModelStats(timeRange),
+          // 50, not the default 10: "slowest agent" and the model ring should
+          // be picked from (nearly) everything, not from a top-10 slice.
+          api.getAgentStats(timeRange, 50),
+          api.getModelStats(timeRange, 50),
           api.getTimeSeries(timeRange),
           api.getAgentSummaries(timeRange, 50).catch(() => [] as AgentSummary[]),
           api.getOptimizationSummary().catch(() => null),
@@ -217,17 +249,6 @@ export default function DashboardPage() {
     );
     const byCalls = [...models].sort((a, b) => b.total_calls - a.total_calls);
 
-    const windowCost = timeSeries.reduce((s, p) => s + p.cost, 0);
-    const daysMap: Record<string, number> = {
-      "1h": 1 / 24,
-      "24h": 1,
-      "7d": 7,
-      "30d": 30,
-      "90d": 90,
-    };
-    const days = daysMap[timeRange] ?? 7;
-    const projectedMonthly = days > 0 ? (windowCost / days) * 30.4 : 0;
-
     const failedCalls = overview
       ? Math.round(overview.total_calls * (1 - overview.success_rate / 100))
       : 0;
@@ -236,22 +257,68 @@ export default function DashboardPage() {
         ? (overview.total_cost / overview.total_tokens) * 1000
         : 0;
 
-    // Change against the previous window of equal length, the same figure the
-    // Agents page reports.
-    const previousCost = summaries.reduce((s, a) => s + a.previous_cost, 0);
-    const currentCost = summaries.reduce((s, a) => s + a.total_cost, 0);
-
     return {
       topAgent: byCost[0] ?? null,
       slowestAgent: bySlowest[0] ?? null,
       topModel: byCalls[0] ?? null,
-      projectedMonthly,
       failedCalls,
       costPer1k,
-      change: previousCost > 0 ? ((currentCost - previousCost) / previousCost) * 100 : null,
       drivers: [...summaries].sort((a, b) => b.total_cost - a.total_cost).slice(0, 3),
     };
-  }, [agents, models, timeSeries, timeRange, overview, summaries]);
+  }, [agents, models, overview, summaries]);
+
+  // ── Which money the headline is ───────────────────────────────────────
+  // Usage on a flat plan (Claude Code, Codex) is priced at API rates but is
+  // not billed. Adding it to metered spend made "Total spend" mostly money
+  // nobody owes, so the headline, its change, the projection and the chart
+  // all follow one basis: metered spend, or plan usage when nothing is metered.
+  const spend = useMemo(() => {
+    if (!overview) return null;
+    const plan = overview.subscription_cost ?? 0;
+    // Rounding can leave a sub-cent remainder when everything is plan usage.
+    const metered = Math.max(overview.total_cost - plan, 0) < 0.000001 ? 0 : overview.total_cost - plan;
+    const basis: SpendBasis = plan > 0 && metered === 0 ? "plan" : "metered";
+    const value = basis === "plan" ? plan : metered;
+
+    const valueOf = (total: number, planPart: number) =>
+      basis === "plan" ? planPart : Math.max(total - planPart, 0);
+
+    let change: number | null = null;
+    if (overview.previous_total_cost != null) {
+      const previous = valueOf(overview.previous_total_cost, overview.previous_subscription_cost ?? 0);
+      change = previous > 0 ? ((value - previous) / previous) * 100 : null;
+    } else if (plan === 0) {
+      // Older backend without previous-window totals: the per-agent figures,
+      // which match when no usage is on a plan.
+      const previous = summaries.reduce((s, a) => s + a.previous_cost, 0);
+      const current = summaries.reduce((s, a) => s + a.total_cost, 0);
+      change = previous > 0 ? ((current - previous) / previous) * 100 : null;
+    }
+    const hasPrevious = overview.previous_total_cost != null || (plan === 0 && summaries.length > 0);
+
+    // Days actually elapsed: a "7 day" window starts at midnight six days ago,
+    // so dividing by 7 understated the run rate until the day was over.
+    const nominal: Record<string, number> = { "1h": 1 / 24, "24h": 1, "7d": 7, "30d": 30, "90d": 90 };
+    // period_end is "now" on the server, snapped up to the next minute.
+    const started = overview.period_start ? Date.parse(overview.period_start) : NaN;
+    const ended = overview.period_end ? Date.parse(overview.period_end) : NaN;
+    const elapsedDays =
+      Number.isFinite(started) && Number.isFinite(ended)
+        ? Math.max((ended - started) / 86_400_000, 1 / 24)
+        : (nominal[timeRange] ?? 7);
+    const projectedMonthly = (value / elapsedDays) * 30.4;
+
+    const series = fillTimeSeries(
+      timeSeries.map((p) =>
+        plan > 0 ? { ...p, cost: valueOf(p.cost, p.subscription_cost ?? 0) } : p,
+      ),
+      overview.period_start ?? timeSeries[0]?.timestamp ?? new Date().toISOString(),
+      overview.period_end ?? new Date().toISOString(),
+      timeSeriesGranularity(timeRange),
+    );
+
+    return { plan, metered, all: overview.total_cost, basis, value, change, hasPrevious, projectedMonthly, series };
+  }, [overview, summaries, timeSeries, timeRange]);
 
   // Show onboarding if API key not configured OR if we got a 401 error
   if (isConfigured === false || showOnboarding) {
@@ -312,7 +379,8 @@ export default function DashboardPage() {
         <Card className="border-red-900/50 bg-red-950/20">
           <p className="text-red-400">{error}</p>
           <p className="mt-2 text-sm text-neutral-400">
-            Make sure the backend is running and accessible.
+            Check your connection and press Refresh. If it keeps failing, the
+            AgentCost API may be unavailable.
           </p>
         </Card>
       )}
@@ -370,38 +438,57 @@ export default function DashboardPage() {
           <>
             {/* Top to bottom: the number, how it got there, what it implies. */}
             <section id="tour-spend" className={cn(SURFACE, "flex flex-col p-5 sm:p-7")}>
-              <Eyebrow>Total spend</Eyebrow>
+              <Eyebrow>
+                {spend!.basis === "plan"
+                  ? "Plan usage, at API rates"
+                  : spend!.plan > 0
+                    ? "Metered spend"
+                    : "Spend"}
+              </Eyebrow>
               <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Money
-                  value={overview.total_cost}
+                  value={spend!.value}
                   className="text-[3.25rem] font-light leading-none tracking-[-0.03em] text-white sm:text-[4rem]"
                 />
-                {summaries.length > 0 && (
+                <SpendKind basis={spend!.basis} />
+                {spend!.hasPrevious && (
                   <span className="flex items-center gap-2 text-[12.5px] text-neutral-500">
-                    <Change percent={insights.change} className="px-2.5 py-1 text-[12.5px]" />
-                    vs the previous window
+                    <Change percent={spend!.change} className="px-2.5 py-1 text-[12.5px]" />
+                    vs the previous {timeRange === "1h" ? "hour" : timeRange === "24h" ? "24 hours" : "window"}
                   </span>
                 )}
               </div>
 
-              {/* A coding agent on a flat plan has usage but no per-token bill. */}
-              {(overview.subscription_cost ?? 0) > 0 && (
-                <p className="mt-3 text-[12.5px] text-neutral-500">
-                  <span className="tabular-nums text-neutral-300">
-                    {usd(overview.subscription_cost ?? 0)}
-                  </span>{" "}
-                  of this is usage covered by a subscription, valued at API rates. Metered
-                  spend is{" "}
-                  <span className="tabular-nums text-neutral-300">
-                    {usd(overview.total_cost - (overview.subscription_cost ?? 0))}
-                  </span>
-                  , and only that counts against the budget.
-                </p>
+              {/* With plan usage in the window, every figure says which money it is. */}
+              {spend!.plan > 0 && (
+                <dl className="mt-4 grid max-w-xl grid-cols-1 gap-x-6 gap-y-1.5 text-[12.5px] sm:grid-cols-[auto_1fr]">
+                  <dt className="text-neutral-400">Metered spend</dt>
+                  <dd className="text-neutral-500">
+                    <span className="tabular-nums text-neutral-200">{usd(spend!.metered)}</span> · billed per
+                    token, counts against the budget
+                  </dd>
+                  <dt className="text-neutral-400">Plan usage</dt>
+                  <dd className="text-neutral-500">
+                    <span className="tabular-nums text-neutral-200">{usd(spend!.plan)}</span> · covered by a
+                    subscription, valued at API rates, not billed
+                  </dd>
+                  <dt className="text-neutral-400">All usage at API rates</dt>
+                  <dd className="text-neutral-500">
+                    <span className="tabular-nums text-neutral-200">{usd(spend!.all)}</span> · what the
+                    charts by agent and model below add up to
+                  </dd>
+                </dl>
               )}
 
               <div className="mt-7 flex-1">
-                {timeSeries.length > 0 ? (
-                  <MainTimeSeriesChart data={timeSeries} range={timeRange} />
+                {spend!.series.length > 0 ? (
+                  <MainTimeSeriesChart
+                    data={spend!.series}
+                    range={timeRange}
+                    spendLabel={
+                      spend!.basis === "plan" ? "Plan usage" : spend!.plan > 0 ? "Metered spend" : "Spend"
+                    }
+                  />
                 ) : (
                   <div className="flex h-52 items-center justify-center text-neutral-500">
                     No data available
@@ -411,9 +498,25 @@ export default function DashboardPage() {
 
               <dl className="mt-6 grid grid-cols-3 divide-x divide-white/6 border-t border-white/6 pt-5">
                 {[
-                  ["Projected a month", usd(insights.projectedMonthly), "at this run rate"],
-                  ["Per call", usd(overview.avg_cost_per_call, 4), "average"],
-                  ["Per 1K tokens", usd(insights.costPer1k, 4), "blended across models"],
+                  [
+                    "Projected a month",
+                    usd(spend!.projectedMonthly),
+                    spend!.basis === "plan"
+                      ? "plan usage at this rate, not billed"
+                      : spend!.plan > 0
+                        ? "metered, at this run rate"
+                        : "at this run rate",
+                  ],
+                  [
+                    "Per call",
+                    usd(overview.avg_cost_per_call, 4),
+                    spend!.plan > 0 ? "average, all usage at API rates" : "average",
+                  ],
+                  [
+                    "Per 1K tokens",
+                    usd(insights.costPer1k, 4),
+                    spend!.plan > 0 ? "all usage at API rates" : "blended across models",
+                  ],
                 ].map(([label, value, sub]) => (
                   <div key={label} className="px-5 first:pl-0 last:pr-0">
                     <dt className="text-[12px] text-neutral-500">{label}</dt>
@@ -447,20 +550,24 @@ export default function DashboardPage() {
                       <Money value={savings.total_potential_savings_monthly} />
                     </p>
                     <p className="mt-2 text-[13px] text-neutral-300">
-                      a month, {savings.total_potential_savings_percent.toFixed(0)}% of current spend
+                      a month, {savings.total_potential_savings_percent.toFixed(0)}% of metered spend
                     </p>
                     <p className="mt-4 max-w-[34ch] text-[13.5px] leading-relaxed text-neutral-400">
-                      Found in the usage itself, and estimated per recommendation
-                      before you change anything.
+                      Estimated from the last {savings.window_days ?? 30} days of usage,
+                      whatever range is selected above, before you change anything.
                     </p>
                   </>
                 ) : (
                   <>
                     <p className="text-[1.5rem] font-light tracking-tight text-white">Run rate</p>
                     <p className="mt-3 text-[2.75rem] font-light leading-none tracking-[-0.03em] text-white">
-                      <Money value={insights.projectedMonthly} />
+                      <Money value={spend!.projectedMonthly} />
                     </p>
-                    <p className="mt-2 text-[13px] text-neutral-300">a month if this window repeats</p>
+                    <p className="mt-2 text-[13px] text-neutral-300">
+                      {spend!.basis === "plan"
+                        ? "a month of plan usage at API rates, if this window repeats"
+                        : "a month if this window repeats"}
+                    </p>
                     <p className="mt-5 max-w-[34ch] text-[13.5px] leading-relaxed text-neutral-300">
                       Recommendations appear once there is enough usage to compare
                       like with like.
@@ -554,12 +661,12 @@ export default function DashboardPage() {
             },
             {
               label: "Agents",
-              value: String(agents.length),
+              value: String(overview.distinct_agents ?? agents.length),
               sub: insights.topAgent ? `top: ${insights.topAgent.agent_name}` : "none seen",
             },
             {
               label: "Models",
-              value: String(models.length),
+              value: String(overview.distinct_models ?? models.length),
               sub: insights.topModel ? `most used: ${insights.topModel.model}` : "none seen",
             },
           ]}
@@ -569,12 +676,12 @@ export default function DashboardPage() {
       {/* Model share, and who spent it each day */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
         <section className={cn(SURFACE, "p-5 sm:p-7")}>
-          <Eyebrow>By model</Eyebrow>
+          <Eyebrow>{spend && spend.plan > 0 ? "By model · all usage at API rates" : "By model"}</Eyebrow>
           <h3 className="mb-7 mt-1.5 text-[1.35rem] font-light tracking-tight text-white">Where the dollars land</h3>
           {loading ? (
             <ChartSkeleton />
           ) : models.length > 0 ? (
-            <ModelShare data={models} />
+            <ModelShare data={models} totalModels={overview?.distinct_models} />
           ) : (
             <div className="flex h-60 items-center justify-center text-neutral-500">
               No model data available
@@ -583,7 +690,7 @@ export default function DashboardPage() {
         </section>
 
         <section className={cn(SURFACE, "p-5 sm:p-7")}>
-          <Eyebrow>By agent</Eyebrow>
+          <Eyebrow>{spend && spend.plan > 0 ? "By agent · all usage at API rates" : "By agent"}</Eyebrow>
           <h3 className="mb-6 mt-1.5 text-[1.35rem] font-light tracking-tight text-white">Who spent it, day by day</h3>
           {loading ? (
             <ChartSkeleton />

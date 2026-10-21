@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Copy, Check, TerminalSquare, ShieldCheck } from "lucide-react";
 
@@ -25,11 +25,25 @@ const CI = `agentcost analyze ./agent --events run.json --fail-on high`;
 
 function CopyLine({ code, label }: { code: string; label?: string }) {
   const [copied, setCopied] = useState(false);
+  const codeRef = useRef<HTMLElement>(null);
 
   const copy = async () => {
-    await navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard refused (no focus, or a browser that blocks it): select the
+      // command so Ctrl+C / Cmd+C still works, instead of failing silently.
+      const node = codeRef.current;
+      const selection = window.getSelection();
+      if (node && selection) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
   };
 
   return (
@@ -37,7 +51,7 @@ function CopyLine({ code, label }: { code: string; label?: string }) {
       {label && <p className="mb-1.5 text-xs text-neutral-500">{label}</p>}
       <div className="group relative rounded-lg border border-white/6 bg-black/30">
         <pre className="overflow-x-auto p-3 pr-11 text-xs leading-relaxed text-neutral-300">
-          <code>{code}</code>
+          <code ref={codeRef}>{code}</code>
         </pre>
         <button
           onClick={copy}

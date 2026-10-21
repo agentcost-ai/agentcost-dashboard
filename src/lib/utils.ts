@@ -42,11 +42,57 @@ export function formatPercentage(value: number): string {
 }
 
 export function dayBucketDate(iso: string): Date {
-  // Day buckets are UTC-midnight ("2026-08-03T00:00:00+00:00"). new Date(iso)
-  // shifts that to the viewer's zone, so every chart label west of UTC showed
-  // the previous day. Build the Date from the calendar date alone instead.
-  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
-  return new Date(y, m - 1, d);
+  // A day key ("2026-08-03"), or a bucket at UTC midnight (the API without
+  // X-Timezone-Offset, and the demo data), names a calendar date: build it
+  // from the date alone, or new Date() would show the previous day west of UTC.
+  // Any other instant is the viewer's own midnight -- the API cuts days on the
+  // offset the dashboard sends -- and reading its date in UTC would show the
+  // previous day east of UTC.
+  if (iso.length === 10 || /T00:00:00(\.0+)?(Z|[+-]00:?00)$/.test(iso)) {
+    const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  const instant = new Date(iso);
+  return new Date(instant.getFullYear(), instant.getMonth(), instant.getDate());
+}
+
+/**
+ * The series with an empty point for every hour or day in [start, end] that
+ * had no calls, so a quiet stretch reads as zero instead of a line drawn
+ * straight across it. Buckets are matched on the viewer's clock.
+ */
+export function fillTimeSeries<
+  T extends { timestamp: string; cost: number; calls: number; tokens: number },
+>(points: T[], start: string, end: string, granularity: "hour" | "day"): T[] {
+  const keyOf = (d: Date) =>
+    granularity === "hour"
+      ? `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`
+      : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const bucketOf = (iso: string) =>
+    granularity === "hour" ? new Date(iso) : dayBucketDate(iso);
+
+  const byKey = new Map(points.map((p) => [keyOf(bucketOf(p.timestamp)), p]));
+  const cursor = new Date(start);
+  if (granularity === "hour") cursor.setMinutes(0, 0, 0);
+  else cursor.setHours(0, 0, 0, 0);
+  const last = new Date(Math.min(new Date(end).getTime(), Date.now()));
+
+  const filled: T[] = [];
+  let matched = 0;
+  // A guard against a malformed window: a 90-day hourly series is 2,160 points.
+  for (let i = 0; cursor <= last && i < 2200; i++) {
+    const existing = byKey.get(keyOf(cursor));
+    if (existing) matched++;
+    filled.push(
+      existing ??
+        ({ timestamp: cursor.toISOString(), cost: 0, calls: 0, tokens: 0, subscription_cost: 0 } as unknown as T),
+    );
+    if (granularity === "hour") cursor.setHours(cursor.getHours() + 1);
+    else cursor.setDate(cursor.getDate() + 1);
+  }
+  // Never drop a point the API returned: if any fell outside the buckets
+  // computed here, show the series as it came.
+  return matched === points.length && byKey.size === points.length ? filled : points;
 }
 
 export function formatDate(date: string | Date): string {
