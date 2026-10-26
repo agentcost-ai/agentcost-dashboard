@@ -17,6 +17,28 @@ export type ChangelogEntry = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "claude-code-codex-cost-from-session-logs",
+    title: "Pricing Claude Code and Codex Sessions From the Logs They Already Keep",
+    excerpt:
+      "Claude Code and Codex record every model call with the provider's own token counts. Reading those files correctly is enough to price a session, but a naive parser gets it wrong in five places.",
+    publishedAt: "2026-10-26",
+    readTime: "7 min read",
+    category: "Engineering",
+    content: [
+      "Claude Code and Codex already write down every model call they make, with the token counts the provider returned. You do not need a proxy or a wrapper to know what a session cost; you need to read those files correctly. This is what we learned building agentcost connect, including the places where a straightforward parser counts a call twice, misses one, or prices it at the wrong rate.",
+      "Where the data lives. Claude Code keeps one JSONL transcript per session under ~/.claude/projects/<project>/<session>.jsonl (or under CLAUDE_CONFIG_DIR when that is set), and one more per subagent in a subagents folder beside it. Every assistant line carries the API message it came from, including Anthropic's usage block: input_tokens, cache_read_input_tokens, cache_creation_input_tokens and output_tokens. Codex keeps one JSONL rollout per thread under ~/.codex/sessions/YYYY/MM/DD/. Current versions write a token_usage_record for each model response; older ones only write a token_count event, whose last_token_usage holds the same figure.",
+      "One call is written as several lines. Claude Code writes a single API message as one line per content block (the text, then each tool call), and every one of those lines repeats the same usage block, with tool results interleaved between them. Add up the lines and a call that used three tools is counted four times. Group by the message id first, collect the tool names from each block, and take the usage once.",
+      "Resumed sessions copy their history. When you resume a Claude Code session, its earlier history is copied into a new transcript file. Key calls on the transcript line or the file and every resumed session counts its past again. The key that holds is the API request id. It is also the id Claude Code's own OpenTelemetry export carries, so a machine that reports both from the files and over OpenTelemetry is still counted once.",
+      "The last call may still be writing. A call that stopped to ask for tools is only known to be complete once the next call appears. Send it early and it goes out with a short tool list, and because our ingestion keeps the first version of an event it receives, that would be wrong permanently. So the final open call is held back until the next sync, or taken ten minutes after the file last changed if the session died. Two other kinds of line are not model calls at all: Claude Code writes its own local errors and interruptions under the placeholder model <synthetic>, which are skipped, and requests the API refused or dropped, which are recorded as failed calls with no tokens against the model the session was using.",
+      "Cache tokens are reported beside input, not inside it. Anthropic's input_tokens is only the uncached part of the prompt. The full prompt is input_tokens plus cache_read_input_tokens, with the read part billed at the cached rate. Cache writes are counted separately again, and come in two lifetimes: the usage block splits them into five-minute and one-hour writes (ephemeral_1h_input_tokens), and a one-hour write costs twice the base input rate. A coding session re-sends its whole context every turn, so cache reads and writes are a large part of what it uses. Treat them as plain input and the total is wrong in both directions.",
+      "A subscription is not spend. On a Claude or ChatGPT plan nothing is billed per token. Pricing that usage at API rates is still useful, because it shows which sessions are heavy and what the plan is worth, but adding it to spend turns a 'total spend' figure into mostly money nobody owes. Claude Code records the account type in its account summary, ~/.claude.json, which is enough to tell a plan from an API key; the credentials file is never opened. Codex states the plan in the rollout itself. Each call is marked billing: subscription or api, plan usage is shown apart from metered spend, and it is left out of budgets, their alerts and their hard caps, and out of the spend that savings percentages are measured against.",
+      "Codex needs its own call id. Codex's OpenTelemetry export carries no response id, only the token counts. To count a call once whichever way it arrives, its id is a hash of the session id with the input, cached and output token counts. The prompt grows with every call in a session, which makes those four values distinct in practice. Codex has also called its shell tool several things over time (exec_command, shell, local_shell); its hooks call it Bash, so every variant is reported as Bash, and a guardrail written against what the dashboard shows is the same name the hook enforces.",
+      "Antigravity is an estimate. It publishes no usage export, so its figures are read from an undocumented local format. Every Antigravity event is marked estimated, and none of it is relied on to enforce anything.",
+      "What leaves your machine. Each event carries the model, token counts, timestamps, the session id, the names of the tools called, the git branch and the working directory's own folder name, never the path that leads to it. Prompt and response text are not sent. The one exception is opt-in: connect with --session-names and each chat's title is sent so sessions can be listed by name, which is off by default because a title summarises what was asked.",
+      "Trying it. Install the SDK with pip install agentcost, then run agentcost connect claude-code --api-key sk_your_project_api_key, or agentcost connect codex, or agentcost connect antigravity. A session becomes a run, and spend breaks down by model, tool, subagent, session and developer. Add --enforce and a second hook runs before every tool call and prompt, refusing what the project's guardrails do not allow and telling the agent why. If you would rather not read local files at all, Claude Code and Codex can export OpenTelemetry logs directly to POST /v1/otlp/v1/logs, which lets an organisation report every session, cloud sessions included, from managed settings alone. The full setup is on the Coding agents docs page.",
+    ],
+  },
+  {
     slug: "executive-cost-and-usage-reports",
     title: "Executive Reports: Board-Ready Cost & Usage in One Click",
     excerpt:
@@ -65,6 +87,21 @@ export const blogPosts: BlogPost[] = [
 ];
 
 export const changelogEntries: ChangelogEntry[] = [
+  {
+    version: "v1.15.1",
+    date: "2026-10-21",
+    summary:
+      "The Overview says which money it is showing, and its counts and changes cover every agent and model",
+    changes: [
+      "When the window includes usage on a Claude or ChatGPT plan, the Overview headline shows metered spend, or plan usage when nothing is metered, and is labelled as such. Metered spend, plan usage and all usage at API rates are listed apart, and the change, the monthly projection and the chart follow the same figure.",
+      "The change against the previous window is computed from the whole project instead of summed from the top agents. GET /v1/analytics/overview now returns previous_total_cost and previous_subscription_cost for the equal-length window just before.",
+      "Agent and model counts are every agent and model in the window, not the length of a top-10 list: the overview returns distinct_agents and distinct_models, and the model ring counts models rather than slices.",
+      "The monthly projection divides by the days actually elapsed. A 7-day window starts at midnight six days ago, so dividing by seven understated the run rate until the day was over.",
+      "Optimizations measures savings percentages against metered spend only, since usage a subscription covers is not money a suggestion can recover. GET /v1/optimizations/summary now returns window_days, and each timeseries point carries subscription_cost.",
+      "Charts show hours and days with no calls as zero instead of drawing a line straight across them, day labels are right both east and west of UTC, and axis labels no longer round $1.65 to $2.",
+      "Copy buttons select the command when the browser blocks the clipboard, so Ctrl+C or Cmd+C still works.",
+    ],
+  },
   {
     version: "v1.15.0",
     date: "2026-10-12",
