@@ -1006,7 +1006,7 @@ function FeedbackCard({
               <h3 className="text-base font-semibold leading-snug text-white lg:text-lg">
                 {item.title}
               </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-neutral-400">
+              <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-neutral-400">
                 {item.description}
               </p>
             </div>
@@ -1035,7 +1035,7 @@ function FeedbackCard({
                   <ShieldCheck size={12} />
                   Admin response
                 </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-primary-100/90">
+                <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-primary-100/90">
                   {item.admin_response}
                 </p>
               </div>
@@ -1124,7 +1124,7 @@ function FeedbackCard({
                       </time>
                     </span>
                   </div>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-300">
+                  <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-neutral-300">
                     {comment.comment}
                   </p>
                 </div>
