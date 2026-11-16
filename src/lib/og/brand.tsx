@@ -1,29 +1,34 @@
 /**
- * Shared pieces of the Open Graph cards (1200x630). Satori rules apply: every
- * element with more than one child needs `display: flex`, and there is no CSS
- * grid, so layout is flex rows and columns throughout.
+ * Shared pieces of the Open Graph cards (1200x630).
+ *
+ * Deliberately plain: the site's own background, its two typefaces, hairline
+ * rules, and the real product where a picture is needed. No glows, gradients,
+ * pills or illustrative numbers -- a share card should look like the product,
+ * not like a template.
+ *
+ * Satori rules apply: every element with more than one child needs
+ * `display: flex`, and there is no CSS grid.
  */
 
 import type { ReactNode } from "react";
-import { MONO, SANS } from "./fonts";
+import { SANS } from "./fonts";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
 export const C = {
-  bg: "#07070a",
-  panel: "#0d0d11",
-  border: "rgba(255,255,255,0.09)",
+  bg: "#0a0a0b",
+  rule: "#262626",
   text: "#fafafa",
   muted: "#a3a3a3",
+  dim: "#737373",
   faint: "#525252",
   sky: "#38bdf8",
-  skyDeep: "#0284c7",
-  amber: "#fbbf24",
-  red: "#f87171",
 };
 
+export const PAD_X = 72;
+
 /** The AgentCost mark (same paths as public/icon.svg). */
-export function Mark({ size = 40 }: { size?: number }) {
+export function Mark({ size = 28 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -42,99 +47,19 @@ export function Mark({ size = 40 }: { size?: number }) {
   );
 }
 
-/** Background: near-black, a faint engineering grid, and a sky glow top-right. */
-export function Frame({ children, glow = C.sky }: { children: ReactNode; glow?: string }) {
+export function Frame({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
         width: "100%",
         height: "100%",
         display: "flex",
+        flexDirection: "column",
         position: "relative",
         backgroundColor: C.bg,
         fontFamily: SANS,
         color: C.text,
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: -260,
-          right: -200,
-          width: 760,
-          height: 760,
-          display: "flex",
-          borderRadius: 9999,
-          backgroundImage: `radial-gradient(circle, ${glow}33 0%, ${glow}10 38%, transparent 70%)`,
-        }}
-      />
-      <div
-        style={{
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          padding: "56px 64px",
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/** Top bar: mark + wordmark on the left, an optional label on the right. */
-export function Header({ right }: { right?: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <Mark size={38} />
-        <div style={{ marginLeft: 14, fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>AgentCost</div>
-      </div>
-      {right ? (
-        <div
-          style={{
-            display: "flex",
-            fontFamily: MONO,
-            fontSize: 18,
-            color: C.muted,
-            border: `1px solid ${C.border}`,
-            borderRadius: 999,
-            padding: "8px 18px",
-            backgroundColor: "rgba(255,255,255,0.03)",
-          }}
-        >
-          {right}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-export function Chip({ children }: { children: ReactNode }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        fontSize: 19,
-        color: "#d4d4d4",
-        border: `1px solid ${C.border}`,
-        backgroundColor: "rgba(255,255,255,0.03)",
-        borderRadius: 999,
-        padding: "9px 18px",
-        marginRight: 12,
+        padding: `60px ${PAD_X}px 56px`,
       }}
     >
       {children}
@@ -142,43 +67,55 @@ export function Chip({ children }: { children: ReactNode }) {
   );
 }
 
-/** Daily spend bars, flat except for one spike. Heights are in px. */
-export const SPEND_BARS = [34, 40, 31, 44, 38, 47, 36, 42, 39, 45, 41, 300, 52, 0];
-
-export function SpikeBars({
-  bars = SPEND_BARS,
-  barWidth = 22,
-  gap = 9,
-  spikeColor = C.amber,
-}: {
-  bars?: number[];
-  barWidth?: number;
-  gap?: number;
-  spikeColor?: string;
-}) {
-  const spike = Math.max(...bars);
+/** Wordmark on the left, the page's address on the right. */
+export function Header({ url = "agentcost.tech" }: { url?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-end" }}>
-      {bars.map((height, index) => {
-        const isSpike = height === spike;
-        return (
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              width: barWidth,
-              height: Math.max(height, 4),
-              marginRight: gap,
-              borderRadius: 5,
-              backgroundImage: isSpike
-                ? `linear-gradient(180deg, ${spikeColor} 0%, ${C.red} 100%)`
-                : "linear-gradient(180deg, rgba(56,189,248,0.55) 0%, rgba(56,189,248,0.18) 100%)",
-              boxShadow: isSpike ? `0 0 42px ${spikeColor}88` : "none",
-              opacity: height === 0 ? 0.25 : 1,
-            }}
-          />
-        );
-      })}
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <Mark size={28} />
+        <div style={{ display: "flex", marginLeft: 12, fontSize: 24, fontWeight: 600, letterSpacing: -0.3 }}>
+          AgentCost
+        </div>
+      </div>
+      <div style={{ display: "flex", fontSize: 20, color: C.dim }}>{url}</div>
+    </div>
+  );
+}
+
+/** A hairline rule with a line of small text either side. */
+export function Footer({ left, right }: { left: string; right?: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderTop: `1px solid ${C.rule}`,
+        paddingTop: 22,
+        fontSize: 20,
+        color: C.dim,
+      }}
+    >
+      <div style={{ display: "flex" }}>{left}</div>
+      {right ? <div style={{ display: "flex" }}>{right}</div> : null}
+    </div>
+  );
+}
+
+/** Small uppercase label above a headline. */
+export function Kicker({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        fontSize: 17,
+        fontWeight: 600,
+        letterSpacing: 2.2,
+        color: C.dim,
+        textTransform: "uppercase",
+      }}
+    >
+      {children}
     </div>
   );
 }
