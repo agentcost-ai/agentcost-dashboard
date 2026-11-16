@@ -26,6 +26,9 @@
  *   booking_clicked         { location }  — outbound click to the Cal.com page
  *                                           (contact | pricing | feedback)
  *   email_copied            { location }  — contact address copied to clipboard
+ *   calculator_scenario     { scenario }  — preset picked on /ai-agent-cost-calculator
+ *   calculator_model        { model }     — model picked on /ai-agent-cost-calculator
+ *   preferred_source_clicked { location } — "preferred source on Google" link clicked
  */
 
 declare global {

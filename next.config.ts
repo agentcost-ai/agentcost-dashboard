@@ -13,16 +13,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Auth-gated app routes render only a spinner for crawlers and would
-        // otherwise be indexed with the homepage's title (they export no
-        // metadata). /demo is a client-side redirect into robots-blocked
-        // /dashboard. Served as a header (NOT robots.txt disallow) so Google
-        // can actually see the noindex.
-        source: "/(agents|events|models|reports|optimizations|feedback|demo)",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
-      },
-      {
-        source: "/agents/:name*",
+        // /demo is a client-side redirect into the app. The app routes
+        // themselves are noindexed by metadata in app/(dashboard)/layout.tsx,
+        // which covers new routes automatically; a hand-kept list here had
+        // already missed /guardrails and /workflows.
+        source: "/demo",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {

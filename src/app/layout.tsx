@@ -37,11 +37,14 @@ export const metadata: Metadata = {
   // `template` auto-brands every page that sets its own title; pages therefore
   // must NOT hand-write " | AgentCost" in their title strings (double-brand).
   title: {
-    default: "AgentCost: See Which Agent Spiked Your AI Bill",
+    // Brand first, then the category. "AgentCost" alone is shared with
+    // unrelated sites (agentcost.in, agentcost.ai); the category is what tells
+    // Google, and a searcher, which one this is.
+    default: "AgentCost: Open-Source LLM Cost Tracking for AI Agents",
     template: "%s | AgentCost",
   },
   description:
-    "Never wonder which agent spiked your AI bill again. AgentCost traces every OpenAI, Anthropic, Gemini and LangChain call to the agent and step that made it.",
+    "AgentCost is open-source LLM cost tracking that traces every OpenAI, Anthropic, Gemini and LangChain call to the agent and step that made it. Two lines of Python, free.",
   keywords: [
     "langchain",
     "openai",
@@ -55,12 +58,16 @@ export const metadata: Metadata = {
   icons: {
     // favicon.ico lives at src/app/favicon.ico (app-router file convention) so
     // browsers hard-requesting /favicon.ico get a real ICO instead of a 404.
+    // Google Search favicons must be ICO/PNG/GIF/JPEG/BMP/TIFF (no SVG) and
+    // preferably larger than 48x48, hence the 192px PNG. iOS ignores SVG
+    // touch icons. Regenerate the PNGs from public/icon.svg if the mark changes.
     icon: [
       { url: "/favicon.ico", sizes: "48x48 32x32 16x16" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
     shortcut: [{ url: "/favicon.ico" }],
-    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   // Deliberately minimal:
   // - no `url`/`title`/`description` here — they would leak the homepage's

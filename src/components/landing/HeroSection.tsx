@@ -39,8 +39,8 @@ export function HeroSection() {
           {...rise(0.3, 12)}
           className="mt-7 max-w-[46ch] text-[17px] font-normal leading-7 text-neutral-400 sm:text-lg"
         >
-          AgentCost traces every LLM call to the agent that made it. Two lines of
-          Python, 3,500+ models, MIT licensed.
+          AgentCost is open-source LLM cost tracking: every call traced to the
+          agent that made it. Two lines of Python, 3,500+ models, MIT licensed.
         </motion.h2>
 
         <motion.div

@@ -375,6 +375,40 @@ No credentials required. Schema: ${SITE_URL}/openapi.json`,
   },
 
   {
+    route: "/ai-agent-cost-calculator",
+    title: "AI Agent Cost Calculator",
+    description:
+      "Estimate what an AI agent costs per run, per day and per month on any major model, with live per-token pricing.",
+    section: "Product",
+    body: `An agent's cost is not one LLM call times a price. Every step re-sends the
+whole context, which grows with each tool result and answer, so input tokens grow
+with the square of the step count:
+
+\`\`\`text
+input  = steps * base + growth * steps * (steps - 1) / 2
+output = steps * output_per_step
+cost   = input * input_rate + output * output_rate
+\`\`\`
+
+- base: system prompt, tool schemas and task, re-sent on every step
+- growth: tokens added to the context per step (tool results plus prior output)
+- With prompt caching, the base is billed at the cached-input rate after step 1.
+
+The interactive calculator, with a per-model table for a support agent (4 steps),
+a research agent (10 steps) and a coding agent (30 steps), is at
+${SITE_URL}/ai-agent-cost-calculator.
+
+To compute it programmatically, price each step with the public estimate endpoint
+(no credentials):
+
+\`\`\`bash
+curl -X POST ${SITE_URL}/api/v1/estimate \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-5.6", "input_tokens": 152500, "output_tokens": 5000}'
+\`\`\``,
+  },
+
+  {
     route: "/docs/mcp",
     title: "AgentCost MCP Server",
     description:

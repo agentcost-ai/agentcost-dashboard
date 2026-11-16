@@ -200,7 +200,15 @@ export const config = {
      * Every path except Next internals, the API markdown handler itself, and the
      * static files that have exactly one representation. Keeping /api/v1 IN so
      * unknown API paths get a JSON 404 rather than the HTML page.
+     *
+     * Images and fonts outside /api are excluded by extension: negotiating them
+     * answered `Accept: image/*` (what image crawlers and link unfurlers send)
+     * with a 406, so Googlebot-Image could not fetch the hero, logo or icons.
+     * /api is left out of that rule because model ids contain dots.
+     *
+     * opengraph-image is matched at any depth: blog posts, comparisons and the
+     * calculator each have their own share card under their segment.
      */
-    "/((?!_next/|api/markdown|favicon\\.ico|icon\\.svg|opengraph-image|robots\\.txt|sitemap\\.xml|llms\\.txt|llms-full\\.txt|openapi\\.json|openapi\\.yaml|.*\\.txt$).*)",
+    "/((?!_next/|api/markdown|favicon\\.ico|icon\\.svg|(?:.*/)?opengraph-image|robots\\.txt|sitemap\\.xml|llms\\.txt|llms-full\\.txt|openapi\\.json|openapi\\.yaml|.*\\.txt$|(?!api/).*\\.(?:png|jpe?g|gif|webp|avif|svg|ico|woff2?)$).*)",
   ],
 };

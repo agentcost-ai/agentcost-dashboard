@@ -10,6 +10,7 @@ export const PUBLIC_ROUTES = [
   "/", // Landing page is public
   "/demo", // Demo entry point — sets demo mode then redirects to dashboard
   "/pricing",
+  "/ai-agent-cost-calculator", // Public tool, found through search.
   "/blog",
   "/changelog",
   "/compare", // Competitor comparison pages — these exist to be found by
@@ -42,6 +43,7 @@ export const PROTECTED_ROUTES = [
   "/dashboard",
   "/events",
   "/feedback",
+  "/guardrails",
   "/models",
   "/optimizations",
   "/reports",

@@ -23,6 +23,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${BASE_URL}/`, lastModified: lastmod, changeFrequency: "weekly", priority: 1.0 },
     { url: `${BASE_URL}/pricing`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.9 },
+    // Rates on this page refresh daily from the live catalogue (ISR).
+    { url: `${BASE_URL}/ai-agent-cost-calculator`, lastModified: new Date().toISOString().slice(0, 10), changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE_URL}/docs`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/docs/sdk`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/docs/api`, lastModified: lastmod, changeFrequency: "monthly", priority: 0.7 },

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { blogPosts } from "@/lib/content";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 
 export const metadata: Metadata = {
   title: "Blog: LLM Cost Optimization Guides & Updates",
@@ -15,7 +17,8 @@ export default function BlogPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0b] text-neutral-100">
-      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+      <Navbar />
+      <div className="mx-auto max-w-5xl px-4 pt-32 pb-16 sm:px-6 sm:pb-20 lg:px-8">
         {/* Back to home */}
         <Link
           href="/"
@@ -84,6 +87,7 @@ export default function BlogPage() {
           ))}
         </div>
       </div>
+      <Footer />
     </main>
   );
 }

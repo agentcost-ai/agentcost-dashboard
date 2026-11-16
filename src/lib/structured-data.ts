@@ -34,14 +34,45 @@ function postalAddress(address: PostalAddress) {
   return { "@type": "PostalAddress", ...address };
 }
 
+/**
+ * The site name and its fallbacks, shared by WebSite and Organization (Google:
+ * "use the same name and alternateName that you're using for your site name").
+ *
+ * "AgentCost" is also used by agentcost.in and agentcost.ai, and Google "generally
+ * won't use the same site name for two different sites that are global in nature".
+ * Its documented fallback is the lowercase domain as the LAST alternateName,
+ * which Google says it will "strongly consider".
+ * https://developers.google.com/search/docs/appearance/site-names
+ */
+export const SITE_NAME = "AgentCost";
+export const SITE_ALTERNATE_NAMES = ["Agent Cost", "agentcost.tech"];
+
+/**
+ * Raster logo for Organization markup. Google requires at least 112x112px, a
+ * crawlable URL, and a Google Images format; a PNG avoids any doubt about SVG.
+ */
+export const LOGO = {
+  "@type": "ImageObject",
+  url: `${SITE_URL}/logo.png`,
+  contentUrl: `${SITE_URL}/logo.png`,
+  width: 512,
+  height: 512,
+  caption: "AgentCost logo",
+} as const;
+
+export const GITHUB_ORG_URL = "https://github.com/agentcost-ai";
+export const PYPI_URL = "https://pypi.org/project/agentcost/";
+export const SDK_REPO_URL = "https://github.com/agentcost-ai/agentcost-sdk";
+
 export function organizationSchema() {
   return {
     "@type": "Organization",
     "@id": ORGANIZATION_ID,
-    name: "AgentCost",
-    alternateName: ["Agent Cost", "AgentCost.tech"],
+    name: SITE_NAME,
+    alternateName: SITE_ALTERNATE_NAMES,
     url: SITE_URL,
-    logo: `${SITE_URL}/icon.svg`,
+    logo: LOGO,
+    image: LOGO.url,
     slogan: "Never wonder which agent spiked your AI bill again",
     description:
       "AgentCost traces every LLM call to the agent, run and step that made it, so a spike in your AI bill always has a name. Open source with a free hosted cloud, covering OpenAI, Anthropic, Gemini and LangChain across 3,500+ models.",
@@ -72,11 +103,11 @@ export function organizationSchema() {
       },
     ],
     ...(ORGANIZATION_ADDRESS ? { address: postalAddress(ORGANIZATION_ADDRESS) } : {}),
-    sameAs: [
-      "https://github.com/agentcost-ai",
-      "https://pypi.org/project/agentcost/",
-      "https://dev.to/kushagra125",
-    ],
+    // Profiles that are verifiably ours. The GitHub org has agentcost.tech as a
+    // verified domain, which is the strongest off-site tie between the name and
+    // this site. Add a LinkedIn company page, X account, Product Hunt, Crunchbase
+    // or Wikidata item here once they exist -- never a URL that isn't ours.
+    sameAs: [GITHUB_ORG_URL, PYPI_URL, "https://dev.to/kushagra125"],
     founder: { "@id": FOUNDER_ID },
   };
 }
@@ -99,8 +130,12 @@ export function websiteSchema() {
   return {
     "@type": "WebSite",
     "@id": WEBSITE_ID,
-    url: SITE_URL,
-    name: "AgentCost",
+    // Google reads the site name from THIS node on the homepage; Organization
+    // alone does not set it.
+    url: SITE_URL, // must equal the homepage canonical exactly
+    name: SITE_NAME,
+    alternateName: SITE_ALTERNATE_NAMES,
+    inLanguage: "en",
     publisher: { "@id": ORGANIZATION_ID },
   };
 }
@@ -109,13 +144,18 @@ export function softwareApplicationSchema() {
   return {
     "@type": "SoftwareApplication",
     "@id": SOFTWARE_ID,
-    name: "AgentCost",
+    name: SITE_NAME,
+    alternateName: "agentcost",
     url: SITE_URL,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Any",
+    image: LOGO.url,
+    isAccessibleForFree: true,
+    license: `${SDK_REPO_URL}/blob/main/LICENSE`,
+    sameAs: [SDK_REPO_URL, PYPI_URL],
     description:
       "Traces every LLM call to the agent, run and step that made it, for OpenAI, Anthropic, Gemini and LangChain across 3,500+ models.",
-    downloadUrl: "https://pypi.org/project/agentcost/",
+    downloadUrl: PYPI_URL,
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     publisher: { "@id": ORGANIZATION_ID },
   };

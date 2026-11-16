@@ -26,6 +26,7 @@ const columns = [
       { label: "Documentation", href: "/docs" },
       { label: "API Reference", href: "/docs/api" },
       { label: "Model Catalog", href: "/docs/models" },
+      { label: "AI Agent Cost Calculator", href: "/ai-agent-cost-calculator" },
       { label: "MCP Server", href: "/docs/mcp" },
       // external: a raw file, not an app route — <Link> would try a client-side
       // navigation to a non-page and fall back to a hard load.
@@ -194,6 +195,21 @@ export function Footer() {
               Never wonder which agent spiked your AI bill again. Open source,
               free in the cloud or self-hosted.
             </p>
+            {/* Google Preferred Sources deeplink (Search Central: "preferred
+                sources"). A plain link, not Google's publisher.js button, so
+                no third-party script runs on every page. */}
+            <a
+              href="https://www.google.com/preferences/source?q=agentcost.tech"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track("preferred_source_clicked", { location: "footer" })}
+              className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-white/8 px-3 py-1.5 text-xs text-neutral-400 transition-colors hover:border-white/20 hover:text-neutral-200"
+            >
+              <svg aria-hidden className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7L12 17.5 5.8 21.2l1.6-7L2 9.5l7.1-.6z" />
+              </svg>
+              Add AgentCost as a preferred source on Google
+            </a>
 
             {/* Meta — one row: year, then the two chips */}
             <div className="flex-1 flex flex-col justify-center mt-8">

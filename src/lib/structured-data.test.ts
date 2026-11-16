@@ -6,8 +6,11 @@ import {
   ORGANIZATION_ID,
   breadcrumbList,
   jsonLd,
+  SITE_ALTERNATE_NAMES,
+  SITE_NAME,
   organizationSchema,
   siteGraph,
+  websiteSchema,
 } from "./structured-data";
 
 describe("Organization schema", () => {
@@ -42,9 +45,7 @@ describe("Organization schema", () => {
   it("keeps the fields the site already published", () => {
     expect(organization.name).toBe("AgentCost");
     expect(organization.url).toBe(SITE_URL);
-    expect(organization.logo).toBe(`${SITE_URL}/icon.svg`);
-    expect(organization.slogan).toBe("Real-time LLM cost observability");
-    expect(organization.alternateName).toEqual(["Agent Cost", "AgentCost.tech"]);
+    expect(organization.slogan).toBe("Never wonder which agent spiked your AI bill again");
     expect(organization.sameAs).toEqual([
       "https://github.com/agentcost-ai",
       "https://pypi.org/project/agentcost/",
@@ -57,6 +58,36 @@ describe("Organization schema", () => {
     expect(organization.email).toBe(CONTACT_EMAIL);
     expect(organization.foundingDate).toBeTruthy();
     expect((organization.knowsAbout as string[]).length).toBeGreaterThan(0);
+  });
+});
+
+describe("site name and logo (Google Search Central rules)", () => {
+  const organization = organizationSchema() as Record<string, unknown>;
+  const website = websiteSchema() as Record<string, unknown>;
+
+  it("puts name and alternateName on the WebSite node, where Google reads the site name", () => {
+    expect(website.name).toBe(SITE_NAME);
+    expect(website.url).toBe(SITE_URL);
+    expect(website.alternateName).toEqual(SITE_ALTERNATE_NAMES);
+  });
+
+  it("ends alternateName with the lowercase domain, Google's documented fallback", () => {
+    const names = SITE_ALTERNATE_NAMES as readonly string[];
+    expect(names.at(-1)).toBe(new URL(SITE_URL).hostname);
+    expect(names.at(-1)).toBe(names.at(-1)?.toLowerCase());
+  });
+
+  it("uses the same name and alternateName on Organization", () => {
+    expect(organization.name).toBe(website.name);
+    expect(organization.alternateName).toEqual(website.alternateName);
+  });
+
+  it("publishes a raster logo of at least 112x112px", () => {
+    const logo = organization.logo as Record<string, unknown>;
+    expect(logo["@type"]).toBe("ImageObject");
+    expect(String(logo.url)).toMatch(/\.png$/);
+    expect(Number(logo.width)).toBeGreaterThanOrEqual(112);
+    expect(Number(logo.height)).toBeGreaterThanOrEqual(112);
   });
 });
 
