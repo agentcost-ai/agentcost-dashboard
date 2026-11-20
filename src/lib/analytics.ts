@@ -22,7 +22,7 @@
  *   demo_tour               { action, step } — guided demo tour progress
  *                                           (step | skip | finish | restart)
  *   github_clicked          { location }  — outbound click to the GitHub repo
- *   sdk_install_started     { location, language? } — install command copied (pip or npm)
+ *   sdk_install_started     { location }  — pip-install command copied
  *   booking_clicked         { location }  — outbound click to the Cal.com page
  *                                           (contact | pricing | feedback)
  *   email_copied            { location }  — contact address copied to clipboard
