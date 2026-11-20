@@ -500,7 +500,7 @@ function DemoOptimizationsCTA() {
             </h3>
             <p className="mt-1 text-sm text-neutral-400">
               See what&apos;s hiding in your spend. Connect your agents with two
-              lines of Python.
+              lines of Python or TypeScript.
             </p>
           </div>
         </div>

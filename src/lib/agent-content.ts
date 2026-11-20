@@ -296,6 +296,7 @@ export function llmsTxt(): string {
     `- [Sitemap](${SITE_URL}/sitemap.xml): the indexable URL set.`,
     `- [API origin](${API_URL}): the same public endpoints, un-mirrored. This host sleeps when idle, so the first request can take up to a minute — prefer ${SITE_URL}/api/v1.`,
     "- [Python SDK on PyPI](https://pypi.org/project/agentcost/): `pip install agentcost`.",
+    "- [TypeScript SDK on npm](https://www.npmjs.com/package/@agentcost/sdk): `npm install @agentcost/sdk`.",
     "- [Source on GitHub](https://github.com/agentcost-ai): MIT licensed.",
     "",
   ].join("\n");

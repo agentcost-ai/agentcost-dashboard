@@ -7,7 +7,7 @@ export const faqs = [
         questions: [
             {
                 q: "How long does it take to set up AgentCost?",
-                a: "Under two minutes. Create a free account (a project with an API key is set up for you), install the Python SDK with pip, and add two lines to your application (import + init). The free hosted cloud does the rest. Prefer to run everything yourself? The same MIT-licensed stack starts with Docker. Either way, your existing LangChain code works completely unchanged, with no refactoring needed.",
+                a: "Under two minutes. Create a free account (a project with an API key is set up for you), install the SDK (pip install agentcost for Python, npm install @agentcost/sdk for TypeScript), and add two lines to your application. The free hosted cloud does the rest. Prefer to run everything yourself? The same MIT-licensed stack starts with Docker. Either way, your existing LangChain code works completely unchanged, with no refactoring needed.",
             },
             {
                 q: "Do I need to modify my existing LangChain code?",
@@ -61,7 +61,7 @@ export const faqs = [
             },
             {
                 q: "What's the tech stack?",
-                a: "Backend: Python with FastAPI, async SQLAlchemy, and PostgreSQL. Frontend: Next.js with React, Tailwind CSS, Recharts, and Framer Motion. SDK: Python package using tiktoken for token counting and httpx for async HTTP. Everything is containerized with Docker.",
+                a: "Backend: Python with FastAPI, async SQLAlchemy, and PostgreSQL. Frontend: Next.js with React, Tailwind CSS, Recharts, and Framer Motion. SDKs: a Python package using tiktoken for token counting and httpx for async HTTP, and a dependency-free TypeScript package for Node.js. Everything is containerized with Docker.",
             },
         ],
     },

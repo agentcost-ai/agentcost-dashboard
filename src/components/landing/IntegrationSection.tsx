@@ -80,7 +80,7 @@ export function IntegrationSection() {
                                 {
                                     step: "01",
                                     title: "Install the SDK",
-                                    desc: "pip install agentcost",
+                                    desc: "pip install agentcost  ·  npm install @agentcost/sdk",
                                 },
                                 {
                                     step: "02",

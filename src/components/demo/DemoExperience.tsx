@@ -207,13 +207,13 @@ export function DemoExperience() {
               </h2>
               <p className="mt-3 text-[14px] leading-relaxed text-neutral-400">
                 {modalAction
-                  ? "The demo is read-only. On your own project this is one click, and connecting takes two lines of Python."
-                  : "Connect your agents with two lines of Python, or paste an OpenAI or Anthropic admin key and see your last 30 days in about a minute."}
+                  ? "The demo is read-only. On your own project this is one click, and connecting takes two lines of Python or TypeScript."
+                  : "Connect your agents with two lines of Python or TypeScript, or paste an OpenAI or Anthropic admin key and see your last 30 days in about a minute."}
               </p>
 
               <dl className="mt-7 divide-y divide-white/8 border-y border-white/8 text-[13px]">
                 {[
-                  ["To integrate", "two lines of Python"],
+                  ["To integrate", "two lines of Python or TypeScript"],
                   ["Models priced", "3,500+"],
                   ["Cost", "free cloud, MIT if you self-host"],
                 ].map(([label, value]) => (

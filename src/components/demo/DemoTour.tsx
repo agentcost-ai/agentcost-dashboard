@@ -78,7 +78,7 @@ const STEPS: Step[] = [
   {
     label: "Done",
     title: "That is the whole loop.",
-    body: "A total, the agent behind it, what a run costs, whether it stayed in bounds, and what to change. Yours takes two lines of Python.",
+    body: "A total, the agent behind it, what a run costs, whether it stayed in bounds, and what to change. Yours takes two lines of Python or TypeScript.",
   },
 ];
 

@@ -71,7 +71,7 @@ export const comparisons: Comparison[] = [
       },
       {
         feature: "Integration",
-        agentcost: "Two lines of Python; no proxy, no base-URL change",
+        agentcost: "Two lines of Python or TypeScript; no proxy, no base-URL change",
         competitor: "Typically routed through Helicone's gateway or SDK",
       },
       {
@@ -160,7 +160,7 @@ export const comparisons: Comparison[] = [
       },
       {
         feature: "Integration",
-        agentcost: "Two lines of Python, auto-instrumented",
+        agentcost: "Two lines of Python or TypeScript, no decorators",
         competitor: "SDK instrumentation, decorators, or OpenTelemetry",
       },
       {

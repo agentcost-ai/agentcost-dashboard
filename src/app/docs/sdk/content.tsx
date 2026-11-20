@@ -11,6 +11,10 @@ export default function SDKDocsPage() {
         <PageHeader eyebrow="Python SDK" title={<>SDK Documentation</>}>
         <p>Complete guide to integrating AgentCost into your OpenAI, Anthropic,
             Gemini, and LangChain applications</p>
+        <p>
+          Using Node.js? See the{" "}
+          <Link href="/docs/typescript">TypeScript SDK</Link>.
+        </p>
       </PageHeader>
 
         {/* Content */}

@@ -252,6 +252,56 @@ export default function PrivacyArchitectureContent() {
             </p>
           </Section>
 
+          {/* 1b. TypeScript SDK differences */}
+          <Section id="typescript-sdk" title="The TypeScript SDK">
+            <p>
+              The TypeScript SDK (<code>@agentcost/sdk</code>) sends the same
+              event schema, trace fields and outcome records to the same single
+              endpoint, with these differences:
+            </p>
+            <ul>
+              <li>
+                <strong>No <code>input_hash</code>.</strong> Nothing is derived
+                from the prompt at all.
+              </li>
+              <li>
+                <strong><code>error</code> is never the provider&apos;s
+                message</strong>, only the error class, HTTP status and error
+                code (for example <code>RateLimitError 429 rate_limit_exceeded</code>),
+                because messages can quote your input.
+              </li>
+              <li>
+                <code>cost</code> is sent as 0; the server prices the call from
+                the model and token counts.
+              </li>
+              <li>
+                <code>event_id</code>: a random id per call, so a resent batch
+                is not stored twice. <code>cached_tokens</code> and{" "}
+                <code>cache_write_tokens</code>: counts.
+              </li>
+              <li>
+                Keys the SDK adds to <code>metadata</code> beside yours:{" "}
+                <code>usage_source</code> (whether token counts came from the
+                endpoint), <code>response_model</code> and{" "}
+                <code>response_id</code> (the model and request id the endpoint
+                returned), <code>gateway_host</code> (the host of a custom base
+                URL, never its path), and <code>_ac_caps</code> (whether the call
+                used images, tools or structured output, as booleans and counts).
+                Two flags appear only when they apply:{" "}
+                <code>stream_options_rejected</code> (the endpoint refused the
+                usage option and the call was resent without it) and{" "}
+                <code>afc_turns</code> (how many requests a Gemini automatic
+                function-calling loop made).
+              </li>
+            </ul>
+            <p>
+              <code>gateway_host</code> and <code>response_model</code> show
+              which endpoint and model you use; <code>response_id</code> is an
+              opaque id issued by that endpoint. None of them carries prompt or
+              completion content.
+            </p>
+          </Section>
+
           {/* 2. What is never collected */}
           <Section
             id="never-collected"

@@ -227,7 +227,14 @@ export function OnboardingScreen() {
             {hasCredentials ? (
               <p className="mt-3 text-sm text-neutral-400">
                 That&apos;s your real API key and project ID — events appear
-                here within seconds of your first LLM call.
+                here within seconds of your first LLM call. Using Node.js?{" "}
+                <Link
+                  href="/docs/typescript"
+                  className="text-primary-400 hover:text-primary-300 underline"
+                >
+                  Use the TypeScript SDK
+                </Link>
+                .
               </p>
             ) : (
               <p className="mt-3 text-sm text-neutral-400">

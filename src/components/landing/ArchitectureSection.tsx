@@ -10,8 +10,8 @@ const steps = [
     title: "Install the SDK",
     subtitle: "pip install agentcost",
     description:
-      "A lightweight Python package. Add the import and call init() with your API key. Your existing LangChain code continues to work unchanged: the SDK intercepts calls transparently via monkey-patching.",
-    highlight: "No wrappers, no decorators, no middleware.",
+      "A lightweight Python package. Add the import and call init() with your API key. Your existing LangChain code continues to work unchanged: the SDK intercepts calls transparently via monkey-patching. On Node.js, npm install @agentcost/sdk and wrap each client once.",
+    highlight: "No proxy, no base-URL change.",
     code: `from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="sk_...",\n    project_id="6b3f2e1d-9c4a-4f8e-b2d7-3a5c8e9f0a1b",\n)\n\n# That's it. Your code stays the same.`,
   },
   {

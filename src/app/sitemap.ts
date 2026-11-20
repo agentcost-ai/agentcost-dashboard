@@ -32,6 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/ai-agent-cost-calculator`, lastModified: new Date().toISOString().slice(0, 10), changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE_URL}/docs`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/docs/sdk`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/docs/typescript`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/docs/api`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/docs/models`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/docs/cli`, changeFrequency: "monthly", priority: 0.7 },

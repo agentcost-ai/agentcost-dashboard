@@ -14,7 +14,7 @@ import {
 export const metadata: Metadata = {
   title: "About AgentCost: Open-Source LLM Cost Observability",
   description:
-    "AgentCost is an open-source LLM cost observability platform: a Python SDK, a FastAPI backend and a dashboard that attribute every model call to the agent that made it. Free hosted or self-hosted, MIT licensed.",
+    "AgentCost is an open-source LLM cost observability platform: Python and TypeScript SDKs, a FastAPI backend and a dashboard that attribute every model call to the agent that made it. Free hosted or self-hosted, MIT licensed.",
   alternates: { canonical: `${SITE_URL}/about` },
 };
 
@@ -23,6 +23,11 @@ const WHAT_WE_BUILD = [
     name: "The Python SDK",
     href: "/docs/sdk",
     body: "Published on PyPI as agentcost. Two lines of integration — an import and an init — and every OpenAI, Anthropic, Gemini and LangChain call is tracked. The SDK intercepts calls by patching the provider client, so existing code is not refactored. Token counting is local (tiktoken) and delivery is batched and asynchronous, so nothing sits in the path of your LLM call.",
+  },
+  {
+    name: "The TypeScript SDK",
+    href: "/docs/typescript",
+    body: "Published on npm as @agentcost/sdk. Wrap a client once and its OpenAI, Anthropic and Google Gen AI calls are tracked; LangChain.js and the Vercel AI SDK plug in as a callback handler and a middleware. No runtime dependencies, ESM and CommonJS, and the same event fields as the Python SDK.",
   },
   {
     name: "The backend",

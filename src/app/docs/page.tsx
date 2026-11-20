@@ -26,7 +26,7 @@ import {
 export const metadata: Metadata = {
   title: "AgentCost Documentation: SDK, REST API, CLI & Model Catalog",
   description:
-    "Every AgentCost developer resource in one index: the Python SDK, the REST API reference, the CLI, the model catalog with live pricing, the MCP server, the OpenAPI specification and the data privacy architecture.",
+    "Every AgentCost developer resource in one index: the Python and TypeScript SDKs, the REST API reference, the CLI, the model catalog with live pricing, the MCP server, the OpenAPI specification and the data privacy architecture.",
   alternates: { canonical: `${SITE_URL}/docs` },
 };
 
@@ -54,13 +54,13 @@ export default function DocsIndexPage() {
           <a href="/auth/register">sign-up</a>
         </li>
         <li>
-          The Python SDK, installed with <code>pip install agentcost</code>
+          The SDK for your language: Python (<code>pip install agentcost</code>)
+          or TypeScript / JavaScript (<code>npm install @agentcost/sdk</code>)
         </li>
       </ol>
       <p>
         Then every OpenAI, Anthropic, Gemini and LangChain call is priced and
-        attributed to the agent, workflow and step that made it — without
-        changing your code:
+        attributed to the agent, workflow and step that made it:
       </p>
       <ul>
         <li>
@@ -78,7 +78,7 @@ export default function DocsIndexPage() {
       </ul>
 
       <Section id="quick-start" title="Quick start">
-        <p>Two lines. Your existing calls are tracked without changes.</p>
+        <p>Python: two lines. Your existing calls are tracked without changes.</p>
         <CodeBlock
           language="python"
           code={`pip install agentcost
@@ -86,12 +86,22 @@ export default function DocsIndexPage() {
 from agentcost import track_costs
 track_costs.init(api_key="sk_your_project_key", project_id="your-project-uuid")`}
         />
+        <p>TypeScript: initialise once, then wrap each client you want tracked.</p>
+        <CodeBlock
+          language="typescript"
+          code={`npm install @agentcost/sdk
+
+import * as agentcost from "@agentcost/sdk";
+agentcost.init({ apiKey: "sk_your_project_key", projectId: "your-project-uuid" });
+const client = agentcost.instrumentOpenAI(new OpenAI());`}
+        />
       </Section>
 
       <Section id="guides" title="Guides">
         <p>Learn how to get AgentCost set up in your project.</p>
         <CardGrid>
           <Card href="/docs/sdk" icon={<Code2 size={22} strokeWidth={1.75} />} title="Python SDK" />
+          <Card href="/docs/typescript" icon={<Code2 size={22} strokeWidth={1.75} />} title="TypeScript SDK" />
           <Card href="/docs/api" icon={<Braces size={22} strokeWidth={1.75} />} title="REST API reference" />
           <Card href="/docs/cli" icon={<TerminalSquare size={22} strokeWidth={1.75} />} title="CLI reference" />
           <Card href="/docs/coding-agents" icon={<Bot size={22} strokeWidth={1.75} />} title="Claude Code, Codex & Antigravity" />
@@ -129,6 +139,9 @@ track_costs.init(api_key="sk_your_project_key", project_id="your-project-uuid")`
         <CardGrid cols={2}>
           <Card href="https://pypi.org/project/agentcost/" icon={<Code2 size={22} strokeWidth={1.75} />} title="pypi.org/project/agentcost" external>
             The Python SDK and CLI, MIT licensed.
+          </Card>
+          <Card href="https://www.npmjs.com/package/@agentcost/sdk" icon={<Code2 size={22} strokeWidth={1.75} />} title="npmjs.com/package/@agentcost/sdk" external>
+            The TypeScript / JavaScript SDK, MIT licensed.
           </Card>
           <Card href="https://github.com/agentcost-ai" icon={<Github size={22} strokeWidth={1.75} />} title="github.com/agentcost-ai" external>
             SDK, backend and dashboard source.

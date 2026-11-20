@@ -26,7 +26,8 @@ import { MethodLabel } from "./primitives";
 const GET_STARTED = [
   { label: "Introduction", href: "/docs" },
   { label: "Quick start", href: "/docs#quick-start" },
-  { label: "Install the SDK", href: "/docs/sdk#installation" },
+  { label: "Install the Python SDK", href: "/docs/sdk#installation" },
+  { label: "Install the TypeScript SDK", href: "/docs/typescript#installation" },
 ];
 
 const RESOURCES = [
@@ -34,6 +35,7 @@ const RESOURCES = [
   { label: "llms.txt", href: "/llms.txt", external: true },
   { label: "GitHub", href: "https://github.com/agentcost-ai", external: true },
   { label: "PyPI package", href: "https://pypi.org/project/agentcost/", external: true },
+  { label: "npm package", href: "https://www.npmjs.com/package/@agentcost/sdk", external: true },
 ];
 
 const LEARN: DocsPage[] = DOCS_PAGES.filter((p) => p.href !== "/docs");

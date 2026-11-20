@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 import { DocsShell } from "@/components/docs/DocsShell";
 
 const TABS = [
-  { label: "Documentation", href: "/docs", icon: BookOpen, match: (p: string) => p === "/docs" || (p.startsWith("/docs/") && !["/docs/api", "/docs/sdk"].includes(p)) },
-  { label: "Guides", href: "/docs/sdk", icon: Compass, match: (p: string) => p === "/docs/sdk" },
+  { label: "Documentation", href: "/docs", icon: BookOpen, match: (p: string) => p === "/docs" || (p.startsWith("/docs/") && !["/docs/api", "/docs/sdk", "/docs/typescript"].includes(p)) },
+  { label: "Guides", href: "/docs/sdk", icon: Compass, match: (p: string) => p === "/docs/sdk" || p === "/docs/typescript" },
   { label: "API Reference", href: "/docs/api", icon: Braces, match: (p: string) => p === "/docs/api" },
 ];
 

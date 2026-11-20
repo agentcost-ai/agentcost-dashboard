@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     template: "%s | AgentCost",
   },
   description:
-    "AgentCost is open-source LLM cost tracking that traces every OpenAI, Anthropic, Gemini and LangChain call to the agent and step that made it. Two lines of Python, free.",
+    "AgentCost is open-source LLM cost tracking that traces every OpenAI, Anthropic, Gemini and LangChain call to the agent and step that made it. Python and TypeScript SDKs, free.",
   keywords: [
     "langchain",
     "openai",

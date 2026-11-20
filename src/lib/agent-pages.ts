@@ -45,6 +45,13 @@ import agentcost
 agentcost.init(api_key="sk_your_project_key")
 \`\`\`
 
+On Node.js, the TypeScript SDK wraps each client once
+(${SITE_URL}/docs/typescript):
+
+\`\`\`bash
+npm install @agentcost/sdk
+\`\`\`
+
 ## What it gives you
 
 - **Per-agent attribution** — wrap a block with \`track_costs.agent("planner")\` and every call inside it is billed to that agent.
@@ -65,8 +72,8 @@ environment and there is no telemetry or phone-home behaviour.
 ## Stack
 
 Backend: Python, FastAPI, async SQLAlchemy, PostgreSQL. Frontend: Next.js,
-React, Tailwind CSS. SDK: Python, using tiktoken for token counting and httpx
-for async delivery.`,
+React, Tailwind CSS. SDKs: Python, using tiktoken for token counting and httpx
+for async delivery; TypeScript, a dependency-free Node.js package.`,
   },
 
   {
@@ -96,6 +103,7 @@ pricing read off their own page on a stated date.`,
     body: `## SDK and tooling
 
 - [AgentCost Python SDK](${SITE_URL}/docs/sdk) — install, quick start, configuration, agent tagging, workflows, streaming, local mode.
+- [AgentCost TypeScript SDK](${SITE_URL}/docs/typescript) — install, OpenAI, Anthropic, Google Gen AI, LangChain.js and Vercel AI SDK integrations, attribution, configuration.
 - [AgentCost CLI reference](${SITE_URL}/docs/cli) — \`agentcost analyze\`, pre-deployment cost estimates, CI usage.
 - [AgentCost REST API reference](${SITE_URL}/docs/api) — authentication, endpoints, error format.
 - [AgentCost model catalogue](${SITE_URL}/docs/models) — every supported model with live per-token pricing.
@@ -111,6 +119,7 @@ pricing read off their own page on a stated date.`,
 ## Packages
 
 - PyPI: https://pypi.org/project/agentcost/
+- npm: https://www.npmjs.com/package/@agentcost/sdk
 - GitHub: https://github.com/agentcost-ai`,
   },
 
@@ -156,6 +165,52 @@ breaks spend down per agent.
 Full reference — configuration, streaming, external correlation, metadata,
 event structure, shutdown, error handling and troubleshooting — is at
 ${SITE_URL}/docs/sdk.`,
+  },
+
+  {
+    route: "/docs/typescript",
+    title: "AgentCost TypeScript SDK",
+    description:
+      "Install @agentcost/sdk and track OpenAI, Anthropic, Google Gen AI, LangChain.js and Vercel AI SDK calls in Node.js per agent, job and step.",
+    section: "Documentation",
+    body: `## Install
+
+\`\`\`bash
+npm install @agentcost/sdk
+\`\`\`
+
+Node.js 18+, ESM and CommonJS, no runtime dependencies. Server-side only.
+
+## Initialise and wrap a client
+
+\`\`\`ts
+import OpenAI from "openai";
+import * as agentcost from "@agentcost/sdk";
+
+agentcost.init(); // AGENTCOST_API_KEY and AGENTCOST_PROJECT_ID from the environment
+const client = agentcost.instrumentOpenAI(new OpenAI());
+\`\`\`
+
+## Integrations
+
+- OpenAI, including Azure OpenAI and any OpenAI-compatible base URL: \`instrumentOpenAI(client)\`.
+- Anthropic: \`instrumentAnthropic(client)\`.
+- Google Gen AI: \`instrumentGoogleGenAI(client)\`.
+- LangChain.js / LangGraph: \`callbacks: [agentcostCallbacks()]\`.
+- Vercel AI SDK: \`wrapLanguageModel({ model, middleware: agentcostMiddleware() })\`.
+
+## Attribution
+
+\`agent()\`, \`workflow()\`, \`step()\`, \`tool()\`, \`metadata()\` and
+\`outcome()\` each take a callback and map to the same fields as the Python SDK.
+
+## What is sent
+
+Token counts, model names, latency, success, attribution and an \`event_id\`.
+Never prompts, completions, API keys or error message text. Serverless
+functions should \`await agentcost.flush()\` before returning.
+
+Full reference: ${SITE_URL}/docs/typescript.`,
   },
 
   {
@@ -532,6 +587,7 @@ system is expensive, not just what the monthly provider invoice totals.
 ## What we build
 
 - A Python SDK, published on PyPI as \`agentcost\`, that tracks OpenAI, Anthropic, Gemini and LangChain calls after a two-line integration.
+- A TypeScript SDK, published on npm as \`@agentcost/sdk\`, that tracks OpenAI, Anthropic, Google Gen AI, LangChain.js and Vercel AI SDK calls in Node.js.
 - A FastAPI backend that ingests those events, prices them against a catalogue of 3,500+ models synced from LiteLLM, and exposes analytics over HTTP.
 - A Next.js dashboard for spend breakdowns, budget guardrails, optimization recommendations and executive reporting.
 - A command-line analyser, \`agentcost analyze\`, that estimates cost risk in a codebase before it ships.

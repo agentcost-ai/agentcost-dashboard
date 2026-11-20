@@ -128,7 +128,11 @@ function TrackAppSnippetCard() {
           </h3>
           <p className="mt-1 text-sm text-neutral-400">
             Your key and project are already filled in. Events appear here
-            within seconds of your first LLM call.
+            within seconds of your first LLM call. Using Node.js?{" "}
+            <Link href="/docs/typescript" className="text-primary-400 hover:text-primary-300 underline">
+              Use the TypeScript SDK
+            </Link>
+            .
           </p>
         </div>
         <button

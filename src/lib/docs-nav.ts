@@ -44,7 +44,7 @@ export const DOCS_PAGES: DocsPage[] = [
   },
   {
     href: "/docs/sdk",
-    label: "SDK",
+    label: "Python SDK",
     sections: [
       { id: "installation", label: "Installation" },
       { id: "quick-start", label: "Quick start" },
@@ -62,6 +62,20 @@ export const DOCS_PAGES: DocsPage[] = [
       { id: "error-handling", label: "Error handling" },
       { id: "best-practices", label: "Best practices" },
       { id: "troubleshooting", label: "Troubleshooting" },
+    ],
+  },
+  {
+    href: "/docs/typescript",
+    label: "TypeScript SDK",
+    sections: [
+      { id: "installation", label: "Installation" },
+      { id: "quick-start", label: "Quick start" },
+      { id: "integrations", label: "Integrations" },
+      { id: "attribution", label: "Agents, jobs and steps" },
+      { id: "gateways", label: "Gateways and proxies" },
+      { id: "event-fields", label: "What is recorded" },
+      { id: "configuration", label: "Configuration" },
+      { id: "limitations", label: "Not tracked" },
     ],
   },
   {
@@ -199,6 +213,7 @@ export const DOCS_PAGES: DocsPage[] = [
     label: "Privacy",
     sections: [
       { id: "transmitted", label: "What the SDK transmits" },
+      { id: "typescript-sdk", label: "The TypeScript SDK" },
       { id: "coding-agents", label: "Coding agents" },
       { id: "hashing", label: "How prompts are handled" },
       { id: "modes", label: "Deployment modes" },

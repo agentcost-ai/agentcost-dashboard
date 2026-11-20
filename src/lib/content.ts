@@ -88,6 +88,18 @@ export const blogPosts: BlogPost[] = [
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "v1.16.0",
+    date: "2026-11-20",
+    summary: "A TypeScript SDK for Node.js",
+    changes: [
+      "npm install @agentcost/sdk tracks OpenAI (including Azure OpenAI and OpenAI-compatible gateways and proxies), Anthropic and Google Gen AI clients, with a callback handler for LangChain.js and LangGraph and a middleware for the Vercel AI SDK. ESM and CommonJS, Node.js 18 and later, no runtime dependencies.",
+      "Agents, workflows, steps, tools, metadata and outcomes work as in the Python SDK and land in the same fields, so Python and TypeScript services report into one project side by side.",
+      "Every event carries an event_id, so a batch resent after a lost response is reported as a duplicate instead of being counted twice. Calls through a custom base URL record the endpoint's host, the model it said it served and its id for the call; a call whose usage never arrived is marked usage_source: missing rather than shown as zero tokens.",
+      "Nothing about the prompt is sent: no prompt hash, and no error message text, only the error class, HTTP status and code. The privacy page lists every field.",
+      "New docs page: TypeScript SDK. The docs index, API reference, llms.txt and the setup cards in the dashboard link to it.",
+    ],
+  },
+  {
     version: "v1.15.1",
     date: "2026-10-21",
     summary:

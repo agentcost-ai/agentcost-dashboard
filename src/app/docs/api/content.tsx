@@ -1860,7 +1860,7 @@ X-RateLimit-Reset: 45`}
         {/* SDKs & Libraries */}
         <Section id="sdks" title="SDKs & Libraries">
           <p>
-            Official SDK for integrating AgentCost into your applications:
+            Official SDKs for integrating AgentCost into your applications:
           </p>
           <div className="docs-panel">
             <p className="font-medium text-neutral-200">Python SDK</p>
@@ -1877,10 +1877,20 @@ X-RateLimit-Reset: 45`}
               </a>
             </div>
           </div>
+          <div className="docs-panel mt-4">
+            <p className="font-medium text-neutral-200">TypeScript / JavaScript SDK</p>
+            <p>For OpenAI, Anthropic, Google Gen AI, LangChain.js and Vercel AI SDK applications</p>
+            <CodeBlock language="bash" code="npm install @agentcost/sdk" />
+            <div className="mt-4">
+              <a href="/docs/typescript" target="_blank" rel="noopener noreferrer">
+                View SDK Documentation →
+              </a>
+            </div>
+          </div>
           <div className="docs-panel docs-panel--warning mt-4">
             <p>
-              <strong>Coming Soon:</strong> JavaScript/TypeScript SDK, Go SDK,
-              and REST client libraries for other languages.
+              <strong>Coming Soon:</strong> Go SDK and REST client libraries for
+              other languages.
             </p>
           </div>
         </Section>

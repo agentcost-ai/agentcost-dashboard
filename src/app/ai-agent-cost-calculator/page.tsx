@@ -298,7 +298,7 @@ cost   = input × input_rate + output × output_rate`}
           </h2>
           <p className="mt-2 max-w-2xl text-[15px] text-neutral-400">
             AgentCost records every LLM call with its real token counts and cost, and attributes it to the
-            agent and step that made it. Two lines of Python, free and open source.
+            agent and step that made it. Python or TypeScript, free and open source.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
