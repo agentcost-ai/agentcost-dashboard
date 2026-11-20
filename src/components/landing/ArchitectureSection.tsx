@@ -1,230 +1,206 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { Code2, ScanLine, Send, Receipt, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const steps = [
+/* ─────────────────────────────────────────────
+   How it works — one call followed through the
+   pipeline. Four stations on a track; a packet
+   travels between them and each station shows
+   the call's state at that point.
+   Numbers are consistent: 1,247 in + 312 out on
+   gpt-4o at $2.50 / $10 per 1M = $0.0062.
+   ───────────────────────────────────────────── */
+
+const EASE = [0.22, 1, 0.36, 1] as const;
+const ADVANCE_MS = 2600;
+
+interface Station {
+  title: string;
+  body: string;
+  icon: LucideIcon;
+  card: React.ReactNode;
+}
+
+function Row({ k, v, strong }: { k: string; v: React.ReactNode; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-neutral-500">{k}</span>
+      <span className={cn("truncate tabular-nums", strong ? "font-medium text-white" : "text-neutral-200")}>{v}</span>
+    </div>
+  );
+}
+
+const STATIONS: Station[] = [
   {
-    id: "01",
-    title: "Install the SDK",
-    subtitle: "pip install agentcost",
-    description:
-      "A lightweight Python package. Add the import and call init() with your API key. Your existing LangChain code continues to work unchanged: the SDK intercepts calls transparently via monkey-patching. On Node.js, npm install @agentcost/sdk and wrap each client once.",
-    highlight: "No proxy, no base-URL change.",
-    code: `from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="sk_...",\n    project_id="6b3f2e1d-9c4a-4f8e-b2d7-3a5c8e9f0a1b",\n)\n\n# That's it. Your code stays the same.`,
+    title: "Your code calls a model",
+    body: "Unchanged. Python is patched in-process; in TypeScript you wrap the client once.",
+    icon: Code2,
+    card: (
+      <div className="font-mono text-[11.5px] leading-5">
+        <p className="text-neutral-500">with agent(&quot;researcher&quot;):</p>
+        <p className="pl-3 text-neutral-200">client.chat.completions</p>
+        <p className="pl-3 text-neutral-200">  .create(model=&quot;gpt-4o&quot;, …)</p>
+      </div>
+    ),
   },
   {
-    id: "02",
-    title: "Calls are captured",
-    subtitle: "Automatic interception",
-    description:
-      "Every LLM invocation is intercepted in real-time. Token counts are calculated using tiktoken, costs are computed from a pricing database of 3,500+ models, and events are batched efficiently before sending.",
-    highlight: "Async delivery that never blocks your calls.",
-    code: `# Behind the scenes:\n► gpt-4o     1,247 tokens   $0.0124\n► claude-3.5  2,105 tokens   $0.0189\n\n✓ Batched & sent asynchronously`,
+    title: "The SDK reads the usage",
+    body: "Off the response the provider already returned, plus the agent and step it ran under.",
+    icon: ScanLine,
+    card: (
+      <div className="space-y-1 text-[12px]">
+        <Row k="model" v="gpt-4o" />
+        <Row k="tokens" v="1,247 in · 312 out" />
+        <Row k="agent" v="researcher" />
+        <p className="pt-1 text-[11px] text-neutral-500">
+          <span className="line-through decoration-neutral-600">prompt</span>{" "}
+          <span className="line-through decoration-neutral-600">reply</span> stay in your process
+        </p>
+      </div>
+    ),
   },
   {
-    id: "03",
-    title: "Data flows to the backend",
-    subtitle: "FastAPI + PostgreSQL",
-    description:
-      "The free hosted backend at api.agentcost.tech receives batched events, stores them in PostgreSQL, and computes per-agent breakdowns, model comparisons, and cost optimization suggestions. Or self-host the same MIT-licensed stack with Docker.",
-    highlight: "Free hosted cloud, or self-host with Docker.",
-    code: `# hosted (default):\n#   api.agentcost.tech, nothing to run\n\n# self-host: docker-compose up\n✓ FastAPI server ready\n✓ PostgreSQL connected\n✓ Analytics engine running`,
+    title: "Sent in the background",
+    body: "Batched off your request path. A retry resends the same ids, so nothing is counted twice.",
+    icon: Send,
+    card: (
+      <div className="space-y-1 text-[12px]">
+        <Row k="POST" v="/v1/events/batch" />
+        <Row k="batch" v="10 events" />
+        <Row k="event_id" v="9f1c…a04e" />
+        <p className="pt-1 text-[11px] text-neutral-500">Sent off your call&apos;s path</p>
+      </div>
+    ),
   },
   {
-    id: "04",
-    title: "See everything in the dashboard",
-    subtitle: "Next.js analytics UI",
-    description:
-      "A full analytics dashboard shows cost trends over time, per-agent and per-model breakdowns, latency distributions, and optimization recommendations to reduce your spend.",
-    highlight: "Actionable insights, not just charts.",
-    code: `Dashboard:\n┌─ Costs:  $12.47 today  (-8%)\n├─ Tokens: 142k processed\n├─ Agents: 4 active\n└─ Optim:  3 suggestions`,
+    title: "Priced and attributed",
+    body: "Priced from a catalogue of 3,500+ models and rolled up by agent, job, run and step.",
+    icon: Receipt,
+    card: (
+      <div className="text-[12px]">
+        <div className="flex items-baseline justify-between">
+          <span className="text-neutral-500">cost</span>
+          <span className="text-[17px] font-semibold tabular-nums text-white">$0.0062</span>
+        </div>
+        <p className="mt-1.5 truncate text-neutral-300">
+          researcher <span className="text-neutral-600">›</span> nightly-report{" "}
+          <span className="text-neutral-600">›</span> draft
+        </p>
+      </div>
+    ),
   },
 ];
 
-const AUTO_ADVANCE_MS = 6000;
-
 export function ArchitectureSection() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.35 });
+  const reduced = useReducedMotion();
   const [active, setActive] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [progressKey, setProgressKey] = useState(0);
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const step = steps[active];
+  const [paused, setPaused] = useState(false);
 
-  // Start autoplay when section comes into view
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsAutoPlaying(true);
-        }
-      },
-      { threshold: 0.3 },
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
+    if (!inView || paused || reduced) return;
+    const id = setInterval(() => setActive((a) => (a + 1) % STATIONS.length), ADVANCE_MS);
+    return () => clearInterval(id);
+  }, [inView, paused, reduced]);
 
-  // Auto-advance timer
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-    const timer = setTimeout(() => {
-      setActive((prev) => {
-        const next = (prev + 1) % steps.length;
-        setProgressKey((k) => k + 1);
-        return next;
-      });
-    }, AUTO_ADVANCE_MS);
-    return () => clearTimeout(timer);
-  }, [active, isAutoPlaying, progressKey]);
-
-  const handleStepClick = useCallback((i: number) => {
-    setActive(i);
-    setIsAutoPlaying(false);
-    setProgressKey((k) => k + 1);
-  }, []);
+  // Packet position along the track, as a fraction of its length.
+  const at = active / (STATIONS.length - 1);
 
   return (
-    <section ref={sectionRef} className="relative py-20 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center max-w-2xl mx-auto mb-20"
-        >
-          <p className="text-xs font-mono text-emerald-400/80 uppercase tracking-[0.2em] mb-5">
-            How it works
-          </p>
-          <h2 className="text-3xl sm:text-[2.75rem] font-bold text-white leading-[1.15] tracking-tight">
-            From call to insight
+    <section id="how-it-works" className="relative py-20 sm:py-32">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-sky-400">How it works</p>
+          <h2 className="mt-4 text-3xl font-semibold leading-[1.15] tracking-tight text-white sm:text-[2.6rem]">
+            Follow one call
             <br />
-            <span className="text-neutral-500">in four steps.</span>
+            <span className="text-neutral-500">from your code to your dashboard.</span>
           </h2>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        <div
+          ref={ref}
+          className="relative mt-16"
+          onPointerEnter={() => setPaused(true)}
+          onPointerLeave={() => setPaused(false)}
         >
-          {/* Step selector tabs with progress bar */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-            {steps.map((s, i) => (
-              <button
-                key={s.id}
-                onClick={() => handleStepClick(i)}
-                className={`group relative text-left px-5 py-4 rounded-xl border transition-all duration-300 overflow-hidden ${active === i
-                    ? "border-white/12 bg-white/4"
-                    : "border-white/4 bg-transparent hover:border-white/8 hover:bg-white/2"
-                  }`}
-              >
-                {/* Auto-advance progress bar */}
-                {active === i && isAutoPlaying && (
-                  <motion.div
-                    key={`progress-${progressKey}`}
-                    className="absolute top-0 left-0 h-0.5 bg-linear-to-r from-sky-500/60 to-sky-400/20"
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{
-                      duration: AUTO_ADVANCE_MS / 1000,
-                      ease: "linear",
-                    }}
-                  />
-                )}
-
-                {/* Active indicator */}
-                {active === i && !isAutoPlaying && (
-                  <motion.div
-                    layoutId="step-indicator"
-                    className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-sky-500/50 via-sky-400/30 to-transparent"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`text-xs font-mono transition-colors duration-200 ${active === i ? "text-sky-400" : "text-neutral-700"
-                      }`}
-                  >
-                    {s.id}
-                  </span>
-                  <span
-                    className={`text-sm font-medium transition-colors duration-200 ${active === i
-                        ? "text-white"
-                        : "text-neutral-500 group-hover:text-neutral-300"
-                      }`}
-                  >
-                    {s.title}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Active step content */}
-          <AnimatePresence mode="wait">
+          {/* Track: horizontal on desktop, vertical on small screens. */}
+          <div aria-hidden className="absolute left-[12.5%] right-[12.5%] top-[22px] hidden h-px bg-white/10 lg:block">
             <motion.div
-              key={active}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="grid lg:grid-cols-2 gap-6"
-            >
-              {/* Left — description */}
-              <div className="rounded-2xl border border-white/6 bg-[#0b0b0d] p-6 sm:p-8 flex flex-col justify-between">
-                <div>
-                  <p className="text-xs font-mono text-neutral-600 mb-3">
-                    {step.subtitle}
-                  </p>
-                  <h3 className="text-xl font-semibold text-white mb-4">
-                    {step.title}
-                  </h3>
-                  <p className="text-[14px] text-neutral-500 leading-relaxed mb-6">
-                    {step.description}
-                  </p>
-                  <p className="text-[14px] text-neutral-300 font-medium flex items-center gap-2">
-                    <ChevronRight className="size-3.5 text-sky-400/70" />
-                    {step.highlight}
-                  </p>
-                </div>
+              className="h-full origin-left bg-gradient-to-r from-sky-400/70 to-sky-400/20"
+              initial={false}
+              animate={{ scaleX: at }}
+              transition={reduced ? { duration: 0 } : { duration: 0.8, ease: EASE }}
+            />
+            <motion.span
+              className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400 shadow-[0_0_14px_4px_rgba(56,189,248,0.45)]"
+              initial={false}
+              animate={{ left: `${at * 100}%` }}
+              transition={reduced ? { duration: 0 } : { duration: 0.8, ease: EASE }}
+            />
+          </div>
+          <div aria-hidden className="absolute bottom-6 left-[22px] top-6 w-px bg-white/10 lg:hidden" />
 
-                {/* Step navigation */}
-                {active < steps.length - 1 && (
+          <ol className="grid grid-cols-1 gap-8 lg:grid-cols-4 lg:gap-5">
+            {STATIONS.map((s, i) => {
+              const Icon = s.icon;
+              const on = i === active;
+              const done = i < active;
+              return (
+                <li key={s.title} className="relative pl-14 lg:pl-0">
                   <button
-                    onClick={() => handleStepClick(active + 1)}
-                    className="mt-8 self-start inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-white transition-colors"
+                    type="button"
+                    onClick={() => setActive(i)}
+                    aria-current={on ? "step" : undefined}
+                    className="group flex w-full flex-col text-left lg:items-center lg:text-center"
                   >
-                    Next: {steps[active + 1].title}
-                    <ChevronRight className="size-3.5" />
+                    <span
+                      className={cn(
+                        "absolute left-0 top-0 flex size-11 items-center justify-center rounded-full border bg-[#0a0a0b] transition-colors duration-300 lg:relative",
+                        on
+                          ? "border-sky-400/60 text-sky-300"
+                          : done
+                            ? "border-white/20 text-neutral-300"
+                            : "border-white/10 text-neutral-500 group-hover:text-neutral-300",
+                      )}
+                    >
+                      <Icon size={17} strokeWidth={1.75} aria-hidden />
+                    </span>
+                    <span className="text-[11px] font-medium tabular-nums text-neutral-500 lg:mt-5">
+                      0{i + 1}
+                    </span>
+                    <span
+                      className={cn(
+                        "mt-1 text-[15px] font-medium transition-colors duration-300",
+                        on ? "text-white" : "text-neutral-300",
+                      )}
+                    >
+                      {s.title}
+                    </span>
+                    <span className="mt-2 max-w-[30ch] text-[13.5px] leading-6 text-neutral-500">{s.body}</span>
                   </button>
-                )}
-              </div>
 
-              {/* Right — code/visual preview */}
-              <div className="rounded-2xl border border-white/6 bg-[#0c0c0e] overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-white/4 bg-white/1.5">
-                  <div className="flex gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]/80" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/80" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]/80" />
-                  </div>
-                  <span className="ml-2 text-[11px] font-mono text-neutral-700">
-                    step-{step.id}.sh
-                  </span>
-                </div>
-                <pre className="p-6 font-mono text-[13px] leading-7 text-neutral-400 whitespace-pre overflow-x-auto">
-                  {step.code}
-                </pre>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </motion.div>
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      opacity: on ? 1 : 0.6,
+                      y: on ? 0 : 4,
+                      borderColor: on ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.07)",
+                    }}
+                    transition={reduced ? { duration: 0 } : { duration: 0.45, ease: EASE }}
+                    className="mt-5 rounded-xl border bg-[#0e0e10] p-4 text-left"
+                  >
+                    {s.card}
+                  </motion.div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       </div>
     </section>
   );

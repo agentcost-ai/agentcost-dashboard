@@ -1,12 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useInView,
-  useReducedMotion,
-} from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Workflow,
   Binary,
@@ -25,16 +20,14 @@ import {
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────────────────────
-   Capability carousel — a wheel of chips on the
-   left drives a stack of product widgets on the
-   right. Each widget is the product itself in
-   miniature, animated in when it becomes active.
+   Capability visuals — each one is the product
+   itself in miniature, animated in when `active`
+   turns true. Laid out by FeaturesSection.
    ───────────────────────────────────────────── */
 
-const PANE = "#111113";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-interface VisualProps {
+export interface VisualProps {
   active: boolean;
 }
 
@@ -218,16 +211,43 @@ function PreDeployVisual({ active }: VisualProps) {
   );
 }
 
-/* ── 04 · Two lines, four SDKs ─────────────────────────────────────────── */
+/* ── 04 · Python and TypeScript ───────────────────────────────────────── */
 
-const PROVIDERS = ["OpenAI", "Anthropic", "Gemini", "LangChain"];
-const PROVIDER_LINES: string[][] = [
-  ["from openai import OpenAI", "client = OpenAI()", "client.chat.completions.create(...)"],
-  ["from anthropic import Anthropic", "client = Anthropic()", "client.messages.create(...)"],
-  ["from google import genai", "client = genai.Client()", "client.models.generate_content(...)"],
-  ["from langchain_openai import ChatOpenAI", "llm = ChatOpenAI(model=\"gpt-4o\")", "llm.invoke(...)"],
+interface Snippet {
+  lang: string;
+  file: string;
+  meta: string;
+  lines: Array<{ text: string; added?: boolean }>;
+}
+
+const SNIPPETS: Snippet[] = [
+  {
+    lang: "Python",
+    file: "agent.py",
+    meta: "+2 lines · 0 changed",
+    lines: [
+      { text: "from agentcost import track_costs", added: true },
+      { text: "track_costs.init(api_key=\"sk_...\")", added: true },
+      { text: "" },
+      { text: "from openai import OpenAI" },
+      { text: "client = OpenAI()" },
+      { text: "client.chat.completions.create(...)" },
+    ],
+  },
+  {
+    lang: "TypeScript",
+    file: "agent.ts",
+    meta: "+2 lines · 1 wrapped",
+    lines: [
+      { text: "import * as agentcost from \"@agentcost/sdk\"", added: true },
+      { text: "agentcost.init()", added: true },
+      { text: "" },
+      { text: "import OpenAI from \"openai\"" },
+      { text: "const client = agentcost.instrumentOpenAI(new OpenAI())", added: true },
+      { text: "await client.chat.completions.create(...)" },
+    ],
+  },
 ];
-const ADDED_LINES = ["from agentcost import track_costs", "track_costs.init(api_key=\"sk_...\")"];
 
 function DiffLine({ n, added, children }: { n: number; added?: boolean; children: React.ReactNode }) {
   return (
@@ -241,41 +261,40 @@ function DiffLine({ n, added, children }: { n: number; added?: boolean; children
 
 function TwoLinesVisual({ active }: VisualProps) {
   const [tab, setTab] = useState(0);
+  const reduced = useReducedMotion();
   useEffect(() => {
-    if (!active) return;
-    const id = setInterval(() => setTab((t) => (t + 1) % PROVIDERS.length), 1600);
+    if (!active || reduced) return;
+    const id = setInterval(() => setTab((t) => (t + 1) % SNIPPETS.length), 2600);
     return () => clearInterval(id);
-  }, [active]);
+  }, [active, reduced]);
+  const snippet = SNIPPETS[tab];
   return (
     <div className="text-[13px]">
       <div className="mb-3 flex gap-1.5">
-        {PROVIDERS.map((p, i) => (
-          <span
-            key={p}
+        {SNIPPETS.map((s, i) => (
+          <button
+            type="button"
+            key={s.lang}
+            onClick={() => setTab(i)}
+            aria-pressed={i === tab}
             className={cn(
               "rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors duration-150",
-              i === tab ? "bg-white text-neutral-950" : "bg-white/6 text-neutral-400",
+              i === tab ? "bg-white text-neutral-950" : "bg-white/6 text-neutral-400 hover:text-neutral-200",
             )}
           >
-            {p}
-          </span>
+            {s.lang}
+          </button>
         ))}
       </div>
       <div className="overflow-hidden rounded-lg border border-white/10 bg-black/40">
         <div className="flex items-center justify-between border-b border-white/8 px-3 py-1.5 text-[11px]">
-          <span className="text-neutral-300">agent.py</span>
-          <span className="tabular-nums text-neutral-500">+2 lines · 0 changed</span>
+          <span className="text-neutral-300">{snippet.file}</span>
+          <span className="tabular-nums text-neutral-500">{snippet.meta}</span>
         </div>
         <div className="py-2 font-mono text-[12.5px] leading-6">
-          {ADDED_LINES.map((line, i) => (
-            <DiffLine key={line} n={i + 1} added>
-              {line}
-            </DiffLine>
-          ))}
-          <DiffLine n={3}>&nbsp;</DiffLine>
-          {PROVIDER_LINES[tab].map((line, i) => (
-            <DiffLine key={line} n={i + 4}>
-              {line}
+          {snippet.lines.map((line, i) => (
+            <DiffLine key={`${snippet.lang}-${i}`} n={i + 1} added={line.added}>
+              {line.text || " "}
             </DiffLine>
           ))}
         </div>
@@ -367,7 +386,7 @@ function ConcurrencyVisual({ active }: VisualProps) {
         <span>t = 0</span>
         <span>4.2 s</span>
       </div>
-      <p className="mt-2 text-neutral-500">Attribution rides contextvars, so lanes never mix their spend.</p>
+      <p className="mt-2 text-neutral-500">Attribution follows each request&apos;s own context, so lanes never mix their spend.</p>
     </Frame>
   );
 }
@@ -531,7 +550,7 @@ function MetadataVisual({ active }: VisualProps) {
 
 /* ── Feature model ─────────────────────────────────────────────────────── */
 
-interface Feature {
+export interface Feature {
   id: string;
   label: string;
   icon: LucideIcon;
@@ -539,7 +558,7 @@ interface Feature {
   visual: React.ComponentType<VisualProps>;
 }
 
-const FEATURES: Feature[] = [
+export const FEATURES: Feature[] = [
   {
     id: "run-cost",
     label: "Cost per run",
@@ -563,9 +582,9 @@ const FEATURES: Feature[] = [
   },
   {
     id: "two-lines",
-    label: "Two lines, four SDKs",
+    label: "Python and TypeScript",
     icon: Code2,
-    description: "OpenAI, Anthropic, Gemini and LangChain. No wrappers, no refactor.",
+    description: "OpenAI, Anthropic, Gemini, LangChain and the Vercel AI SDK. No proxy, no refactor.",
     visual: TwoLinesVisual,
   },
   {
@@ -579,7 +598,7 @@ const FEATURES: Feature[] = [
     id: "concurrency",
     label: "Concurrency-safe",
     icon: Layers,
-    description: "Parallel pipelines never mix their spend. Attribution rides contextvars.",
+    description: "Parallel pipelines never mix their spend, in threads or async code.",
     visual: ConcurrencyVisual,
   },
   {
@@ -604,187 +623,3 @@ const FEATURES: Feature[] = [
     visual: MetadataVisual,
   },
 ];
-
-const AUTO_PLAY_INTERVAL = 4200;
-const ITEM_HEIGHT = 60;
-
-const wrap = (min: number, max: number, v: number) => {
-  const range = max - min;
-  return ((((v - min) % range) + range) % range) + min;
-};
-
-/* ── Carousel ──────────────────────────────────────────────────────────── */
-
-export function FeatureCarousel() {
-  const [step, setStep] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(rootRef, { amount: 0.4 });
-  const reducedMotion = useReducedMotion();
-
-  const count = FEATURES.length;
-  const current = ((step % count) + count) % count;
-
-  const next = useCallback(() => setStep((s) => s + 1), []);
-
-  const select = (index: number) => {
-    const diff = (index - current + count) % count;
-    if (diff > 0) setStep((s) => s + diff);
-  };
-
-  // Advance only while visible, not hovered, and motion is welcome.
-  useEffect(() => {
-    if (paused || !inView || reducedMotion) return;
-    const id = setInterval(next, AUTO_PLAY_INTERVAL);
-    return () => clearInterval(id);
-  }, [next, paused, inView, reducedMotion]);
-
-  const status = (index: number): "active" | "prev" | "next" | "hidden" => {
-    let d = index - current;
-    if (d > count / 2) d -= count;
-    if (d < -count / 2) d += count;
-    if (d === 0) return "active";
-    if (d === -1) return "prev";
-    if (d === 1) return "next";
-    return "hidden";
-  };
-
-  const spring = reducedMotion
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 90, damping: 22, mass: 1 };
-  const cardSpring = reducedMotion
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 260, damping: 25, mass: 0.8 };
-
-  return (
-    <div
-      ref={rootRef}
-      className="mx-auto w-full max-w-6xl"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      aria-roledescription="carousel"
-      aria-label="AgentCost capabilities"
-    >
-      <div className="relative flex min-h-[600px] flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a0a0b] lg:aspect-video lg:flex-row lg:rounded-[2.5rem]">
-        {/* Chip wheel */}
-        <div
-          className="relative z-30 flex min-h-[340px] w-full flex-col items-start justify-center overflow-hidden px-6 md:min-h-[420px] md:px-12 lg:h-full lg:w-[42%] lg:pl-14"
-          style={{ backgroundColor: PANE }}
-        >
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-40 h-16 md:h-24"
-            style={{ background: `linear-gradient(to bottom, ${PANE}, ${PANE}cc, transparent)` }}
-          />
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-16 md:h-24"
-            style={{ background: `linear-gradient(to top, ${PANE}, ${PANE}cc, transparent)` }}
-          />
-          <div className="relative z-20 flex h-full w-full items-center justify-center lg:justify-start">
-            {FEATURES.map((feature, index) => {
-              const active = index === current;
-              const distance = wrap(-(count / 2), count / 2, index - current);
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={feature.id}
-                  style={{ height: ITEM_HEIGHT, width: "fit-content" }}
-                  animate={{
-                    y: distance * ITEM_HEIGHT,
-                    opacity: Math.max(0, 1 - Math.abs(distance) * 0.28),
-                  }}
-                  transition={spring}
-                  className="absolute flex items-center justify-start"
-                >
-                  <button
-                    type="button"
-                    onClick={() => select(index)}
-                    aria-pressed={active}
-                    tabIndex={Math.abs(distance) > 2 ? -1 : 0}
-                    className={cn(
-                      "group flex cursor-pointer items-center gap-3 rounded-full border px-5 py-3 text-left transition-colors duration-500 md:px-6",
-                      active
-                        ? "z-10 border-white bg-white text-neutral-950"
-                        : "border-white/15 bg-transparent text-white/60 hover:border-white/40 hover:text-white",
-                    )}
-                  >
-                    <Icon
-                      size={17}
-                      strokeWidth={2}
-                      className={cn(
-                        "shrink-0 transition-colors duration-500",
-                        active ? "text-neutral-950" : "text-white/40 group-hover:text-white/80",
-                      )}
-                      aria-hidden
-                    />
-                    <span className="whitespace-nowrap text-[12.5px] font-medium uppercase tracking-[0.08em]">
-                      {feature.label}
-                    </span>
-                  </button>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Card stack */}
-        <div className="relative flex min-h-[600px] flex-1 items-center justify-center overflow-hidden border-t border-white/10 px-6 py-14 md:min-h-[600px] md:px-12 lg:h-full lg:border-l lg:border-t-0 lg:px-10 lg:py-12">
-          <div className="relative flex min-h-[480px] w-full max-w-[400px] items-center justify-center sm:aspect-[7/8] sm:min-h-0">
-            {FEATURES.map((feature, index) => {
-              const s = status(index);
-              const active = s === "active";
-              const prev = s === "prev";
-              const nxt = s === "next";
-              const Visual = feature.visual;
-              return (
-                <motion.div
-                  key={feature.id}
-                  initial={false}
-                  animate={{
-                    x: active ? 0 : prev ? -90 : nxt ? 90 : 0,
-                    scale: active ? 1 : prev || nxt ? 0.86 : 0.7,
-                    opacity: active ? 1 : prev || nxt ? 0.35 : 0,
-                    rotate: prev ? -3 : nxt ? 3 : 0,
-                    zIndex: active ? 20 : prev || nxt ? 10 : 0,
-                  }}
-                  transition={cardSpring}
-                  style={{ pointerEvents: active ? "auto" : "none" }}
-                  className="absolute inset-0 origin-center overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0c0c0d]"
-                  aria-hidden={!active}
-                >
-                  <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-white/20" aria-hidden />
-                  <div
-                    className={cn(
-                      "absolute inset-x-0 top-0 p-6 transition-all duration-700 md:p-7",
-                      active ? "blur-0 grayscale-0" : "blur-[2px] grayscale",
-                    )}
-                  >
-                    <Visual active={active} />
-                  </div>
-
-                  <AnimatePresence>
-                    {active && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: reducedMotion ? 0 : 0.35 }}
-                        className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/75 to-transparent p-7 pt-24 md:p-8"
-                      >
-                        <span className="mb-3 w-fit rounded-full border border-white/15 bg-black/60 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-300">
-                          {String(index + 1).padStart(2, "0")} · {feature.label}
-                        </span>
-                        <p className="text-[19px] font-medium leading-snug tracking-tight text-white md:text-[21px]">
-                          {feature.description}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}

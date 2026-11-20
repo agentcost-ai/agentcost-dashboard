@@ -1,19 +1,31 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { motion, useInView } from "framer-motion";
-import { Grid2x2Plus } from "lucide-react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, Check, Copy, Grid2x2Plus, Printer } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { comparisons } from "@/lib/comparisons";
 import { AnnotatedArrow } from "./AnnotatedArrow";
 
-const columns = [
+/* ─────────────────────────────────────────────
+   Footer — the site prints a receipt for your
+   visit. A thermal slip feeds out of a printer
+   slot when the footer scrolls in, itemising
+   this tab's session (time here, pages viewed)
+   at $0.00, with a barcode made from the visit
+   id and a torn edge. "Print again" re-feeds it.
+   Nothing is stored or sent: the session numbers
+   live in sessionStorage in this tab only.
+   ───────────────────────────────────────────── */
+
+const columns: Array<{ title: string; links: Array<{ label: string; href: string; external?: boolean }> }> = [
   {
     title: "Product",
     links: [
       // Root-anchored so they work from /pricing, /blog, etc.
       { label: "Features", href: "/#features" },
+      { label: "How it works", href: "/#how-it-works" },
       { label: "Integration", href: "/#integration" },
       { label: "Privacy by design", href: "/#privacy" },
       { label: "Pricing", href: "/pricing" },
@@ -21,338 +33,395 @@ const columns = [
     ],
   },
   {
-    title: "Resources",
+    title: "Developers",
     links: [
       { label: "Documentation", href: "/docs" },
+      { label: "Python SDK", href: "/docs/sdk" },
+      { label: "TypeScript SDK", href: "/docs/typescript" },
       { label: "API Reference", href: "/docs/api" },
-      { label: "Model Catalog", href: "/docs/models" },
-      { label: "AI Agent Cost Calculator", href: "/ai-agent-cost-calculator" },
       { label: "MCP Server", href: "/docs/mcp" },
-      // external: a raw file, not an app route — <Link> would try a client-side
-      // navigation to a non-page and fall back to a hard load.
-      // llms.txt is deliberately NOT listed: agents probe /llms.txt by
-      // convention rather than following links, and it reads as noise to a
-      // human. It stays linked from /docs and the 404 page.
+      // A raw file, not an app route. llms.txt is deliberately not listed:
+      // agents probe it by convention; it stays linked from /docs and the 404.
       { label: "OpenAPI Spec", href: "/openapi.json", external: true },
-      { label: "Blog", href: "/blog" },
-      { label: "Changelog", href: "/changelog" },
     ],
   },
   {
-    // Generated from lib/comparisons.ts so a new comparison page is linked
-    // site-wide the moment it exists — no crawl-orphan pages.
-    title: "Compare",
-    links: comparisons.map((c) => ({
-      label: `vs ${c.competitor}`,
-      href: `/compare/${c.slug}`,
-    })),
+    title: "Resources",
+    links: [
+      { label: "Model Catalog", href: "/docs/models" },
+      { label: "AI Agent Cost Calculator", href: "/ai-agent-cost-calculator" },
+      { label: "Blog", href: "/blog" },
+      { label: "Changelog", href: "/changelog" },
+      // Generated so a new comparison page is linked site-wide the moment it
+      // exists: no crawl-orphan pages.
+      ...comparisons.map((c) => ({ label: `vs ${c.competitor}`, href: `/compare/${c.slug}` })),
+    ],
   },
   {
     title: "Company",
     links: [
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
-      {
-        label: "GitHub",
-        href: "https://github.com/agentcost-ai",
-        external: true,
-      },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
+      { label: "GitHub", href: "https://github.com/agentcost-ai", external: true },
       { label: "Terms of Service", href: "/terms" },
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Data & Privacy Docs", href: "/docs/privacy" },
-      {
-        label: "License (MIT)",
-        href: "https://github.com/agentcost-ai/agentcost-sdk/blob/main/LICENSE",
-      },
     ],
   },
 ];
 
-/* Cost-skyline layers. Each path is a jagged cost-chart silhouette that tiles
-   at x=1440 (same y at both ends), duplicated via <use> so a translateX(-50%)
-   loop is seamless. Flat fills only — depth comes from layering, not
-   gradients. */
-const HILL_BACK =
-  "M0,96 L80,88 L140,110 L220,70 L300,104 L380,60 L460,92 L540,52 L620,96 " +
-  "L700,78 L780,116 L860,66 L940,98 L1020,58 L1100,90 L1180,74 L1260,108 " +
-  "L1340,64 L1440,96 L1440,240 L0,240 Z";
-const HILL_MID =
-  "M0,150 L70,138 L150,164 L230,124 L310,158 L390,118 L470,150 L550,132 " +
-  "L630,168 L710,126 L790,156 L870,140 L950,172 L1030,122 L1110,152 " +
-  "L1190,136 L1270,166 L1350,128 L1440,150 L1440,240 L0,240 Z";
-const HILL_FRONT =
-  "M0,176 L90,164 L170,192 L250,148 L330,180 L410,140 L490,172 L570,154 " +
-  "L650,196 L730,144 L810,176 L890,158 L970,198 L1050,146 L1130,178 " +
-  "L1210,160 L1290,192 L1370,150 L1440,176 L1440,240 L0,240 Z";
-/* The front layer's top edge, stroked — the skyline IS a cost line. */
-const COST_LINE =
-  "M0,176 L90,164 L170,192 L250,148 L330,180 L410,140 L490,172 L570,154 " +
-  "L650,196 L730,144 L810,176 L890,158 L970,198 L1050,146 L1130,178 " +
-  "L1210,160 L1290,192 L1370,150 L1440,176";
-/* A few "data points" on the cost line's peaks and valleys. */
-const LINE_DOTS: Array<[number, number]> = [
-  [250, 148],
-  [410, 140],
-  [650, 196],
-  [730, 144],
-  [970, 198],
-  [1050, 146],
-  [1370, 150],
-];
+const INSTALLS = [
+  { id: "pip", cmd: "pip install agentcost" },
+  { id: "npm", cmd: "npm install @agentcost/sdk" },
+] as const;
 
-function SkylineLayer({
-  path,
-  fill,
-  heightClass,
-  driftClass,
-  zClass,
-  line,
-}: {
-  path: string;
-  fill: string;
-  heightClass: string;
-  driftClass: string;
-  zClass: string;
-  line?: boolean;
-}) {
+/* ── Session, kept in this tab only ──────────────────────────────────── */
+
+interface Visit {
+  id: string;
+  start: number;
+  pages: number;
+}
+
+const VISIT_KEY = "agentcost_footer_visit";
+
+function readVisit(): Visit {
+  const fresh: Visit = {
+    id: Math.random().toString(36).slice(2, 8).toUpperCase(),
+    start: Date.now(),
+    pages: 1,
+  };
+  try {
+    const raw = sessionStorage.getItem(VISIT_KEY);
+    const prev = raw ? (JSON.parse(raw) as Partial<Visit>) : null;
+    const visit: Visit =
+      prev && typeof prev.id === "string" && typeof prev.start === "number" && typeof prev.pages === "number"
+        ? { id: prev.id, start: prev.start, pages: prev.pages + 1 }
+        : fresh;
+    sessionStorage.setItem(VISIT_KEY, JSON.stringify(visit));
+    return visit;
+  } catch {
+    return fresh;
+  }
+}
+
+/** Seconds since `start`, ticking once a second. */
+function useElapsed(start: number | null) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    if (start === null) return;
+    const tick = () => setNow(Date.now());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [start]);
+  return start === null || now === null ? null : Math.max(0, Math.floor((now - start) / 1000));
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+const mmss = (s: number) => (s >= 3600 ? `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}` : `${pad(Math.floor(s / 60))}:${pad(s % 60)}`);
+
+/** Barcode bars from a string: same id, same barcode. */
+function bars(seed: string): number[] {
+  let h = 2166136261;
+  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  const out: number[] = [];
+  for (let i = 0; i < 42; i++) {
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    out.push(1 + ((h >>> 0) % 3));
+  }
+  return out;
+}
+
+/* ── Receipt ─────────────────────────────────────────────────────────── */
+
+function Line({ k, v, strong }: { k: string; v: React.ReactNode; strong?: boolean }) {
   return (
-    <div
-      aria-hidden
-      className={`pointer-events-none absolute bottom-0 left-0 w-[200%] ${zClass}`}
-    >
-      <div className={`${driftClass} will-change-transform`}>
-        <svg
-          className={`block w-full ${heightClass}`}
-          viewBox="0 0 2880 240"
-          preserveAspectRatio="none"
-        >
-          {[0, 1440].map((x) => (
-            <g key={x} transform={`translate(${x},0)`}>
-              <path d={path} fill={fill} />
-              {line && (
-                <>
-                  <path
-                    d={COST_LINE}
-                    fill="none"
-                    stroke="#38bdf8"
-                    strokeOpacity="0.32"
-                    strokeWidth="2"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                  {LINE_DOTS.map(([cx, cy]) => (
-                    <circle
-                      key={cx}
-                      cx={cx}
-                      cy={cy}
-                      r="3.5"
-                      fill="#38bdf8"
-                      fillOpacity="0.45"
-                    />
-                  ))}
-                </>
-              )}
-            </g>
-          ))}
-        </svg>
-      </div>
+    <div className={`flex items-baseline gap-2 ${strong ? "font-bold" : ""}`}>
+      <span className="shrink-0">{k}</span>
+      <span aria-hidden className="mb-[3px] flex-1 border-b border-dotted border-neutral-900/30" />
+      <span className="shrink-0 tabular-nums">{v}</span>
     </div>
   );
 }
 
-const letterVariants = {
-  hidden: { y: "0.45em", opacity: 0 },
-  show: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const },
-  },
-};
+function Rule({ double }: { double?: boolean }) {
+  return <div aria-hidden className={`my-2.5 border-t border-neutral-900/35 ${double ? "border-double border-t-[3px]" : "border-dashed"}`} />;
+}
+
+function Receipt() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.25 });
+  const reduced = useReducedMotion();
+  const [visit, setVisit] = useState<Visit | null>(null);
+  const [printKey, setPrintKey] = useState(0);
+  const elapsed = useElapsed(visit?.start ?? null);
+
+  // Read after mount (sessionStorage is client-only); cancelled on unmount so
+  // a development double-mount does not count the page twice.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisit(readVisit()));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const stamp = useMemo(() => {
+    if (!visit) return { date: "", time: "" };
+    const d = new Date(visit.start);
+    return {
+      date: d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      time: d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+    };
+  }, [visit]);
+
+  const code = useMemo(() => bars(visit?.id ?? "AGENTCOST"), [visit?.id]);
+
+  return (
+    <div ref={ref} className="relative mx-auto w-full max-w-[340px]">
+      {/* Printer slot */}
+      <div className="relative z-20 h-5 rounded-full border border-white/10 bg-gradient-to-b from-[#1b1b20] to-[#0d0d10] shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6)]">
+        <div className="absolute inset-x-5 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-black" />
+        <span className="absolute right-3 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-emerald-400 shadow-[0_0_6px_1px_rgba(52,211,153,0.6)]" aria-hidden />
+      </div>
+
+      {/* Paper, fed down from under the slot */}
+      <div className="relative -mt-2.5 overflow-hidden px-3 pb-4">
+        <motion.div
+          key={printKey}
+          initial={reduced ? false : { y: "-100%" }}
+          animate={inView ? { y: "0%" } : undefined}
+          transition={{ duration: 1.6, ease: "linear" }}
+          className="relative"
+        >
+          <div
+            className="relative bg-[#f4f1ea] px-5 pb-5 pt-6 font-mono text-[11.5px] leading-[1.55] text-neutral-900 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.7)]"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(0deg, rgba(0,0,0,0.018) 0 1px, transparent 1px 3px)",
+            }}
+          >
+            <div className="flex flex-col items-center text-center">
+              <span className="flex items-center gap-1.5 text-[15px] font-bold tracking-tight">
+                <Grid2x2Plus className="size-4" strokeWidth={2.4} aria-hidden />
+                AGENTCOST
+              </span>
+              <span className="mt-0.5 text-[10.5px] uppercase tracking-[0.18em] text-neutral-600">
+                LLM cost observability
+              </span>
+            </div>
+
+            <Rule double />
+            <Line k={`VISIT #${visit?.id ?? "------"}`} v={stamp.date || "--"} />
+            <Line k="PRINTED" v={stamp.time || "--:--"} />
+            <Rule />
+
+            <div className="mb-1 flex justify-between text-[10px] uppercase tracking-[0.14em] text-neutral-600">
+              <span>Item</span>
+              <span>Cost</span>
+            </div>
+            <Line k={`Time on site ${elapsed === null ? "--:--" : mmss(elapsed)}`} v="$0.00" />
+            <Line k={`Pages viewed ×${visit?.pages ?? 1}`} v="$0.00" />
+            <Line k="Models priced ×3,500+" v="$0.00" />
+            <Line k="Prompts collected ×0" v="$0.00" />
+            <Line k="Seats, tiers, limits" v="none" />
+            <Rule />
+            <Line k="SUBTOTAL" v="$0.00" />
+            <Line k="PLAN" v="Free forever" />
+            <Line k="LICENSE" v="MIT" />
+            <Rule double />
+            <div className="flex items-baseline justify-between text-[15px] font-bold">
+              <span>TOTAL</span>
+              <span className="tabular-nums">$0.00</span>
+            </div>
+
+            <div className="mt-4 flex h-11 items-stretch justify-center gap-[2px]" aria-hidden>
+              {code.map((w, i) => (
+                <span key={i} className={i % 2 ? "bg-transparent" : "bg-neutral-900"} style={{ width: w }} />
+              ))}
+            </div>
+            <p className="mt-1.5 text-center text-[10px] tracking-[0.3em] text-neutral-600">
+              AC-{visit?.id ?? "------"}
+            </p>
+            <p className="mt-3 text-center text-[10.5px] uppercase tracking-[0.12em]">
+              * every token, accounted for *
+            </p>
+          </div>
+
+          {/* Torn edge */}
+          <div
+            aria-hidden
+            className="h-3 w-full"
+            style={{
+              background:
+                "linear-gradient(-45deg, transparent 6px, #f4f1ea 0) 0 0 / 12px 12px repeat-x, linear-gradient(45deg, transparent 6px, #f4f1ea 0) 0 0 / 12px 12px repeat-x",
+            }}
+          />
+        </motion.div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setPrintKey((k) => k + 1)}
+        className="mx-auto mt-1 flex items-center gap-1.5 rounded-full border border-white/8 px-3 py-1 text-[11px] text-neutral-500 transition-colors hover:border-white/20 hover:text-neutral-200"
+      >
+        <Printer className="size-3" aria-hidden />
+        Print again
+      </button>
+
+      {inView && (
+        <AnnotatedArrow
+          label="your receipt for this visit"
+          dir="right"
+          delay={1.4}
+          className="absolute -left-48 top-24 hidden -rotate-6 xl:flex"
+        />
+      )}
+    </div>
+  );
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
 
 export function Footer() {
-  const stageRef = useRef<HTMLDivElement>(null);
-  // Amount-based, no rootMargin: the stage hugs the page bottom, and on short
-  // viewports a negative margin excludes it entirely — the reveal never fired
-  // on phones.
-  const stageInView = useInView(stageRef, { once: true, amount: 0.3 });
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copy = (id: string, cmd: string) => {
+    navigator.clipboard?.writeText(cmd).then(
+      () => {
+        setCopied(id);
+        track("sdk_install_started", { location: "footer", language: id === "pip" ? "python" : "typescript" });
+        setTimeout(() => setCopied((c) => (c === id ? null : c)), 1800);
+      },
+      () => undefined,
+    );
+  };
 
   return (
     <footer className="relative overflow-hidden border-t border-white/6 bg-[#07070a]">
-      {/* Link columns */}
-      <div className="relative z-30 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 sm:pt-16 pb-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8 sm:gap-10">
-          {/* Brand column — description only. No mini logo lockup: the navbar
-              carries the brand up top and the giant wordmark carries it below,
-              a third repeat here was noise. Double-width (col-span-2 of 6),
-              the classic footer shape: wide description column, narrow link
-              columns. Flex so the meta line centers in the leftover height. */}
-          <div className="col-span-2 flex flex-col">
-            <p className="text-sm text-neutral-500 leading-relaxed max-w-xs">
-              Never wonder which agent spiked your AI bill again. Open source,
-              free in the cloud or self-hosted.
-            </p>
-            {/* Google Preferred Sources deeplink (Search Central: "preferred
-                sources"). A plain link, not Google's publisher.js button, so
-                no third-party script runs on every page. */}
-            <a
-              href="https://www.google.com/preferences/source?q=agentcost.tech"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => track("preferred_source_clicked", { location: "footer" })}
-              className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-white/8 px-3 py-1.5 text-xs text-neutral-400 transition-colors hover:border-white/20 hover:text-neutral-200"
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/30 to-transparent"
+      />
+      <div className="mx-auto grid max-w-7xl gap-14 px-4 pb-10 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16 lg:px-8">
+        <div className="min-w-0">
+          <h2 className="max-w-[16ch] text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-[2.6rem]">
+            Every token, accounted for.
+          </h2>
+          <p className="mt-4 max-w-md text-[15px] leading-6 text-neutral-400">
+            Open-source LLM cost tracking for Python and TypeScript. Free in the cloud, or
+            self-host the whole stack.
+          </p>
+
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <Link
+              href="/auth/register"
+              onClick={() => track("click_signup", { location: "footer" })}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-[14px] font-medium text-neutral-950 transition-colors hover:bg-neutral-200"
             >
-              <svg aria-hidden className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7L12 17.5 5.8 21.2l1.6-7L2 9.5l7.1-.6z" />
-              </svg>
-              Add AgentCost as a preferred source on Google
-            </a>
-
-            {/* Meta — one row: year, then the two chips */}
-            <div className="flex-1 flex flex-col justify-center mt-8">
-              <div className="flex flex-nowrap items-center gap-x-2 text-xs whitespace-nowrap text-neutral-500">
-                <span>AgentCost © {new Date().getFullYear()}</span>
-                <span
-                  aria-hidden
-                  className="size-1 rounded-full bg-neutral-700"
-                />
-                <a
-                  href="https://github.com/agentcost-ai/agentcost-sdk/blob/main/LICENSE"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full border border-white/8 px-2.5 py-1 text-neutral-500 hover:border-white/20 hover:text-neutral-300 transition-colors"
-                >
-                  MIT License
-                </a>
-                <a
-                  href="https://github.com/agentcost-ai"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => track("github_clicked", { location: "footer" })}
-                  className="flex items-center gap-1.5 rounded-full border border-white/8 px-2.5 py-1 text-neutral-500 hover:border-white/20 hover:text-neutral-300 transition-colors"
-                >
-                  <svg
-                    className="size-3.5"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                  </svg>
-                  GitHub
-                </a>
-              </div>
-            </div>
+              Start tracking free
+              <ArrowUpRight className="size-4" aria-hidden />
+            </Link>
+            {INSTALLS.map((i) => (
+              <button
+                key={i.id}
+                type="button"
+                onClick={() => copy(i.id, i.cmd)}
+                aria-label={`Copy: ${i.cmd}`}
+                className="group inline-flex items-center gap-2 rounded-lg border border-white/8 bg-white/[0.02] px-3 py-2 font-mono text-[12.5px] text-neutral-300 transition-colors hover:border-white/20"
+              >
+                <span className="text-neutral-600">$</span>
+                {i.cmd}
+                {copied === i.id ? (
+                  <Check className="size-3.5 text-emerald-400" aria-hidden />
+                ) : (
+                  <Copy className="size-3.5 text-neutral-600 group-hover:text-neutral-300" aria-hidden />
+                )}
+              </button>
+            ))}
           </div>
+          <span className="sr-only" role="status" aria-live="polite">
+            {copied ? "Copied to clipboard" : ""}
+          </span>
 
-          {columns.map((col) => (
-            <div key={col.title}>
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-400 mb-4">
-                {col.title}
-              </p>
-              <ul className="space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link.label}>
-                    {link.external ? (
-                      <a
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block text-sm text-neutral-500 hover:text-neutral-200 transition-colors duration-200"
-                      >
-                        {link.label}
-                      </a>
-                    ) : (
-                      <Link
-                        href={link.href}
-                        className="inline-block text-sm text-neutral-500 hover:text-neutral-200 transition-colors duration-200"
-                      >
-                        {link.label}
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
+          <nav aria-label="Footer" className="mt-14 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
+            {columns.map((col) => (
+              <div key={col.title}>
+                <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
+                  {col.title}
+                </p>
+                <ul className="space-y-2.5">
+                  {col.links.map((link) => {
+                    const cls =
+                      "group inline-flex items-center gap-1 text-[14px] text-neutral-400 transition-colors hover:text-white";
+                    const arrow = (
+                      <ArrowUpRight
+                        className="size-3 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
+                        aria-hidden
+                      />
+                    );
+                    return (
+                      <li key={link.label}>
+                        {link.external ? (
+                          <a href={link.href} target="_blank" rel="noopener noreferrer" className={cls}>
+                            {link.label}
+                            {arrow}
+                          </a>
+                        ) : (
+                          <Link href={link.href} className={cls}>
+                            {link.label}
+                            {arrow}
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
         </div>
+
+        <Receipt />
       </div>
 
-      {/* Brand stage — giant wordmark over a drifting cost skyline */}
-      <div ref={stageRef} className="relative mt-4 sm:mt-2">
-        <h2 className="sr-only">AgentCost</h2>
-
-        {/* Back layers drift behind the wordmark. Heights track the clamped
-            wordmark size per breakpoint so the front layer overlaps the lower
-            third of the letters and never swallows them. */}
-        <SkylineLayer
-          path={HILL_BACK}
-          fill="#141824"
-          heightClass="h-14 sm:h-20 md:h-28 lg:h-40 xl:h-44 2xl:h-52"
-          driftClass="footer-drift-slow"
-          zClass="z-0"
-        />
-        <SkylineLayer
-          path={HILL_MID}
-          fill="#10141f"
-          heightClass="h-11 sm:h-16 md:h-20 lg:h-32 xl:h-36 2xl:h-40"
-          driftClass="footer-drift-mid"
-          zClass="z-0"
-        />
-
-        {/* Handwritten annotation — our landing signature. Mounted only when
-            the stage scrolls into view so the draw-in actually plays. */}
-        {stageInView && (
-          <AnnotatedArrow
-            label="every token, accounted for"
-            dir="left"
-            delay={0.9}
-            className="absolute right-[6%] top-1 z-30 hidden -rotate-6 sm:flex"
-          />
-        )}
-
-        {/* Wordmark */}
-        <motion.div
-          aria-hidden
-          initial="hidden"
-          animate={stageInView ? "show" : "hidden"}
-          transition={{ staggerChildren: 0.045, delayChildren: 0.1 }}
-          className="relative z-10 flex select-none items-baseline justify-center whitespace-nowrap px-2 pt-6 sm:pt-2 -mb-[0.16em] text-[clamp(3.4rem,14vw,13rem)] font-bold leading-none tracking-[-0.045em] text-neutral-100"
-        >
-          <motion.span
-            variants={letterVariants}
-            className="mr-[0.1em] inline-flex self-center translate-y-[0.04em]"
-          >
-            <Grid2x2Plus
-              className="size-[0.56em] text-sky-400"
-              strokeWidth={2.2}
-            />
-          </motion.span>
-          {"AgentCost".split("").map((ch, i) => (
-            <motion.span
-              key={i}
-              variants={letterVariants}
-              whileHover={{ y: "-0.05em" }}
-              className="inline-block"
+      <div className="border-t border-white/6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-[12px] text-neutral-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <span>© {new Date().getFullYear()} AgentCost</span>
+            <span aria-hidden className="size-1 rounded-full bg-neutral-700" />
+            <a
+              href="https://github.com/agentcost-ai/agentcost-sdk/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-neutral-200"
             >
-              {ch}
-            </motion.span>
-          ))}
-        </motion.div>
-
-        {/* Front layer overlaps the letterforms, like the inspiration's
-            foreground clouds — its top edge stroked as a live cost line */}
-        <SkylineLayer
-          path={HILL_FRONT}
-          fill="#0b0e15"
-          heightClass="h-8 sm:h-12 md:h-16 lg:h-24 xl:h-28 2xl:h-32"
-          driftClass="footer-drift-fast"
-          zClass="z-20"
-          line
-        />
+              MIT License
+            </a>
+            <span aria-hidden className="size-1 rounded-full bg-neutral-700" />
+            <a
+              href="https://github.com/agentcost-ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track("github_clicked", { location: "footer" })}
+              className="hover:text-neutral-200"
+            >
+              GitHub
+            </a>
+          </div>
+          {/* Google Preferred Sources deeplink: a plain link, not Google's
+              publisher.js button, so no third-party script runs on every page. */}
+          <a
+            href="https://www.google.com/preferences/source?q=agentcost.tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("preferred_source_clicked", { location: "footer" })}
+            className="inline-flex w-fit items-center gap-1.5 hover:text-neutral-200"
+          >
+            <svg aria-hidden className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7L12 17.5 5.8 21.2l1.6-7L2 9.5l7.1-.6z" />
+            </svg>
+            Add AgentCost as a preferred source on Google
+          </a>
+        </div>
       </div>
     </footer>
   );

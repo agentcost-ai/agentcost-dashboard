@@ -94,6 +94,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRotatingKey, setIsRotatingKey] = useState(false);
   const [showSnippetKey, setShowSnippetKey] = useState(false);
+  const [snippetLang, setSnippetLang] = useState<"python" | "typescript">("python");
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -324,7 +325,12 @@ export default function SettingsPage() {
     setIsDeleting(false);
   };
 
-  const snippet = `from agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}",\n    project_id="${config.projectId || project?.id || "your_project_id"}"\n)\n\n# Your OpenAI, Anthropic, Gemini, and LangChain calls are now tracked.`;
+  const snippetKey = showSnippetKey && config.apiKey ? config.apiKey : "your_api_key";
+  const snippetProject = config.projectId || project?.id || "your_project_id";
+  const snippet =
+    snippetLang === "python"
+      ? `# pip install agentcost\nfrom agentcost import track_costs\n\ntrack_costs.init(\n    api_key="${snippetKey}",\n    project_id="${snippetProject}",\n)\n\n# Your OpenAI, Anthropic, Gemini and LangChain calls are now tracked.`
+      : `// npm install @agentcost/sdk\nimport OpenAI from "openai";\nimport * as agentcost from "@agentcost/sdk";\n\nagentcost.init({\n  apiKey: "${snippetKey}",\n  projectId: "${snippetProject}",\n});\n\nconst client = agentcost.instrumentOpenAI(new OpenAI());\n// Calls through this client are now tracked. Anthropic, Google Gen AI,\n// LangChain.js and the Vercel AI SDK: agentcost.tech/docs/typescript`;
 
   return (
     <div className="space-y-6">
@@ -582,9 +588,25 @@ export default function SettingsPage() {
       {/* Quick start */}
       <SectionCard
         title="Quick start"
-        description="Your project wired into Python. Toggle the key on to copy a ready-to-run snippet."
+        description="Your project, ready to run. Show the key to copy a snippet that works as is."
         action={
           <>
+            <div role="tablist" aria-label="Language" className="inline-flex rounded-md border border-white/10 p-0.5">
+              {(["python", "typescript"] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  role="tab"
+                  aria-selected={snippetLang === l}
+                  onClick={() => setSnippetLang(l)}
+                  className={`rounded px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                    snippetLang === l ? "bg-white text-neutral-950" : "text-neutral-400 hover:text-white"
+                  }`}
+                >
+                  {l === "python" ? "Python" : "TypeScript"}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={() => setShowSnippetKey(!showSnippetKey)}
@@ -599,34 +621,40 @@ export default function SettingsPage() {
       >
         <pre className="overflow-x-auto px-5 py-4 font-mono text-[12.5px] leading-6 text-neutral-300">
           <code>
-            <span className="text-neutral-500">from</span> agentcost{" "}
-            <span className="text-neutral-500">import</span> track_costs{"\n\n"}
-            track_costs.init({"\n"}
-            {"    "}api_key=
-            <span className="text-neutral-100">
-              &quot;{showSnippetKey && config.apiKey ? config.apiKey : "your_api_key"}&quot;
-            </span>
-            ,{"\n"}
-            {"    "}project_id=
-            <span className="text-neutral-100">
-              &quot;{config.projectId || project?.id || "your_project_id"}&quot;
-            </span>
-            {"\n"}){"\n\n"}
-            <span className="text-neutral-500">
-              # Your OpenAI, Anthropic, Gemini, and LangChain calls are now tracked.
-            </span>
+            {snippet.split("\n").map((line, i) => (
+              <span
+                key={`${snippetLang}-${i}`}
+                className={`block ${
+                  /^\s*(#|\/\/)/.test(line)
+                    ? "text-neutral-500"
+                    : line.includes(snippetKey) || line.includes(snippetProject)
+                      ? "text-neutral-100"
+                      : ""
+                }`}
+              >
+                {line || "\u00a0"}
+              </span>
+            ))}
           </code>
         </pre>
       </SectionCard>
 
       {/* Documentation */}
       <SectionCard title="Documentation">
-        <SettingRow label="SDK" description="Setup, tracing, outcomes and tools.">
+        <SettingRow label="Python SDK" description="Setup, tracing, outcomes and tools.">
           <Link
             href="/docs/sdk"
             className="text-[13px] text-neutral-300 underline decoration-white/20 underline-offset-2 hover:text-white"
           >
-            Read the SDK docs
+            Read the Python docs
+          </Link>
+        </SettingRow>
+        <SettingRow label="TypeScript SDK" description="OpenAI, Anthropic, Google Gen AI, LangChain.js, Vercel AI SDK.">
+          <Link
+            href="/docs/typescript"
+            className="text-[13px] text-neutral-300 underline decoration-white/20 underline-offset-2 hover:text-white"
+          >
+            Read the TypeScript docs
           </Link>
         </SettingRow>
         <SettingRow label="API" description="Every endpoint, with examples.">
